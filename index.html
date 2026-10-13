@@ -1540,6 +1540,7 @@ const toolboxPanel=$('#toolboxPanel');
 const audio=new Audio();
 audio.preload='metadata';
 audio.playbackRate=1;
+try{ audio.referrerPolicy='no-referrer'; }catch(_){}
 
 audio.addEventListener('play',()=>{
   document.body.classList.add('playing');
