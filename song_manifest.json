@@ -1,0 +1,26 @@
+{
+  "version": "2026-10-14T12:00:00Z",
+  "baseUrl": "https://satoko-ashe.github.io/music/",
+  "songs": [
+    {
+      "id": "smv6qfxhnng58e",
+      "title": "无到 bho5 do6",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1791916056372-869ce0ac-4e4c-4220-8bef-c063183987c0.mp3",
+      "instrumental": "https://mp3tourl.com/audio/1791916159907-7c7dc6da-93c0-4f32-b57d-032ee48f2079.mp3",
+      "cover": "covers/无到 bho5 do6.png",
+      "lyric": "lyrics/无到 bho5 do6.srt",
+      "originalTitle": "舍得",
+      "originalArtist": "王唯旖",
+      "lyricist": "金瓯阿舍",
+      "composer": "仓雁彬",
+      "intro": "潮州话版本《无到》bho5 do6（不在）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/ihE2c4buykkf",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iRzA54buz6qd",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1DopR6wExb/",
+      "tags": ["潮州话", "翻唱"]
+    }
+  ]
+}
