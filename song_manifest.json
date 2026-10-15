@@ -1,26 +1,210 @@
 {
-  "version": "2026-10-14T12:00:00Z",
+  "version": "2026-10-17T12:00:00Z",
   "baseUrl": "https://satoko-ashe.github.io/music/",
   "songs": [
     {
-      "id": "smv6qfxhnng58e",
-      "title": "无到 bho5 do6",
+      "id": "qrlnjws51z2ac",
+      "title": "无到",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1791916056372-869ce0ac-4e4c-4220-8bef-c063183987c0.mp3",
       "instrumental": "https://mp3tourl.com/audio/1791916159907-7c7dc6da-93c0-4f32-b57d-032ee48f2079.mp3",
       "cover": "https://file.uhsea.com/2610/2957848711b776e6bb599f9f39b8cd05G9.png",
-      "lyric": "https://satoko-ashe.github.io/music/lyrics/无到 bho5 do6.srt",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/无到.srt",
       "originalTitle": "舍得",
       "originalArtist": "王唯旖",
-      "lyricist": "金瓯阿舍",
+      "lyricist": "B站_金瓯阿舍",
       "composer": "仓雁彬",
-      "intro": "潮州话版本《无到》bho5 do6（不在）",
+      "intro": "无到 bho5 do6（不在）",
       "audioLanzouUrl": "https://wwbpm.lanzoue.com/ihE2c4buykkf",
       "audioLanzouPwd": "2026",
       "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iRzA54buz6qd",
       "instrumentalLanzouPwd": "2026",
       "mvUrl": "https://www.bilibili.com/video/BV1DopR6wExb/",
-      "tags": ["潮州话", "翻唱"]
+      "tags": [
+        "潮州话",
+        "翻唱"
+      ]
+    },
+    {
+      "id": "pffnltbw8mhq5",
+      "title": "只是岂爱",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792080640597-314c81aa-43a0-419d-b3ac-8007dfa3afd2.mp3",
+      "instrumental": "https://mp3tourl.com/audio/1792078107649-100572b5-9650-484d-b336-f72e9f31e3d0.mp3",
+      "cover": "https://file.uhsea.com/2610/82d9df3ae7210dca57fb58664307b0018E.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/只是岂爱.srt",
+      "originalTitle": "只是太爱你",
+      "originalArtist": "张敬轩",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "张敬轩",
+      "intro": "只是岂爱 zi2 si6 kah4 ain3（只是太爱）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/ifchF4c4278d",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iQGJH4c3cr5e",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1TeVA69EVx/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱"
+      ]
+    },
+    {
+      "id": "c9gm323xon9wg",
+      "title": "过番垂帑",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792086612588-df76e539-1f43-4164-a3fc-313821c4d823.mp3",
+      "cover": "https://file.uhsea.com/2610/0a2992f6b1c46edcdde9c0a99f24887cM9.png",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/过番垂帑.srt",
+      "originalTitle": "来去打工",
+      "originalArtist": "王以诺",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "王以诺",
+      "intro": "过番垂帑 guê3 huang1 cuê7 tang3（下南洋谋生）\n——电影《给阿嬷的情书》郑木生人物曲",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/ix0p44c4ghgf",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1tw546oE5Q/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电影",
+        "OST"
+      ]
+    },
+    {
+      "id": "rcadiboo0giuv",
+      "title": "帝王庙",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792081387894-4e470fbe-eb75-4376-8be7-23972406c145.mp3",
+      "cover": "https://file.uhsea.com/2610/daa670150ce7040a5c7c5ad0006bfa69X5.png",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/帝王庙.srt",
+      "originalTitle": "春庭雪",
+      "originalArtist": "橙翼",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "清彦",
+      "intro": "帝王庙 di3 uang5 bhiê7（帝王庙宇）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/iIoFC4c45ypa",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1nRo7BZEa3/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电视",
+        "OST"
+      ]
+    },
+    {
+      "id": "58dqbfq4wjnlq",
+      "title": "九幺幺事变",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792085839011-cd2b948b-b219-4925-a20a-ea083a2bfd47.mp3",
+      "cover": "https://file.uhsea.com/2610/0244d17837e28fe90c02f3917787c72aR9.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/九幺幺事变.srt",
+      "originalTitle": "沉默的羔羊",
+      "originalArtist": "周深",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "于冬然",
+      "intro": "九幺幺事变 gao2 iao1 iao1 se7 biang3 （911事变）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/iTjNJ4c4f82b",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1i3H3zcESq/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱"
+      ]
+    },
+    {
+      "id": "6fzhkqwvsw8y4",
+      "title": "暝舞",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792087484563-522136f1-ddc4-4b98-b324-65aca223f0b6.mp3",
+      "cover": "https://file.uhsea.com/2610/a89e9e04b0f2c30b4b7b455326381c06H3.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/暝舞.srt",
+      "originalTitle": "越南神曲Dạ Vũ（夜舞）",
+      "originalArtist": "Tăng Duy Tân（曾维新）",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "Tăng Duy Tân（曾维新）",
+      "intro": "暝舞 mên5 bhu2（杜十娘人物曲）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/i4ztz4c4i3xa",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1oVRdBpEYK/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "神曲"
+      ]
+    },
+    {
+      "id": "t4mi1bk9a7qob",
+      "title": "孤城",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792092305374-2a49d54d-e00c-4ffb-9cee-ea56383dd95d.mp3",
+      "cover": "https://file.uhsea.com/2610/ddab1136316e391bef09b82bddb3f7fe44.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/孤城.srt",
+      "originalTitle": "荒城渡",
+      "originalArtist": "周深",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "夏恒&邓强中",
+      "intro": "孤城 gou1 sian5 （《陈情令》薛洋人物曲）",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/iFrNK4c4oyuj",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1SKd7BqEd7/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电视",
+        "OST"
+      ]
+    },
+    {
+      "id": "039v2wm2qrg86",
+      "title": "月下炰荼",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792092889996-d3fc7b14-3b14-4a52-8253-8ccad581a96e.mp3",
+      "cover": "https://file.uhsea.com/2610/94816e443e3ca0457a1cecb5983141052H.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/月下炰荼.srt",
+      "originalTitle": "月下煮荼",
+      "originalArtist": "陈佳",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "李奕瀚",
+      "intro": "月下炰荼（月下煮荼）\n——电影《给阿嬷的情书》谢南枝人物曲",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/ibrwL4c4p9vg",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1WkdTBAEq6/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电影",
+        "OST"
+      ]
+    },
+    {
+      "id": "rpfv9dg5og3am",
+      "title": "命理",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792093549137-8d094f7b-3dfc-4136-ac0e-0bfb84ae1114.mp3",
+      "cover": "https://file.uhsea.com/2610/a8cf00acba250f32a31eefc1225c62ff8J.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/命理.srt",
+      "originalTitle": "命运",
+      "originalArtist": "이경섭（李京燮）",
+      "lyricist": "B站_金瓯阿舍",
+      "composer": "이경섭（李京燮）",
+      "intro": "命理 mian7 li2——韩剧《浪漫满屋》OST",
+      "audioLanzouUrl": "https://wwbpm.lanzoue.com/ilCTY4c4ppcd",
+      "audioLanzouPwd": "2026",
+      "instrumentalLanzouPwd": "2026",
+      "mvUrl": "https://www.bilibili.com/video/BV1P81xBZEiP/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电视",
+        "OST"
+      ]
     }
   ]
 }
