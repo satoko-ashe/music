@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0b0f">
+<<<<<<< HEAD
 <meta name="referrer" content="no-referrer">
 <title>我的音乐 · 网页播放器</title>
+=======
+<title>我的音乐 · 本地播放器</title>
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0b0b0f;--panel:#13131a;--card:#1a1a23;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--text:#eaeaf0;--dim:#8b8b98;--dimmer:#5c5c6a;--accent:#ec4141;--accent2:#ff6b81;--blue:#6fc8ff;--green:#5fd98f;--lyric-scale:1}
@@ -83,7 +87,16 @@ body[data-view="player"] .pane-player{display:flex}
 .grid-wrap{flex:1 1 auto;min-height:0;overflow-y:auto;padding:22px 24px 30px}
 .section{max-width:1600px;margin:0 0 34px}
 .section:last-child{margin-bottom:0}
+<<<<<<< HEAD
 .grid{display:grid;grid-template-columns:repeat(auto-fill, clamp(160px, 16vw, 240px));gap:18px}
+=======
+/* ★ 卡片自适应屏幕 + 靠左对齐 */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, clamp(160px, 16vw, 240px));
+  gap:18px;
+}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 .card{position:relative;background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s;border:1px solid var(--line)}
 .card:hover{transform:translateY(-4px);box-shadow:0 14px 40px -12px rgba(0,0,0,.75);background:#1f1f29}
 .card.playing{border-color:rgba(236,65,65,.5);box-shadow:0 0 0 1px rgba(236,65,65,.3),0 12px 36px -14px rgba(236,65,65,.4)}
@@ -139,7 +152,17 @@ body[data-view="player"] .pane-player{display:flex}
 .eq i:nth-child(3){height:7px;animation-delay:.36s}
 .card.paused .eq i{animation-play-state:paused;opacity:.5}
 @keyframes eq{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1.15)}}
+<<<<<<< HEAD
 .card-menu{position:fixed;background:#22222c;border:1px solid var(--line2);border-radius:10px;padding:5px;box-shadow:0 16px 40px -10px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.05);z-index:1000;min-width:150px;animation:pop .16s ease}
+=======
+.card-menu{
+  position:fixed;
+  background:#22222c;border:1px solid var(--line2);
+  border-radius:10px;padding:5px;
+  box-shadow:0 16px 40px -10px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.05);
+  z-index:1000;min-width:150px;animation:pop .16s ease;
+}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 @keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.96)}}
 .card-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:7px;font-size:12.5px;color:#d5d5e0;text-align:left;transition:.15s}
 .card-menu button:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -275,10 +298,34 @@ body.playing .play-btn .i-pause{display:block}
 .speed-btn.changed{color:var(--accent)}
 
 .volume-wrap{position:relative;display:flex;align-items:center;flex-shrink:0}
+<<<<<<< HEAD
 .volume-pop{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:160px;padding:12px 14px;background:#1c1c26;border:1px solid var(--line2);border-radius:10px;display:none;flex-direction:column;gap:8px;box-shadow:0 16px 40px -10px rgba(0,0,0,.9);z-index:60}
 .volume-wrap.open .volume-pop{display:flex}
 .volume-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer}
 .volume-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(236,65,65,.85)}
+=======
+.volume-pop{
+  position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);
+  width:160px;padding:12px 14px;
+  background:#1c1c26;border:1px solid var(--line2);
+  border-radius:10px;
+  display:none;flex-direction:column;gap:8px;
+  box-shadow:0 16px 40px -10px rgba(0,0,0,.9);
+  z-index:60;
+}
+.volume-wrap.open .volume-pop{display:flex}
+.volume-slider{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;border-radius:99px;
+  background:rgba(255,255,255,.15);outline:none;cursor:pointer;
+}
+.volume-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--accent);cursor:pointer;
+  box-shadow:0 0 8px rgba(236,65,65,.85);
+}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 .volume-pct{font-size:11px;color:var(--dim);text-align:center;letter-spacing:.3px}
 
 .desk-lyric{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(760px,calc(100vw - 24px));padding:16px 22px 18px;border-radius:16px;background:rgba(16,16,22,.78);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 60px -16px rgba(0,0,0,.9);z-index:900;text-align:center;user-select:none;cursor:grab;touch-action:none}
@@ -290,6 +337,7 @@ body.playing .play-btn .i-pause{display:block}
 .dl-btn:hover{background:rgba(255,255,255,.1);color:#fff}
 .dl-main{font-size:26px;font-weight:700;line-height:1.35;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.75),0 0 30px rgba(236,65,65,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dl-sub{font-size:13.5px;color:rgba(255,255,255,.48);margin-top:5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+<<<<<<< HEAD
 
 body[data-mode="lyric"]{background:transparent!important}
 body[data-mode="lyric"] .app{display:none!important}
@@ -318,6 +366,71 @@ body[data-mode="lyric"] .dl-btn:active{transform:scale(.94)}
 body[data-mode="lyric"] .dl-main{font-size:34px;line-height:1.25;font-weight:700;color:var(--dl-text-color);text-shadow:0 2px 20px rgba(0,0,0,.9), 0 0 40px rgba(236,65,65,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1}
 body[data-mode="lyric"] .dl-sub{font-size:15px;margin-top:5px;color:var(--dl-text-color);opacity:.55;text-shadow:0 2px 14px rgba(0,0,0,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1}
 body[data-mode="lyric"] .dl-settings{position:fixed;top:16px;left:50%;transform:translateX(-50%);width:300px;padding:14px 16px;background:rgba(28,28,38,.98);border:1px solid rgba(255,255,255,.14);border-radius:14px;display:flex;flex-direction:column;gap:12px;z-index:9999;box-shadow:0 18px 50px -10px rgba(0,0,0,.95), 0 0 0 1px rgba(236,65,65,.2);font-size:12px;color:#d5d5e0;cursor:default}
+=======
+
+body[data-mode="lyric"]{background:transparent!important}
+body[data-mode="lyric"] .app{display:none!important}
+body[data-mode="lyric"] .desk-lyric{
+  --dl-bg-rgb:16,16,22;
+  --dl-alpha:.9;
+  --dl-text-color:#ffffff;
+  position:fixed;inset:0;left:0;top:0;right:0;bottom:0;
+  transform:none;width:100%;height:100%;border-radius:14px;
+  padding:10px 70px 10px 26px;
+  margin:0;
+  display:flex;flex-direction:column;justify-content:center;
+  background:rgba(var(--dl-bg-rgb), var(--dl-alpha));
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  cursor:grab;
+  border:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06) inset, 0 0 34px -10px rgba(236,65,65,.3);
+  overflow:hidden;
+  transition:box-shadow .2s, background .2s;
+}
+body[data-mode="lyric"] .desk-lyric:hover{
+  box-shadow:0 0 0 1px rgba(236,65,65,.45) inset, 0 0 46px -8px rgba(236,65,65,.55);
+}
+body[data-mode="lyric"] .desk-lyric:active{cursor:grabbing}
+body[data-mode="lyric"] .desk-lyric.locked{cursor:default}
+body[data-mode="lyric"] .desk-lyric.locked:active{cursor:default}
+body[data-mode="lyric"] .desk-lyric .dl-head{opacity:0;transition:opacity .25s;top:6px;right:6px;gap:3px;display:flex;z-index:200}
+body[data-mode="lyric"] .desk-lyric:hover .dl-head{opacity:1}
+body[data-mode="lyric"] .dl-btn{width:30px;height:30px;font-size:12px;color:#b8b8c8;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;transition:.15s}
+body[data-mode="lyric"] .dl-btn:hover{background:rgba(236,65,65,.25);color:#fff;border-color:rgba(236,65,65,.55);transform:scale(1.06)}
+body[data-mode="lyric"] .dl-btn:active{transform:scale(.94)}
+body[data-mode="lyric"] .dl-main{
+  font-size:34px;line-height:1.25;font-weight:700;
+  color:var(--dl-text-color);
+  text-shadow:0 2px 20px rgba(0,0,0,.9), 0 0 40px rgba(236,65,65,.3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:relative;z-index:1;
+}
+body[data-mode="lyric"] .dl-sub{
+  font-size:15px;margin-top:5px;
+  color:var(--dl-text-color);
+  opacity:.55;
+  text-shadow:0 2px 14px rgba(0,0,0,.85);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:relative;z-index:1;
+}
+
+body[data-mode="lyric"] .dl-settings{
+  position:fixed;
+  top:16px;left:50%;
+  transform:translateX(-50%);
+  width:300px;padding:14px 16px;
+  background:rgba(28,28,38,.98);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  display:flex;flex-direction:column;gap:12px;
+  z-index:9999;
+  box-shadow:0 18px 50px -10px rgba(0,0,0,.95), 0 0 0 1px rgba(236,65,65,.2);
+  font-size:12px;
+  color:#d5d5e0;
+  cursor:default;
+}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 body[data-mode="lyric"] .dl-settings .row{display:flex;align-items:center;gap:10px;justify-content:space-between}
 body[data-mode="lyric"] .dl-settings .k{min-width:56px;font-size:11.5px;color:#9a9aae;text-align:left;flex-shrink:0}
 body[data-mode="lyric"] .dl-settings input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none}
@@ -376,9 +489,22 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 .cache-dot.off{background:#555;box-shadow:none}
 .edit-hint{font-size:11.5px;color:var(--dimmer);line-height:1.7;background:rgba(236,65,65,.06);border:1px solid rgba(236,65,65,.2);border-radius:10px;padding:10px 12px;flex-shrink:0}
 .edit-hint b{color:#ff9aa9}
+<<<<<<< HEAD
 .more-btn{display:block;width:100%;padding:10px;margin-top:8px;border:1px dashed rgba(255,255,255,.15);border-radius:9px;background:rgba(255,255,255,.02);color:var(--dim);font-size:12px;cursor:pointer;transition:.15s;text-align:center}
 .more-btn:hover{background:rgba(236,65,65,.08);border-color:rgba(236,65,65,.4);color:#fff}
 
+=======
+
+.more-btn{
+  display:block;width:100%;padding:10px;margin-top:8px;
+  border:1px dashed rgba(255,255,255,.15);
+  border-radius:9px;background:rgba(255,255,255,.02);
+  color:var(--dim);font-size:12px;cursor:pointer;
+  transition:.15s;text-align:center;
+}
+.more-btn:hover{background:rgba(236,65,65,.08);border-color:rgba(236,65,65,.4);color:#fff}
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 @media(max-width:1000px){
   .side-panel{position:fixed;right:0;top:0;bottom:0;z-index:200;width:min(320px,80vw);transform:translateX(100%);transition:transform .3s cubic-bezier(.3,.8,.3,1),opacity .2s;background:#141420;box-shadow:-20px 0 60px rgba(0,0,0,.6);opacity:1;flex-basis:auto}
   .side-panel.open{transform:translateX(0)}
@@ -493,6 +619,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 
         <div class="toolbox-panel" id="toolboxPanel" hidden>
           <div class="toolbox-head">工具箱</div>
+<<<<<<< HEAD
           <a href="https://subtitleconverters.com/conversions/" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">📄</span><span class="tb-name">字幕格式转换</span></a>
           <a href="https://www.haimian.com/" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">🎵</span><span class="tb-name">海绵AI免费音乐制作</span></a>
           <a href="https://snapany.com/zh/bilibili" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">📺</span><span class="tb-name">B站视频下载</span></a>
@@ -503,6 +630,18 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
           <a href="https://up.woozooo.com/" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">☁️</span><span class="tb-name">蓝奏云网盘</span></a>
           <a href="https://www.uhsea.com/" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">🔗</span><span class="tb-name">屋舍转直链</span></a>
           <a href="https://www.mp3tourl.com/zh/tools/voice-to-link" rel="noopener noreferrer" target="_blank" data-ext><span class="tb-ico">🔗</span><span class="tb-name">语音在线托管</span></a>
+=======
+          <a href="https://subtitleconverters.com/conversions/" data-ext><span class="tb-ico">📄</span><span class="tb-name">字幕格式转换</span></a>
+          <a href="https://www.haimian.com/" data-ext><span class="tb-ico">🎵</span><span class="tb-name">海绵AI免费音乐制作</span></a>
+          <a href="https://snapany.com/zh/bilibili" data-ext><span class="tb-ico">📺</span><span class="tb-name">B站视频下载</span></a>
+          <a href="https://editsub.com/zh/edit" data-ext><span class="tb-ico">✏️</span><span class="tb-name">在线字幕编辑器</span></a>
+          <a href="https://vocalremover.org/splitter-ai" data-ext><span class="tb-ico">🎤</span><span class="tb-name">人声在线分离</span></a>
+          <a href="https://www.gaitubao.com/" data-ext><span class="tb-ico">🖼️</span><span class="tb-name">图片尺寸改图宝</span></a>
+          <a href="https://y.qq.com/vemus/" data-ext><span class="tb-ico">🎼</span><span class="tb-name">QQ音乐发布后台</span></a>
+          <a href="https://up.woozooo.com/" data-ext><span class="tb-ico">☁️</span><span class="tb-name">蓝奏云网盘</span></a>
+          <a href="https://www.uhsea.com/" data-ext><span class="tb-ico">🔗</span><span class="tb-name">屋舍转直链</span></a>
+          <a href="https://www.mp3tourl.com/zh/tools/voice-to-link" data-ext><span class="tb-ico">🔗</span><span class="tb-name">语音在线托管</span></a>
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
         </div>
       </div>
     </div>
@@ -721,8 +860,13 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   <div class="modal-card">
     <h3>设置 <button class="close-x" data-close="settingsModal">✕</button></h3>
     <label class="field">
+<<<<<<< HEAD
       远程清单地址（song_manifest.json）
       <input type="text" id="setMusicRoot" placeholder="https://satoko-ashe.github.io/music/song_manifest.json" spellcheck="false">
+=======
+      本地音乐根目录
+      <input type="text" id="setMusicRoot" placeholder="D:/MyMusic" spellcheck="false">
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
     </label>
     <div class="cache-bar">
       <span><span class="cache-dot" id="syncDot"></span>清单版本：<span id="setManifestVer">—</span></span>
@@ -740,9 +884,12 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 (function(){
 'use strict';
 
+<<<<<<< HEAD
 /* ============================================================
    常量 & 工具
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 const DEFAULT_MANIFEST_URL = 'https://satoko-ashe.github.io/music/song_manifest.json';
 const KEY_USER = 'mp_user_v1';
 const KEY_PREF = 'mp_pref_v1';
@@ -750,8 +897,11 @@ const KEY_NP_COLLAPSE = 'mp_np_collapsed_v2';
 const KEY_SIDE_COLLAPSE = 'mp_side_collapsed_v2';
 const KEY_VOLUME = 'mp_volume_v1';
 const KEY_LYRIC_STYLE = 'mp_lyric_style_v1';
+<<<<<<< HEAD
 const KEY_CONFIG = 'mp_config_v2';
 const KEY_MANIFEST_CACHE = 'mp_manifest_cache_v2';
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -764,11 +914,14 @@ function fmtTime(sec){
   return m+':'+String(s).padStart(2,'0');
 }
 
+<<<<<<< HEAD
 /* 是否运行在 Tauri 里 */
 const T = (window.__TAURI__ && window.__TAURI__.core) || null;
 const WEB_MODE = !(T && typeof T.invoke === 'function');
 
 /* 桌面歌词窗口模式 */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 const IS_LYRIC_MODE = (()=>{
   try{
     if(window.__TAURI__ && window.__TAURI__.window && window.__TAURI__.window.getCurrentWindow){
@@ -785,6 +938,7 @@ if(IS_LYRIC_MODE){
   document.body.dataset.mode = 'lyric';
   document.body.setAttribute('data-view','list');
   document.documentElement.style.background = 'transparent';
+<<<<<<< HEAD
 }
 
 /* ============================================================
@@ -1068,6 +1222,55 @@ let currentPlaylist = [], currentId = null;
 let playMode = 'list', vocalMode = 'vocal', lyricScale = 1, playbackRate = 1.0;
 const RATE_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+=======
+}
+
+const T = (window.__TAURI__ && window.__TAURI__.core) || null;
+async function tInvoke(cmd, args){
+  if(!T || !T.invoke) throw new Error('Tauri 未就绪');
+  return T.invoke(cmd, args||{});
+}
+function toPlayUrl(p){
+  if(!p) return '';
+  if(/^(https?:|blob:|data:|asset:|file:)/i.test(p)) return p;
+  try{ if(T && T.convertFileSrc) return T.convertFileSrc(p); }catch(_){}
+  return p;
+}
+function resolveRemoteUrl(u){
+  if(!u) return '';
+  if(/^(https?:|blob:|data:)/i.test(u)) return u;
+  const base = appConfig.manifestUrl || DEFAULT_MANIFEST_URL;
+  try{
+    const b = base.replace(/[^/]*$/, '');
+    return new URL(u, b).href;
+  }catch(_){ return u; }
+}
+async function openExternal(url){
+  if(!url) return;
+  console.log('[openExternal]', url);
+  try{
+    if(window.__TAURI__ && window.__TAURI__.opener && window.__TAURI__.opener.openUrl){
+      await window.__TAURI__.opener.openUrl(url);
+      return;
+    }
+  }catch(e){ console.warn('opener.openUrl failed:', e); }
+  try{
+    if(window.__TAURI__ && window.__TAURI__.shell && window.__TAURI__.shell.open){
+      await window.__TAURI__.shell.open(url);
+      return;
+    }
+  }catch(e){ console.warn('shell.open failed:', e); }
+  try{ window.open(url, '_blank', 'noopener,noreferrer'); }catch(_){}
+}
+
+let appConfig = { musicRoot:'', manifestUrl:'', manifestVersion:'', lastSync:'' };
+let recommendSongs = [], localSongs = [], allSongs = [];
+let favSet = new Set(), historyList = [], pinnedSet = new Set(), orderMap = new Map();
+let currentPlaylist = [], currentId = null;
+let playMode = 'list', vocalMode = 'vocal', lyricScale = 1, playbackRate = 1.0;
+const RATE_STEPS = [0.5,0.75,1,1.25,1.5,2];
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 const state = {
   lines:[], lineEls:[], activeIndex:-1,
   userScrollUntil:0, scrollTimer:null, scrollRaf:0,
@@ -1079,6 +1282,7 @@ const state = {
   selectMode:false,
   selectedIds:new Set(),
   lyricStyle:{ alpha:0.9, textColor:'#ffffff', bgColor:'#101014' },
+<<<<<<< HEAD
   pairsShowAll:false,
   lyricLoading:false
 };
@@ -1086,6 +1290,11 @@ const state = {
 /* ============================================================
    DOM 引用
    ============================================================ */
+=======
+  pairsShowAll:false
+};
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 const gridWrap         = $('#gridWrap');
 const gridRecommend    = $('#gridRecommend');
 const gridLocal        = $('#gridLocal');
@@ -1136,6 +1345,7 @@ const adminModal       = $('#adminModal');
 const settingsModal    = $('#settingsModal');
 const toolboxPanel     = $('#toolboxPanel');
 
+<<<<<<< HEAD
 /* ============================================================
    音频元素
    ============================================================ */
@@ -1146,6 +1356,12 @@ try{
   audio.referrerPolicy = 'no-referrer';
   audio.crossOrigin = null;
 }catch(_){}
+=======
+const audio = new Audio();
+audio.preload = 'metadata';
+audio.playbackRate = 1;
+try{ audio.referrerPolicy='no-referrer'; }catch(_){}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 
 audio.addEventListener('play',()=>{ document.body.classList.add('playing'); renderAll(); renderSide(); });
 audio.addEventListener('pause',()=>{ document.body.classList.remove('playing'); renderAll(); renderSide(); });
@@ -1173,7 +1389,11 @@ audio.addEventListener('error',()=>{
     pbArtist.textContent = (isInst?'伴奏':'音频') + '链接失效，已提供蓝奏云下载';
     showDownloadDialog(song,isInst,lanzouUrl,lanzouPwd);
   }else{
+<<<<<<< HEAD
     pbArtist.textContent = '音频加载失败（链接失效或被防盗链拦截）';
+=======
+    pbArtist.textContent = '音频加载失败（本地文件缺失或链接失效）';
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }
 });
 
@@ -1221,7 +1441,11 @@ function showDownloadDialog(song,isInst,lanzouUrl,lanzouPwd){
       <h3>音频不可用 <button class="close-x">✕</button></h3>
       <p style="font-size:13px;color:var(--dim);line-height:1.8;margin:4px 0 8px">
         「${esc(song.title)}」的${isInst?'伴奏':'音频'}无法播放。<br>
+<<<<<<< HEAD
         可以通过蓝奏云下载后本地播放。
+=======
+        可以通过蓝奏云下载后放进本地文件夹再重新扫描导入。
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
       </p>
       ${lanzouPwd?`<div style="font-size:12px;color:var(--dim);padding:9px 12px;background:rgba(255,255,255,.05);border-radius:8px">提取码：<b style="color:#fff;letter-spacing:1px">${esc(lanzouPwd)}</b></div>`:''}
       <div class="row" style="justify-content:flex-end;margin-top:6px">
@@ -1238,7 +1462,11 @@ function showDownloadDialog(song,isInst,lanzouUrl,lanzouPwd){
     if(lanzouPwd && navigator.clipboard){
       try{ await navigator.clipboard.writeText(lanzouPwd); showToast('提取码已复制'); }catch(_){}
     }
+<<<<<<< HEAD
     openExternal(lanzouUrl);
+=======
+    await openExternal(lanzouUrl);
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
     close();
   };
 }
@@ -1254,9 +1482,12 @@ function openLanzouManual(){
   showDownloadDialog(song,isInst,lanzouUrl,lanzouPwd);
 }
 
+<<<<<<< HEAD
 /* ============================================================
    本地持久化
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 function persistUser(){
   try{
     const data = { fav:[...favSet], history:historyList.slice(0,200), pinned:[...pinnedSet], order:{} };
@@ -1300,9 +1531,12 @@ function loadPref(){
   }catch(_){}
 }
 
+<<<<<<< HEAD
 /* ============================================================
    歌词样式
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 function hexToRgb(hex){
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return m ? {r:parseInt(m[1],16), g:parseInt(m[2],16), b:parseInt(m[3],16)} : null;
@@ -1332,6 +1566,7 @@ function applyLyricStyle(){
   const bc = $('#dlBgColor'); if(bc) bc.value = st.bgColor;
 }
 
+<<<<<<< HEAD
 /* ============================================================
    歌词解析（SRT / LRC）
    ============================================================ */
@@ -1441,6 +1676,8 @@ async function fetchLyricsFor(song){
 /* ============================================================
    数据加载 & 渲染
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 async function loadAllFromDb(){
   let songs = [];
   try{ songs = await tInvoke('list_songs') || []; }
@@ -1772,6 +2009,10 @@ $('#btnExportSel').addEventListener('click', async ()=>{
   try{
     const path = await tInvoke('export_manifest', { json, filename: null });
     showToast('已导出: ' + path);
+<<<<<<< HEAD
+=======
+    try{ await tInvoke('open_music_folder', {}); }catch(_){}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }catch(e){
     const blob = new Blob([json], { type:'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -1941,7 +2182,11 @@ function openCardMenu(anchor,song){
     else if(m==='lz'){ closeCardMenu(); playFrom(currentPlaylist.length?currentPlaylist:[song.id], song.id); setTimeout(openLanzouManual,100); return; }
     else if(m==='edit'){ closeCardMenu(); openEditModal(song); return; }
     else if(m==='del'){
+<<<<<<< HEAD
       if(confirm(`从本地曲库移除「${song.title||'未命名'}」？\n（网页版导入的歌曲仅本次会话有效）`)){
+=======
+      if(confirm(`从本地曲库移除「${song.title||'未命名'}」？\n（磁盘上的音频文件不会删除）`)){
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
         try{
           await tInvoke('delete_song',{ id:song.id });
           favSet.delete(song.id); pinnedSet.delete(song.id); orderMap.delete(song.id);
@@ -1955,7 +2200,10 @@ function openCardMenu(anchor,song){
             document.body.dataset.view = 'list';
           }
           await loadAllFromDb();
+<<<<<<< HEAD
           updateWebImportUI();
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
         }catch(err){ alert('删除失败：'+err); }
       }
     }
@@ -1979,9 +2227,12 @@ function moveOrder(id,dir){
   persistUser();
 }
 
+<<<<<<< HEAD
 /* ============================================================
    播放器信息区
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 function setBigCover(src){
   if(src){
     bigCoverImg.src = src;
@@ -2058,18 +2309,25 @@ function renderNpInfo(song){
   updateFavPinUI();
 }
 
+<<<<<<< HEAD
 /* ============================================================
    歌词渲染
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 function renderLyrics(){
   lyricsInner.innerHTML = '';
   state.lineEls = [];
   state.activeIndex = -1;
   if(!state.lines.length){
     lyricEmpty.style.display = 'flex';
+<<<<<<< HEAD
     if(state.lyricLoading) lyricEmpty.innerHTML = '歌词加载中…';
     else if(audio.src) lyricEmpty.innerHTML = '这首歌暂无歌词<br>可在 song_manifest.json 的 <code>lyric</code> 字段填入 .srt / .lrc 地址';
     else lyricEmpty.innerHTML = '从榜单选择一首歌曲开始播放';
+=======
+    lyricEmpty.innerHTML = audio.src ? '这首歌暂无歌词<br>把同名 .srt / .lrc 放进 lyrics/ 文件夹后重新扫描' : '从榜单选择一首歌曲开始播放';
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
     updatePanePadding();
     return;
   }
@@ -2189,6 +2447,7 @@ if(lyricsPane){
   lyricsPane.addEventListener('wheel',markUserScroll,{passive:true});
   lyricsPane.addEventListener('touchmove',markUserScroll,{passive:true});
 }
+<<<<<<< HEAD
 async function loadLyricsFromSong(song){
   state.lines = [];
   state.lyricLoading = false;
@@ -2206,6 +2465,12 @@ async function loadLyricsFromSong(song){
   renderLyrics();
   if(state.lines.length) setActive(findIndex(audio.currentTime), true);
   updateDeskLyric();
+=======
+function loadLyricsFromSong(song){
+  state.lines = (song && Array.isArray(song.lyricLines)) ? song.lyricLines : [];
+  renderLyrics();
+  if(state.lines.length) setActive(findIndex(audio.currentTime), true);
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 }
 function resetLyrics(){
   if(!state.lineEls.length)return;
@@ -2221,9 +2486,12 @@ function resetLyrics(){
   updateDeskLyric();
 }
 
+<<<<<<< HEAD
 /* ============================================================
    播放控制
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 async function playFrom(playlistIds,songId){
   currentPlaylist = playlistIds.slice();
   await playSong(songId);
@@ -2261,6 +2529,10 @@ async function playSong(id){
   audio.load();
   audio.play().catch(()=>{});
   loadLyricsFromSong(song);
+<<<<<<< HEAD
+=======
+  updateDeskLyric();
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 }
 function getPlaylist(){
   if(currentPlaylist.includes(currentId)) return currentPlaylist;
@@ -2518,6 +2790,7 @@ $('#lyricPlus').addEventListener('click',()=>setLyricScale(lyricScale+0.1));
 $('#btnToolbox').addEventListener('click',e=>{
   e.stopPropagation();
   toolboxPanel.hidden = !toolboxPanel.hidden;
+<<<<<<< HEAD
 });
 document.addEventListener('click',e=>{
   if(toolboxPanel.hidden)return;
@@ -2536,12 +2809,51 @@ toolboxPanel.addEventListener('click', e=>{
    桌面歌词
    ============================================================ */
 function computeDeskText(){
+=======
+});
+document.addEventListener('click',e=>{
+  if(toolboxPanel.hidden)return;
+  if(e.target.closest('.toolbox-panel')||e.target.closest('#btnToolbox'))return;
+  toolboxPanel.hidden = true;
+});
+toolboxPanel.addEventListener('click', e=>{
+  const a = e.target.closest('a[data-ext]');
+  if(!a) return;
+  e.preventDefault();
+  const url = a.getAttribute('href');
+  openExternal(url);
+  toolboxPanel.hidden = true;
+});
+
+$('#btnDesk').addEventListener('click', async ()=>{
+  state.deskOn = !state.deskOn;
+  $('#btnDesk').classList.toggle('on', state.deskOn);
+  try{
+    if(state.deskOn){
+      await tInvoke('show_lyric_window');
+      setTimeout(()=>{
+        updateDeskLyric();
+        tInvoke('push_lyric_font',{ font:state.dlFont }).catch(()=>{});
+      }, 400);
+    }else{
+      await tInvoke('hide_lyric_window');
+    }
+  }catch(e){ console.warn('lyric window failed:', e); }
+  persistPref();
+});
+
+function updateDeskLyric(){
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   let m = '♪ 桌面歌词', s = '';
   const cur  = state.lines[state.activeIndex];
   const next = state.lines[state.activeIndex+1];
   if(!state.lines.length){
     m = '♪ 桌面歌词';
+<<<<<<< HEAD
     s = audio.src ? (state.lyricLoading ? '歌词加载中…' : '这首歌暂无歌词') : '还没有播放歌曲';
+=======
+    s = audio.src ? '这首歌暂无歌词' : '还没有播放歌曲';
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }else if(!cur){
     m = '♪';
     s = next ? (next.text||next.trans||'') : '';
@@ -2549,14 +2861,18 @@ function computeDeskText(){
     m = cur.text || cur.trans || '♪';
     s = (cur.trans && cur.text) ? cur.trans : (next ? (next.text||next.trans||'') : '');
   }
+<<<<<<< HEAD
   return { m, s };
 }
 function updateDeskLyric(){
   const { m, s } = computeDeskText();
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   if(IS_LYRIC_MODE){
     dlMain.textContent = m;
     dlSub.textContent  = s;
   }else if(state.deskOn){
+<<<<<<< HEAD
     bcPost({ type:'lyric', main:m, sub:s });
   }
 }
@@ -2578,6 +2894,12 @@ $('#btnDesk').addEventListener('click', async ()=>{
   persistPref();
 });
 
+=======
+    tInvoke('push_lyric',{ main:m, sub:s }).catch(()=>{});
+  }
+}
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 let dlDrag = null;
 if(!IS_LYRIC_MODE){
   deskLyric.addEventListener('pointerdown',e=>{
@@ -2623,11 +2945,16 @@ if(!IS_LYRIC_MODE){
 }
 $('#dlClose').addEventListener('click', async ()=>{
   state.deskOn = false;
+<<<<<<< HEAD
   $('#btnDesk') && $('#btnDesk').classList.remove('on');
   if(IS_LYRIC_MODE){
     bcPost({ type:'closed' });
     try{ window.close(); }catch(_){}
   }else{
+=======
+  $('#btnDesk')?.classList.remove('on');
+  if(IS_LYRIC_MODE){
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
     try{ await tInvoke('hide_lyric_window'); }catch(_){}
   }
   persistPref();
@@ -2642,7 +2969,11 @@ $('#dlMinus').addEventListener('click',()=>{
   state.dlFont = Math.max(16, state.dlFont-2);
   applyDlFont();
   if(!IS_LYRIC_MODE){
+<<<<<<< HEAD
     bcPost({ type:'font', font: state.dlFont });
+=======
+    tInvoke('push_lyric_font',{ font:state.dlFont }).catch(()=>{});
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }else{
     resizeLyricWindow();
   }
@@ -2652,7 +2983,11 @@ $('#dlPlus').addEventListener('click',()=>{
   state.dlFont = Math.min(52, state.dlFont+2);
   applyDlFont();
   if(!IS_LYRIC_MODE){
+<<<<<<< HEAD
     bcPost({ type:'font', font: state.dlFont });
+=======
+    tInvoke('push_lyric_font',{ font:state.dlFont }).catch(()=>{});
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }else{
     resizeLyricWindow();
   }
@@ -2694,7 +3029,11 @@ $('#dlResetStyle').addEventListener('click', ()=>{
 });
 
 async function resizeLyricWindow(){
+<<<<<<< HEAD
   if(!IS_LYRIC_MODE || WEB_MODE) return;
+=======
+  if(!IS_LYRIC_MODE) return;
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   try{
     const W = window.__TAURI__.window;
     const win = W.getCurrentWindow();
@@ -2712,11 +3051,16 @@ async function resizeLyricWindow(){
   }catch(e){ console.warn('resize lyric failed:', e); }
 }
 
+<<<<<<< HEAD
 /* ============================================================
    设置弹窗
    ============================================================ */
 function openSettings(){
   $('#setMusicRoot').value = appConfig.manifestUrl || DEFAULT_MANIFEST_URL;
+=======
+function openSettings(){
+  $('#setMusicRoot').value = appConfig.musicRoot || '';
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
   $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
   $('#syncDot').classList.toggle('off', !appConfig.manifestVersion);
@@ -2724,17 +3068,30 @@ function openSettings(){
 }
 $('#btnSettings').addEventListener('click',openSettings);
 $('#btnSaveSettings').addEventListener('click', async ()=>{
+<<<<<<< HEAD
   const url = $('#setMusicRoot').value.trim();
   try{
     await tInvoke('set_config',{ key:'manifest_url', value:url || DEFAULT_MANIFEST_URL });
     await refreshConfig();
     settingsModal.hidden = true;
     showToast('已保存，点「立即同步」生效');
+=======
+  const root = $('#setMusicRoot').value.trim();
+  try{
+    await tInvoke('set_config',{ key:'music_root', value:root });
+    await refreshConfig();
+    settingsModal.hidden = true;
+    showToast('已保存');
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   }catch(e){ alert('保存失败：'+e); }
 });
 
 $('#btnResetData').addEventListener('click', ()=>{
+<<<<<<< HEAD
   if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、设置、缓存索引等\n重置后页面会自动刷新\n\n（远程清单与已托管的音频文件不受影响）')) return;
+=======
+  if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、设置、缓存索引等\n重置后页面会自动刷新\n\n（D:\\MyMusic 里的音频文件不受影响）')) return;
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   try{ localStorage.clear(); }catch(_){}
   try{ sessionStorage.clear(); }catch(_){}
   try{
@@ -2746,7 +3103,11 @@ $('#btnResetData').addEventListener('click', ()=>{
 });
 
 async function refreshConfig(){
+<<<<<<< HEAD
   try{ appConfig = Object.assign(appConfig, await tInvoke('get_config') || {}); }catch(_){}
+=======
+  try{ appConfig = await tInvoke('get_config') || appConfig; }catch(_){}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 }
 async function doSync(force){
   const btn = $('#btnSync');
@@ -2758,6 +3119,7 @@ async function doSync(force){
     return stat;
   }finally{ btn.classList.remove('spin'); }
 }
+<<<<<<< HEAD
 function afterSyncUI(stat){
   $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
   $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
@@ -2776,11 +3138,36 @@ $('#btnSync').addEventListener('click', async ()=>{
 /* ============================================================
    Toast
    ============================================================ */
+=======
+$('#btnSyncNow').addEventListener('click', async ()=>{
+  try{
+    const stat = await doSync(true);
+    $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
+    $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
+    $('#syncDot').classList.toggle('off', !appConfig.manifestVersion);
+    showToast(stat.skipped ? '远程清单已是最新' : `同步完成 · ${stat.message}`);
+  }catch(e){ alert('同步失败：'+e); }
+});
+$('#btnSync').addEventListener('click', async ()=>{
+  try{
+    const stat = await doSync(true);
+    $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
+    $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
+    $('#syncDot').classList.toggle('off', !appConfig.manifestVersion);
+    showToast(stat.skipped ? '远程清单已是最新' : `同步完成 · ${stat.message}`);
+  }catch(e){ alert('同步失败：'+e); }
+});
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 let toastEl = null, toastTimer = null;
 function showToast(msg){
   if(!toastEl){
     toastEl = document.createElement('div');
+<<<<<<< HEAD
     toastEl.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);padding:10px 18px;border-radius:10px;background:rgba(30,30,40,.95);color:#fff;font-size:13px;z-index:2000;box-shadow:0 12px 30px -8px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.1);transition:opacity .25s,transform .25s;pointer-events:none;max-width:80vw;text-align:center';
+=======
+    toastEl.style.cssText = `position:fixed;left:50%;bottom:96px;transform:translateX(-50%);padding:10px 18px;border-radius:10px;background:rgba(30,30,40,.95);color:#fff;font-size:13px;z-index:2000;box-shadow:0 12px 30px -8px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.1);transition:opacity .25s,transform .25s;pointer-events:none`;
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
     document.body.appendChild(toastEl);
   }
   toastEl.textContent = msg;
@@ -2791,6 +3178,7 @@ function showToast(msg){
     toastEl.style.opacity = '0';
     toastEl.style.transform = 'translateX(-50%) translateY(8px)';
   }, 2400);
+<<<<<<< HEAD
 }
 document.addEventListener('click',e=>{
   const id = e.target.dataset && e.target.dataset.close;
@@ -2830,8 +3218,15 @@ function groupLocalFiles(files){
     }
   }
   return [...map.values()].filter(g=>g.audio || g.inst);
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 }
+document.addEventListener('click',e=>{
+  const id = e.target.dataset && e.target.dataset.close;
+  if(id){ const m = document.getElementById(id); if(m) m.hidden = true; }
+});
 
+<<<<<<< HEAD
 async function buildLocalSong(g){
   const audioUrl = g.audio ? URL.createObjectURL(g.audio) : '';
   const instUrl  = g.inst  ? URL.createObjectURL(g.inst)  : '';
@@ -3090,11 +3485,125 @@ if(btnClearLocalOld && !WEB_MODE){
 /* ============================================================
    编辑本地歌曲（网页版不可用）
    ============================================================ */
+=======
+let pendingPairs = [];
+$('#btnAdmin').addEventListener('click', async ()=>{
+  adminModal.hidden = false;
+  await refreshScanner();
+});
+$('#btnRescan').addEventListener('click', refreshScanner);
+$$('#adminModal .folder-box').forEach(box=>{
+  box.addEventListener('click', async ()=>{
+    try{ await tInvoke('open_music_folder', { sub: box.dataset.open }); }
+    catch(e){ alert('打开失败：'+e); }
+  });
+});
+$('#btnOpenRoot').addEventListener('click', async ()=>{
+  try{ await tInvoke('open_music_folder', {}); }
+  catch(e){ alert('打开失败：'+e); }
+});
+async function refreshScanner(){
+  const box = $('#pairList');
+  box.innerHTML = `<div style="text-align:center;color:#666;padding:32px 0;font-size:12.5px">正在扫描…</div>`;
+  $('#pairCount').textContent = '…';
+  try{
+    const matches = await tInvoke('scan_local');
+    pendingPairs = matches || [];
+    state.pairsShowAll = false;
+    renderPairs();
+  }catch(e){
+    pendingPairs = [];
+    $('#pairCount').textContent = '0';
+    box.innerHTML = `<div style="text-align:center;color:#ff8080;padding:32px 0;font-size:12.5px;line-height:1.8">扫描失败：${esc(e)}<br>请先在设置里确认「本地音乐根目录」有效</div>`;
+  }
+}
+const PAIRS_PAGE_SIZE = 15;
+function renderPairs(){
+  const box = $('#pairList');
+  $('#pairCount').textContent = pendingPairs.length;
+  box.innerHTML = '';
+  if(!pendingPairs.length){
+    box.innerHTML = `<div style="text-align:center;color:#666;padding:32px 0;font-size:12.5px;line-height:1.8">未在音乐根目录找到音频文件<br>把同名 .mp3 放进 <code style="color:#ff9aa9">audio/</code> 文件夹后点「重新扫描」<br><span style="color:#444">伴奏 instrumental/ · 封面 covers/ · 歌词 lyrics/</span></div>`;
+    return;
+  }
+  const showAll = state.pairsShowAll || pendingPairs.length <= PAIRS_PAGE_SIZE;
+  const list = showAll ? pendingPairs : pendingPairs.slice(0, PAIRS_PAGE_SIZE);
+  const frag = document.createDocumentFragment();
+  for(const m of list){
+    const badges = [];
+    badges.push(m.hasAudio ? '<span class="st ok">人声</span>' : '<span class="st err">缺人声</span>');
+    if(m.hasInst) badges.push('<span class="st ok">伴奏</span>');
+    if(m.hasCover) badges.push('<span class="st ok">封面</span>');
+    if(m.hasLyric){
+      const n = (m.lyricLines && m.lyricLines.length) || 0;
+      badges.push(`<span class="st ok">歌词 ${n} 行</span>`);
+    }
+    const card = document.createElement('div');
+    card.className = 'pair-card';
+    card.innerHTML = `
+      <div class="pair-head">
+        <div class="nm">${esc(m.title || m.key)}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>
+      </div>`;
+    frag.appendChild(card);
+  }
+  box.appendChild(frag);
+
+  if(!showAll){
+    const more = document.createElement('button');
+    more.className = 'more-btn';
+    more.textContent = `▼ 展开查看全部 ${pendingPairs.length} 首`;
+    more.addEventListener('click', ()=>{
+      state.pairsShowAll = true;
+      renderPairs();
+    });
+    box.appendChild(more);
+  }else if(pendingPairs.length > PAIRS_PAGE_SIZE){
+    const collapse = document.createElement('button');
+    collapse.className = 'more-btn';
+    collapse.textContent = `▲ 收起（共 ${pendingPairs.length} 首）`;
+    collapse.addEventListener('click', ()=>{
+      state.pairsShowAll = false;
+      renderPairs();
+      box.scrollTop = 0;
+    });
+    box.appendChild(collapse);
+  }
+}
+$('#btnImportAll').addEventListener('click', async ()=>{
+  if(!pendingPairs.length){ alert('没有可导入的曲目'); return; }
+  try{
+    const n = await tInvoke('import_local', { matches: pendingPairs });
+    await loadAllFromDb();
+    adminModal.hidden = true;
+    showToast(`已导入 ${n} 首到本地曲库`);
+  }catch(e){ alert('导入失败：'+e); }
+});
+$('#btnClearLocal').addEventListener('click', async ()=>{
+  const localCount = allSongs.filter(s=>s.source==='local').length;
+  if(!localCount){ alert('本地曲库已经是空的'); return; }
+  if(!confirm(`清空所有本地 DIY 歌曲（${localCount} 首）？\n（磁盘上的音频文件不会被删除）`))return;
+  try{
+    const locals = allSongs.filter(s=>s.source==='local');
+    for(const s of locals){
+      await tInvoke('delete_song',{ id:s.id });
+      favSet.delete(s.id); pinnedSet.delete(s.id); orderMap.delete(s.id);
+    }
+    historyList = historyList.filter(h=>getSongById(h.id));
+    persistUser();
+    await loadAllFromDb();
+    await refreshScanner();
+    showToast('本地曲库已清空');
+  }catch(e){ alert('清空失败：'+e); }
+});
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 function openEditModal(song){
   if(song.source!=='local'){
     showToast('仅本地 DIY 音乐可编辑');
     return;
   }
+<<<<<<< HEAD
   if(WEB_MODE){
     const m = document.createElement('div');
     m.className = 'modal';
@@ -3113,6 +3622,8 @@ function openEditModal(song){
     return;
   }
 
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   const m = document.createElement('div');
   m.className = 'modal';
   m.innerHTML = `
@@ -3124,28 +3635,51 @@ function openEditModal(song){
       </h3>
       <div class="edit-hint">
         <b>提示</b>
+<<<<<<< HEAD
         修改音频 / 封面 / 歌词 的路径或 URL 时，可填本地文件绝对路径，也可填网络直链。
+=======
+        修改音频 / 封面 / 歌词 的路径或 URL 时，可填本地文件绝对路径（如 <code style="color:#ff9aa9">D:/MyMusic/audio/xxx.mp3</code>），也可填网络直链。
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
       </div>
       <div class="pair-scroll" style="max-height:60vh">
         <div class="pair-fields">
           <label style="grid-column:1/-1">歌曲名<input type="text" data-f="title" value="${esc(song.title||'')}"></label>
+<<<<<<< HEAD
           <label>演唱者<input type="text" data-f="coverArtist" value="${esc(song.coverArtist||'')}"></label>
+=======
+          <label>演唱者<input type="text" data-f="coverArtist" value="${esc(song.coverArtist||'')}" placeholder="演唱/翻唱者"></label>
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
           <label>原唱者<input type="text" data-f="originalArtist" value="${esc(song.originalArtist||'')}"></label>
           <label>原歌曲名<input type="text" data-f="originalTitle" value="${esc(song.originalTitle||'')}"></label>
           <label>作词人<input type="text" data-f="lyricist" value="${esc(song.lyricist||'')}"></label>
           <label>作曲人<input type="text" data-f="composer" value="${esc(song.composer||'')}"></label>
+<<<<<<< HEAD
           <label style="grid-column:1/-1">标签（逗号分隔）<input type="text" data-f="tags" value="${esc((song.tags||[]).join(', '))}"></label>
           <label style="grid-column:1/-1">MV 链接<input type="text" data-f="mvUrl" value="${esc(song.mvUrl||'')}"></label>
           <label style="grid-column:1/-1">简介<textarea data-f="intro" style="min-height:60px">${esc(song.intro||'')}</textarea></label>
+=======
+          <label style="grid-column:1/-1">标签（逗号分隔）<input type="text" data-f="tags" value="${esc((song.tags||[]).join(', '))}" placeholder="潮州话, 翻唱, 片尾曲"></label>
+          <label style="grid-column:1/-1">MV 链接<input type="text" data-f="mvUrl" value="${esc(song.mvUrl||'')}" placeholder="https://... 点 MV 按钮直接打开"></label>
+          <label style="grid-column:1/-1">简介<textarea data-f="intro" style="min-height:60px">${esc(song.intro||'')}</textarea></label>
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
           <label style="grid-column:1/-1;margin-top:6px;color:var(--accent);font-weight:600">─── 文件路径或直链 ───</label>
           <label style="grid-column:1/-1">人声音频<input type="text" data-f="audio" value="${esc(song.audio||'')}"></label>
           <label style="grid-column:1/-1">伴奏音频<input type="text" data-f="instrumental" value="${esc(song.instrumental||'')}"></label>
           <label style="grid-column:1/-1">封面图片<input type="text" data-f="cover" value="${esc(song.cover||'')}"></label>
           <label style="grid-column:1/-1">歌词文件（.srt / .lrc）<input type="text" data-f="lyric" value="${esc(song.lyric||'')}"></label>
+<<<<<<< HEAD
           <label style="grid-column:1/-1;margin-top:6px;color:#a78bfa;font-weight:600">─── 蓝奏云下载兜底（可选） ───</label>
           <label style="grid-column:1/-1">人声 蓝奏云链接<input type="text" data-f="audioLanzouUrl" value="${esc(song.audioLanzouUrl||'')}"></label>
           <label>人声 提取码<input type="text" data-f="audioLanzouPwd" value="${esc(song.audioLanzouPwd||'')}"></label>
           <label style="grid-column:1/-1">伴奏 蓝奏云链接<input type="text" data-f="instrumentalLanzouUrl" value="${esc(song.instrumentalLanzouUrl||'')}"></label>
+=======
+
+          <label style="grid-column:1/-1;margin-top:6px;color:#a78bfa;font-weight:600">─── 蓝奏云下载兜底（可选） ───</label>
+          <label style="grid-column:1/-1">人声 蓝奏云链接<input type="text" data-f="audioLanzouUrl" value="${esc(song.audioLanzouUrl||'')}" placeholder="https://..."></label>
+          <label>人声 提取码<input type="text" data-f="audioLanzouPwd" value="${esc(song.audioLanzouPwd||'')}"></label>
+          <label style="grid-column:1/-1">伴奏 蓝奏云链接<input type="text" data-f="instrumentalLanzouUrl" value="${esc(song.instrumentalLanzouUrl||'')}" placeholder="https://..."></label>
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
           <label>伴奏 提取码<input type="text" data-f="instrumentalLanzouPwd" value="${esc(song.instrumentalLanzouPwd||'')}"></label>
         </div>
       </div>
@@ -3177,9 +3711,12 @@ function openEditModal(song){
   });
 }
 
+<<<<<<< HEAD
 /* ============================================================
    音量
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 let lastVolume = 1;
 function applyVolume(v){
   v = Math.max(0, Math.min(1, v));
@@ -3221,9 +3758,12 @@ $('#volSlider').addEventListener('dblclick', ()=>{
   lastVolume = 1;
 });
 
+<<<<<<< HEAD
 /* ============================================================
    启动
    ============================================================ */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 async function init(){
   try{
     const v = parseFloat(localStorage.getItem(KEY_VOLUME));
@@ -3232,7 +3772,10 @@ async function init(){
 
   loadLyricStyle();
 
+<<<<<<< HEAD
   /* ---------- 桌面歌词窗口 ---------- */
+=======
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   if(IS_LYRIC_MODE){
     loadPref();
     applyLyricStyle();
@@ -3242,6 +3785,7 @@ async function init(){
     const lockBtn = document.getElementById('dlLock');
     if(lockBtn) lockBtn.textContent = state.dlLocked ? '🔒' : '🔓';
     dlMain.textContent = '♪ 桌面歌词';
+<<<<<<< HEAD
     dlSub.textContent = '等待播放器推送…';
 
     const ch = getLyricChannel();
@@ -3268,6 +3812,25 @@ async function init(){
   }
 
   /* ---------- 主窗口 ---------- */
+=======
+    dlSub.textContent = '等待主窗口推送…';
+    try{
+      const { listen } = window.__TAURI__.event;
+      listen('lyric-update', ev=>{
+        const { main, sub } = ev.payload || {};
+        dlMain.textContent = main || '♪';
+        dlSub.textContent = sub || '';
+      });
+      listen('lyric-font', ev=>{
+        const n = Number(ev.payload) || 26;
+        state.dlFont = n;
+        applyDlFont();
+      });
+    }catch(e){ console.warn('lyric listen failed:', e); }
+    return;
+  }
+
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   initCollapse();
   loadPref();
   applyDlFont();
@@ -3283,11 +3846,18 @@ async function init(){
     b.classList.toggle('active', b.dataset.mode===vocalMode);
   });
   loadUser();
+<<<<<<< HEAD
   setupLyricBus();
   if(WEB_MODE) buildWebAdminModal();
 
   loadWebConfig();
   try{ await tInvoke('set_config',{ key:'manifest_url', value: appConfig.manifestUrl || DEFAULT_MANIFEST_URL }); }catch(_){}
+=======
+
+  try{
+    await tInvoke('set_config',{ key:'manifest_url', value: DEFAULT_MANIFEST_URL });
+  }catch(_){}
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
   await refreshConfig();
 
   renderTagbar();
@@ -3295,6 +3865,7 @@ async function init(){
   renderSide();
   await loadAllFromDb();
 
+<<<<<<< HEAD
   /* 自动同步一次远程清单 */
   try{
     const stat = await tInvoke('sync_remote',{ force:false });
@@ -3305,6 +3876,16 @@ async function init(){
     console.warn('[sync] failed:', e);
     showToast('远程清单同步失败，请检查网络或清单地址');
   }
+=======
+  try{
+    const stat = await tInvoke('sync_remote',{ force:false });
+    if(!stat.skipped){
+      await refreshConfig();
+      await loadAllFromDb();
+      showToast(`已同步远程清单 · ${stat.message}`);
+    }
+  }catch(e){ console.warn('[sync] failed:', e); }
+>>>>>>> d9dbd10a61bd7525cb741db0c0a2bc97fe5dec53
 
   requestAnimationFrame(loop);
   if(window.ResizeObserver && lyricsPane){
