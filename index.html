@@ -679,6 +679,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
     </div>
     <div class="row" style="justify-content:flex-end">
       <button class="ghost danger" id="btnResetData" title="清空本地数据并刷新">重置数据</button>
+      <button class="ghost" id="btnDownloadDesktop" title="下载 Windows 桌面版（提取码 2026）">💻 桌面版下载</button>
       <button class="ghost" id="btnSyncNow">立即同步</button>
       <button class="primary" id="btnSaveSettings">保存</button>
     </div>
@@ -2957,6 +2958,25 @@ $('#btnSaveSettings').addEventListener('click', async ()=>{
   await saveConfig();
   settingsModal.hidden = true;
   showToast('已保存，点「立即同步」生效');
+});
+$('#btnDownloadDesktop').addEventListener('click', async ()=>{
+  const url = 'https://wwbpm.lanzoue.com/ija5t4c31j0f';
+  const pwd = '2026';
+  if(pwd){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      try{
+        await navigator.clipboard.writeText(pwd);
+        showToast('提取码 ' + pwd + ' 已复制，正在打开下载页…');
+      }catch(_){
+        showToast('提取码：' + pwd);
+      }
+    }else{
+      showToast('提取码：' + pwd);
+    }
+  }else{
+    showToast('正在打开下载页…');
+  }
+  openExternal(url);
 });
 $('#btnResetData').addEventListener('click', async ()=>{
   if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、本地曲库、设置等\n重置后页面会自动刷新')) return;
