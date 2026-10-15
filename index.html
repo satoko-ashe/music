@@ -146,7 +146,7 @@ body[data-view="player"] .pane-player{display:flex}
 .empty b{color:var(--dim);font-size:15px;display:block;margin-bottom:8px}
 .pane-player{display:flex;background:radial-gradient(900px 500px at 30% 0%,rgba(236,65,65,.08),transparent 60%),radial-gradient(700px 400px at 80% 100%,rgba(111,200,255,.05),transparent 60%)}
 .np-left{flex:0 0 380px;padding:30px;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--line);transition:flex-basis .25s,width .25s,padding .25s,opacity .2s}
-.np-right{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.np-right{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .np-right-head{flex:0 0 auto;padding:14px 26px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(0,0,0,.18);gap:10px}
 .np-right-head .lbl{font-size:12.5px;color:var(--dim);font-weight:600;letter-spacing:.5px;display:flex;align-items:center;gap:7px}
 .np-right-head .lbl::before{content:"";width:3px;height:13px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--accent2))}
@@ -188,6 +188,18 @@ body.np-collapsed .np-left{flex:0 0 0;width:0;padding:0;border-right:none;overfl
 .line.active .trans{color:#d4d4e0;text-shadow:0 0 16px rgba(255,255,255,.25)}
 .line.active{background:radial-gradient(ellipse 70% 90% at 50% 50%,rgba(236,65,65,.09) 0%,transparent 70%)}
 .lyric-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--dimmer);font-size:13px;text-align:center;padding:20px;line-height:2}
+.mv-pane{position:absolute;inset:0;display:flex;flex-direction:column;background:#000;z-index:5}
+.mv-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(0,0,0,.75);border-bottom:1px solid var(--line)}
+.mv-title{font-size:12.5px;font-weight:600;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.mv-hint{font-size:11px;color:var(--dimmer);white-space:nowrap;flex-shrink:0}
+.mv-open{padding:5px 11px;border-radius:7px;background:rgba(111,200,255,.15);border:1px solid rgba(111,200,255,.4);color:#9adcff;font-size:11.5px;transition:.15s;flex-shrink:0;cursor:pointer}
+.mv-open:hover{background:rgba(111,200,255,.28);color:#fff}
+.mv-close{padding:5px 11px;border-radius:7px;background:rgba(236,65,65,.15);border:1px solid rgba(236,65,65,.4);color:#ff8080;font-size:11.5px;transition:.15s;flex-shrink:0;cursor:pointer}
+.mv-close:hover{background:rgba(236,65,65,.3);color:#fff}
+.mv-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#000;position:relative}
+.mv-body iframe{width:100%;height:100%;border:none;background:#000}
+.mv-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--dim);font-size:13px;pointer-events:none}
+.mv-loading .sp{width:26px;height:26px;border:2.5px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin 0.9s linear infinite}
 .side-panel{flex:0 0 300px;width:300px;display:flex;flex-direction:column;border-left:1px solid var(--line);background:rgba(0,0,0,.22);overflow:hidden;transition:width .25s,flex-basis .25s,opacity .2s}
 body.side-collapsed .side-panel{flex:0 0 0;width:0;border-left:none;opacity:0;pointer-events:none}
 .side-head{flex:0 0 auto;padding:14px 14px 10px;border-bottom:1px solid var(--line)}
@@ -261,6 +273,16 @@ body.playing .play-btn .i-pause{display:block}
 .track-switch button:hover{color:#fff}
 .track-switch button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .track-switch button:disabled{opacity:.3;cursor:not-allowed}
+.track-switch button[data-mode="karaoke"].active{background:linear-gradient(135deg,#f0932b,#ffbe76)}
+/* ★ 唱K 人声比例调节器 */
+.karaoke-vol{display:flex;align-items:center;gap:6px;padding:0 8px;height:32px;background:rgba(240,147,43,.12);border:1px solid rgba(240,147,43,.35);border-radius:9px;flex-shrink:0}
+.karaoke-vol[hidden]{display:none!important}
+.kv-label{font-size:11px;color:#f0932b;font-weight:600;white-space:nowrap}
+.kv-val{font-size:11px;color:#ffbe76;font-weight:700;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;cursor:pointer;user-select:none}
+.kv-val:hover{color:#fff}
+.karaoke-vol input[type="range"]{-webkit-appearance:none;appearance:none;width:80px;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer}
+.karaoke-vol input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#f0932b;cursor:pointer;box-shadow:0 0 6px rgba(240,147,43,.8)}
+.karaoke-vol input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f0932b;cursor:pointer;border:none}
 .speed-btn{width:auto;min-width:44px;padding:0 10px;border-radius:9px;height:32px;font-size:11.5px;font-weight:700;color:#c7c7d2;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
 .speed-btn:hover{background:rgba(255,255,255,.08);color:#fff}
 .speed-btn.changed{color:var(--accent)}
@@ -410,6 +432,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .play-btn svg{width:18px;height:18px}
   .pb-right{gap:3px;flex:0 0 auto}
   .track-switch{display:none}
+  .karaoke-vol{display:none!important}
   .pb-right .ctrl:nth-child(n+4){display:none}
   .speed-btn{min-width:38px;padding:0 7px;font-size:11px}
   .desk-lyric{bottom:100px;padding:12px 16px 14px;border-radius:12px}
@@ -417,6 +440,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .dl-sub{font-size:12px}
   .modal{padding:10px}
   .modal-card{padding:16px;border-radius:14px}
+  .mv-hint{display:none}
   body[data-mode="lyric"] .dl-settings{width:260px}
 }
 @media(max-width:400px){
@@ -528,6 +552,23 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
             <div class="lyrics-inner" id="lyricsInner"></div>
           </div>
           <div class="lyric-empty" id="lyricEmpty">从榜单选择一首歌曲开始播放</div>
+
+          <div class="mv-pane" id="mvPane" hidden>
+            <div class="mv-head">
+              <span class="mv-title" id="mvTitle">MV</span>
+              <span class="mv-hint">音乐已暂停 · 想听伴奏请点下方「伴奏」</span>
+              <button class="mv-open" id="mvOpenTab" type="button" title="在新标签页打开">↗ 新标签页</button>
+              <button class="mv-close" id="mvClose" type="button" title="关闭，返回歌词">✕ 关闭</button>
+            </div>
+            <div class="mv-body">
+              <iframe id="mvFrame" src="" frameborder="0" scrolling="no" allowfullscreen="true"
+                      allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"></iframe>
+              <div class="mv-loading" id="mvLoading">
+                <div class="sp"></div>
+                <span>MV 加载中…</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -586,8 +627,14 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
       </div>
       <div class="pb-right">
         <div class="track-switch" id="trackSwitch">
-          <button data-mode="vocal" class="active">人声</button>
-          <button data-mode="inst">伴奏</button>
+          <button data-mode="vocal" class="active" title="只播放人声">人声</button>
+          <button data-mode="inst" title="只播放伴奏">伴奏</button>
+          <button data-mode="karaoke" title="唱K：伴奏 + 弱人声（原唱跟唱）">唱K</button>
+        </div>
+        <div class="karaoke-vol" id="karaokeVol" hidden title="调节唱K时人声的比例（双击数字重置为25%）">
+          <span class="kv-label">人声</span>
+          <input type="range" id="karaokeSlider" min="0" max="100" value="25">
+          <span class="kv-val" id="karaokeVal">25%</span>
         </div>
         <button class="speed-btn" id="btnSpeed" title="倍速播放">1.0x</button>
         <button class="ctrl" id="btnMode" title="播放模式">
@@ -635,7 +682,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   <div class="dl-sub" id="dlSub"></div>
 </div>
 
-<!-- 本地导入弹窗 -->
 <div class="modal" id="adminModal" hidden>
   <div class="modal-bg" data-close="adminModal"></div>
   <div class="modal-card wide">
@@ -664,7 +710,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   </div>
 </div>
 
-<!-- 设置弹窗 -->
 <div class="modal" id="settingsModal" hidden>
   <div class="modal-bg" data-close="settingsModal"></div>
   <div class="modal-card">
@@ -713,20 +758,20 @@ function fmtTime(sec){
 }
 function stripExt(n){ return String(n||'').replace(/\.[^.]+$/,''); }
 
-/* 稳定 hash：用于生成"不会因导入次数改变"的 ID */
 function djb2(str){
   let h = 5381;
   const s = String(str);
-  for(let i = 0; i < s.length; i++){
-    h = ((h << 5) + h + s.charCodeAt(i)) | 0;
-  }
+  for(let i = 0; i < s.length; i++){ h = ((h << 5) + h + s.charCodeAt(i)) | 0; }
   return Math.abs(h);
 }
 function makeStableId(g){
-  const key = (g.audio && g.audio.relPath)
-           || (g.inst && g.inst.relPath)
-           || (g.title || g.key || '');
+  const key = (g.audio && g.audio.relPath) || (g.inst && g.inst.relPath) || (g.title || g.key || '');
   return 'local_' + djb2(key).toString(36);
+}
+function extractBvid(url){
+  if(!url) return '';
+  const m = String(url).match(/\/video\/(BV[0-9A-Za-z]+)/i);
+  return m ? m[1] : '';
 }
 
 const IS_LYRIC_MODE = (()=>{
@@ -773,7 +818,6 @@ async function idbGet(store, key){
     r.onerror  = ()=>rej(r.error);
   });
 }
-/* store 有 keyPath → 只传对象；store 无 keyPath → 传 value, key */
 async function idbPut(store, keyOrValue, value){
   const db = await openDB();
   return new Promise((res, rej)=>{
@@ -816,13 +860,9 @@ async function idbClear(store){
    文件系统访问层
    ============================================================ */
 async function getRootHandle(){
-  try{ return await idbGet('kv', 'rootHandle'); }
-  catch(_){ return null; }
+  try{ return await idbGet('kv', 'rootHandle'); }catch(_){ return null; }
 }
-async function saveRootHandle(h){
-  return idbPut('kv', 'rootHandle', h);
-}
-/* 会弹窗请求权限（用户主动操作时调用） */
+async function saveRootHandle(h){ return idbPut('kv', 'rootHandle', h); }
 async function ensureRootPermission(){
   const h = await getRootHandle();
   if(!h) return null;
@@ -832,11 +872,8 @@ async function ensureRootPermission(){
     perm = await h.requestPermission({ mode:'read' });
     if(perm === 'granted') return h;
     return null;
-  }catch(e){
-    return h;
-  }
+  }catch(_){ return h; }
 }
-/* 静默版：只在已授权时返回句柄，不弹窗 */
 async function ensureRootPermissionSilent(){
   const h = await getRootHandle();
   if(!h) return null;
@@ -846,7 +883,6 @@ async function ensureRootPermissionSilent(){
     return null;
   }catch(_){ return null; }
 }
-/* 写权限：会弹窗请求 */
 async function ensureRootWritePermission(){
   const h = await getRootHandle();
   if(!h) return null;
@@ -864,11 +900,7 @@ async function resolveFileByPath(relPath){
   const parts = String(relPath).split('/').filter(Boolean);
   let cur = root;
   for(let i=0;i<parts.length;i++){
-    if(i === parts.length - 1){
-      cur = await cur.getFileHandle(parts[i]);
-    }else{
-      cur = await cur.getDirectoryHandle(parts[i]);
-    }
+    cur = (i === parts.length - 1) ? await cur.getFileHandle(parts[i]) : await cur.getDirectoryHandle(parts[i]);
   }
   return cur.getFile();
 }
@@ -878,38 +910,26 @@ async function listDirEntries(dirHandle, basePath){
   try{
     if(typeof dirHandle.entries === 'function'){
       for await (const [name, entry] of dirHandle.entries()){
-        if(entry.kind === 'file'){
-          out.push({ name, relPath: basePath ? (basePath + '/' + name) : name, handle: entry });
-        }
-      }
-    }else if(typeof dirHandle.values === 'function'){
-      for await (const entry of dirHandle.values()){
-        if(entry.kind === 'file'){
-          out.push({ name: entry.name, relPath: basePath ? (basePath + '/' + entry.name) : entry.name, handle: entry });
-        }
+        if(entry.kind === 'file') out.push({ name, relPath: basePath ? (basePath + '/' + name) : name, handle: entry });
       }
     }
   }catch(e){ console.warn('[listDirEntries]', e); }
   return out;
 }
 async function getDirSafe(root, name){
-  try{ return await root.getDirectoryHandle(name); }
-  catch(_){ return null; }
+  try{ return await root.getDirectoryHandle(name); }catch(_){ return null; }
 }
-/* 从根目录读取 song_manifest.json */
 async function readManifestFromHandle(root){
   try{
     const fh = await root.getFileHandle('song_manifest.json');
     const file = await fh.getFile();
-    const text = await file.text();
-    return JSON.parse(text);
+    return JSON.parse(await file.text());
   }catch(e){
     if(e && e.name === 'NotFoundError') return null;
     console.warn('[manifest] read failed:', e);
     return null;
   }
 }
-/* 把 JSON 写入根目录 */
 async function writeManifestToRoot(json){
   const root = await ensureRootWritePermission();
   if(!root) return false;
@@ -919,10 +939,7 @@ async function writeManifestToRoot(json){
     await w.write(json);
     await w.close();
     return true;
-  }catch(e){
-    console.warn('[manifest] write failed:', e);
-    return false;
-  }
+  }catch(e){ console.warn('[manifest] write failed:', e); return false; }
 }
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|flac|ogg|oga|aac|opus|wma|webm)$/i;
@@ -934,42 +951,16 @@ async function scanFromHandle(rootHandle){
   const instDir  = await getDirSafe(rootHandle, 'instrumental');
   const coverDir = await getDirSafe(rootHandle, 'covers');
   const lyricDir = await getDirSafe(rootHandle, 'lyrics');
-
   const audioFiles = await listDirEntries(audioDir, 'audio');
   const instFiles  = await listDirEntries(instDir,  'instrumental');
   const coverFiles = await listDirEntries(coverDir, 'covers');
   const lyricFiles = await listDirEntries(lyricDir, 'lyrics');
-
   const map = new Map();
-  const get = (base, title)=>{
-    if(!map.has(base)) map.set(base, { key:base, title: title || base });
-    return map.get(base);
-  };
-
-  for(const f of audioFiles){
-    if(!AUDIO_EXT.test(f.name)) continue;
-    const base = stripExt(f.name);
-    const g = get(base);
-    if(!g.audio) g.audio = f;
-  }
-  for(const f of instFiles){
-    if(!AUDIO_EXT.test(f.name)) continue;
-    const base = stripExt(f.name);
-    const g = get(base);
-    if(!g.inst) g.inst = f;
-  }
-  for(const f of coverFiles){
-    if(!IMG_EXT.test(f.name)) continue;
-    const base = stripExt(f.name);
-    const g = get(base);
-    if(!g.cover) g.cover = f;
-  }
-  for(const f of lyricFiles){
-    if(!LYR_EXT.test(f.name)) continue;
-    const base = stripExt(f.name);
-    const g = get(base);
-    if(!g.lyric) g.lyric = f;
-  }
+  const get = (base)=>{ if(!map.has(base)) map.set(base, { key:base, title:base }); return map.get(base); };
+  for(const f of audioFiles){ if(!AUDIO_EXT.test(f.name)) continue; const b=stripExt(f.name); const g=get(b); if(!g.audio) g.audio=f; }
+  for(const f of instFiles){ if(!AUDIO_EXT.test(f.name)) continue; const b=stripExt(f.name); const g=get(b); if(!g.inst) g.inst=f; }
+  for(const f of coverFiles){ if(!IMG_EXT.test(f.name)) continue; const b=stripExt(f.name); const g=get(b); if(!g.cover) g.cover=f; }
+  for(const f of lyricFiles){ if(!LYR_EXT.test(f.name)) continue; const b=stripExt(f.name); const g=get(b); if(!g.lyric) g.lyric=f; }
   return [...map.values()].filter(g => g.audio || g.inst);
 }
 
@@ -985,23 +976,18 @@ function groupLocalFilesFromInput(files){
     else if(/instrumental/i.test(dirPath)) subDir = 'instrumental';
     else if(/covers?/i.test(dirPath)) subDir = 'covers';
     else if(/lyric/i.test(dirPath)) subDir = 'lyrics';
-
     if(!AUDIO_EXT.test(fileName) && !IMG_EXT.test(fileName) && !LYR_EXT.test(fileName)) continue;
     const base = stripExt(fileName);
-    if(!map.has(base)) map.set(base, { key: base, title: base });
+    if(!map.has(base)) map.set(base, { key:base, title:base });
     const g = map.get(base);
     const relPath = subDir ? (subDir + '/' + fileName) : fileName;
-
     if(AUDIO_EXT.test(fileName)){
-      if(subDir === 'instrumental'){
-        if(!g.inst) g.inst = { name: fileName, relPath, file: f };
-      }else{
-        if(!g.audio) g.audio = { name: fileName, relPath, file: f };
-      }
+      if(subDir === 'instrumental'){ if(!g.inst) g.inst = { name:fileName, relPath, file:f }; }
+      else { if(!g.audio) g.audio = { name:fileName, relPath, file:f }; }
     }else if(IMG_EXT.test(fileName)){
-      if(!g.cover) g.cover = { name: fileName, relPath, file: f };
+      if(!g.cover) g.cover = { name:fileName, relPath, file:f };
     }else{
-      if(!g.lyric) g.lyric = { name: fileName, relPath, file: f };
+      if(!g.lyric) g.lyric = { name:fileName, relPath, file:f };
     }
   }
   return [...map.values()].filter(g => g.audio || g.inst);
@@ -1019,9 +1005,7 @@ async function loadConfig(){
     appConfig.lastSync = c.lastSync || '';
   }
 }
-async function saveConfig(){
-  await idbPut('kv', 'config', appConfig);
-}
+async function saveConfig(){ await idbPut('kv', 'config', appConfig); }
 
 /* ============================================================
    全局数据
@@ -1050,6 +1034,15 @@ const state = {
   pendingPairs:[],
   storageMode:''
 };
+
+/* MV 状态 */
+let mvTimer = null;
+let mvFallbackUrl = '';
+let mvLoaded = false;
+let mvPrevWasPlaying = false;
+
+/* 唱K模式：人声衰减系数（1 = 原音，0 = 完全静音人声），可实时调节 */
+let karaokeVocalFactor = 0.25;
 
 /* ============================================================
    DOM 引用
@@ -1104,12 +1097,17 @@ const settingsModal    = $('#settingsModal');
 const toolboxPanel     = $('#toolboxPanel');
 
 /* ============================================================
-   音频
+   音频：主 audio（人声/伴奏/唱K主轨）+ 辅助 audioInst（唱K时的伴奏轨）
    ============================================================ */
 const audio = new Audio();
 audio.preload = 'metadata';
 audio.playbackRate = 1;
 try{ audio.referrerPolicy = 'no-referrer'; }catch(_){}
+
+const audioInst = new Audio();
+audioInst.preload = 'metadata';
+audioInst.playbackRate = 1;
+try{ audioInst.referrerPolicy = 'no-referrer'; }catch(_){}
 
 let activeBlobUrls = [];
 function revokeActiveBlobUrls(){
@@ -1121,9 +1119,40 @@ function trackBlobUrl(u){
   return u;
 }
 
-audio.addEventListener('play',()=>{ document.body.classList.add('playing'); renderAll(); renderSide(); });
-audio.addEventListener('pause',()=>{ document.body.classList.remove('playing'); renderAll(); renderSide(); });
-audio.addEventListener('ended',()=>{ document.body.classList.remove('playing'); handleEnded(); });
+/* 主 audio 事件：同步副 audio 的状态 */
+audio.addEventListener('play',()=>{
+  document.body.classList.add('playing');
+  renderAll(); renderSide();
+  if(audioInst.src && audioInst.paused){
+    try{ audioInst.currentTime = audio.currentTime; }catch(_){}
+    audioInst.play().catch(()=>{});
+  }
+});
+audio.addEventListener('pause',()=>{
+  document.body.classList.remove('playing');
+  renderAll(); renderSide();
+  if(audioInst.src && !audioInst.paused){
+    try{ audioInst.pause(); }catch(_){}
+  }
+});
+audio.addEventListener('ended',()=>{
+  document.body.classList.remove('playing');
+  if(audioInst.src && !audioInst.paused){ try{ audioInst.pause(); }catch(_){} }
+  handleEnded();
+});
+audio.addEventListener('seeking',()=>{
+  if(audioInst.src && !isNaN(audio.currentTime)){
+    try{ audioInst.currentTime = audio.currentTime; }catch(_){}
+  }
+});
+audio.addEventListener('seeked',()=>{
+  if(audioInst.src && !isNaN(audio.currentTime)){
+    try{ audioInst.currentTime = audio.currentTime; }catch(_){}
+  }
+});
+audio.addEventListener('ratechange',()=>{
+  audioInst.playbackRate = audio.playbackRate;
+});
 audio.addEventListener('loadedmetadata',()=>{
   pbDur.textContent = fmtTime(audio.duration);
   updateProgressUI();
@@ -1139,10 +1168,8 @@ audio.addEventListener('error',()=>{
   document.body.classList.remove('playing');
   if(!song) return;
   const isInst = vocalMode === 'inst';
-  const lanzouUrl = isInst ? (song.instrumentalLanzouUrl || song.audioLanzouUrl)
-                           : (song.audioLanzouUrl || song.instrumentalLanzouUrl);
-  const lanzouPwd = isInst ? (song.instrumentalLanzouPwd || song.audioLanzouPwd)
-                           : (song.audioLanzouPwd || song.instrumentalLanzouPwd);
+  const lanzouUrl = isInst ? (song.instrumentalLanzouUrl || song.audioLanzouUrl) : (song.audioLanzouUrl || song.instrumentalLanzouUrl);
+  const lanzouPwd = isInst ? (song.instrumentalLanzouPwd || song.audioLanzouPwd) : (song.audioLanzouPwd || song.instrumentalLanzouPwd);
   if(lanzouUrl){
     pbArtist.textContent = (isInst?'伴奏':'音频') + '链接失效，已提供蓝奏云下载';
     showDownloadDialog(song, isInst, lanzouUrl, lanzouPwd);
@@ -1188,10 +1215,8 @@ function openLanzouManual(){
   const song = getCurrent();
   if(!song) return;
   const isInst = vocalMode === 'inst';
-  const lanzouUrl = isInst ? (song.instrumentalLanzouUrl || song.audioLanzouUrl)
-                           : (song.audioLanzouUrl || song.instrumentalLanzouUrl);
-  const lanzouPwd = isInst ? (song.instrumentalLanzouPwd || song.audioLanzouPwd)
-                           : (song.audioLanzouPwd || song.instrumentalLanzouPwd);
+  const lanzouUrl = isInst ? (song.instrumentalLanzouUrl || song.audioLanzouUrl) : (song.audioLanzouUrl || song.instrumentalLanzouUrl);
+  const lanzouPwd = isInst ? (song.instrumentalLanzouPwd || song.audioLanzouPwd) : (song.audioLanzouPwd || song.instrumentalLanzouPwd);
   if(!lanzouUrl){ alert('这首歌没有提供蓝奏云链接'); return; }
   showDownloadDialog(song, isInst, lanzouUrl, lanzouPwd);
 }
@@ -1237,6 +1262,7 @@ function persistPref(){
   try{
     localStorage.setItem(LS_PREF, JSON.stringify({
       playMode, vocalMode, lyricScale, playbackRate,
+      karaokeVocal: karaokeVocalFactor,
       desk:{ on:state.deskOn, locked:state.dlLocked, font:state.dlFont }
     }));
   }catch(_){}
@@ -1250,6 +1276,7 @@ function loadPref(){
     if(p.vocalMode) vocalMode = p.vocalMode;
     if(typeof p.lyricScale==='number') lyricScale = p.lyricScale;
     if(typeof p.playbackRate==='number') playbackRate = p.playbackRate;
+    if(typeof p.karaokeVocal === 'number') karaokeVocalFactor = Math.max(0, Math.min(1, p.karaokeVocal));
     if(p.desk){
       state.dlLocked = !!p.desk.locked;
       state.dlFont = p.desk.font || 26;
@@ -1275,9 +1302,7 @@ function loadLyricStyle(){
     if(o.bgColor) state.lyricStyle.bgColor = o.bgColor;
   }catch(_){}
 }
-function saveLyricStyle(){
-  try{ localStorage.setItem(LS_LYRIC, JSON.stringify(state.lyricStyle)); }catch(_){}
-}
+function saveLyricStyle(){ try{ localStorage.setItem(LS_LYRIC, JSON.stringify(state.lyricStyle)); }catch(_){} }
 function applyLyricStyle(){
   const st = state.lyricStyle;
   const rgb = hexToRgb(st.bgColor) || {r:16,g:16,b:20};
@@ -1295,17 +1320,14 @@ function applyLyricStyle(){
    ============================================================ */
 const CJK_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/;
 function hasCJK(s){ return CJK_RE.test(s||''); }
-
 function buildLyricLine(time, texts){
   const line = { time, text:'', romaji:'', trans:'' };
   const arr = texts.filter(Boolean);
   if(!arr.length) return { time, text:'♪', romaji:'', trans:'' };
-  if(arr.length === 1){
+  if(arr.length === 1){ line.text = arr[0]; }
+  else if(arr.length === 2){
     line.text = arr[0];
-  }else if(arr.length === 2){
-    line.text = arr[0];
-    if(hasCJK(arr[1])) line.trans = arr[1];
-    else line.romaji = arr[1];
+    if(hasCJK(arr[1])) line.trans = arr[1]; else line.romaji = arr[1];
   }else{
     line.text = arr[0];
     const rest = arr.slice(1);
@@ -1314,9 +1336,7 @@ function buildLyricLine(time, texts){
       line.trans = rest.slice(transIdx).join('\n');
       const mid = rest.slice(0, transIdx).filter(Boolean);
       if(mid.length) line.romaji = mid.join('\n');
-    }else{
-      line.romaji = rest.join('\n');
-    }
+    }else{ line.romaji = rest.join('\n'); }
   }
   return line;
 }
@@ -1390,47 +1410,30 @@ function mapRemoteSong(s, base){
     composer: s.composer || '',
     intro: s.intro || '',
     tags: Array.isArray(s.tags) ? s.tags.slice() : [],
-    audio: abs(s.audio),
-    instrumental: abs(s.instrumental),
-    cover: abs(s.cover),
-    lyric: abs(s.lyric),
+    audio: abs(s.audio), instrumental: abs(s.instrumental),
+    cover: abs(s.cover), lyric: abs(s.lyric),
     mvUrl: s.mvUrl || '',
-    audioLanzouUrl: s.audioLanzouUrl || '',
-    audioLanzouPwd: s.audioLanzouPwd || '',
-    instrumentalLanzouUrl: s.instrumentalLanzouUrl || '',
-    instrumentalLanzouPwd: s.instrumentalLanzouPwd || '',
+    audioLanzouUrl: s.audioLanzouUrl || '', audioLanzouPwd: s.audioLanzouPwd || '',
+    instrumentalLanzouUrl: s.instrumentalLanzouUrl || '', instrumentalLanzouPwd: s.instrumentalLanzouPwd || '',
     sortOrder: (typeof s.sortOrder === 'number') ? s.sortOrder : undefined,
-    duration: 0,
-    source: 'remote'
+    duration: 0, source: 'remote'
   };
 }
-
-/* 把根目录 JSON 里的歌曲映射成内部结构（本地曲库） */
 function mapManifestSongToLocal(raw){
   const pathKey = raw.audio || raw.instrumental || raw.title || '';
   const id = raw.id || ('local_' + djb2(pathKey).toString(36));
   return {
-    id,
-    title: raw.title || '未命名',
-    coverArtist: raw.coverArtist || '',
-    originalTitle: raw.originalTitle || '',
-    originalArtist: raw.originalArtist || '',
-    lyricist: raw.lyricist || '',
-    composer: raw.composer || '',
-    intro: raw.intro || '',
+    id, title: raw.title || '未命名',
+    coverArtist: raw.coverArtist || '', originalTitle: raw.originalTitle || '',
+    originalArtist: raw.originalArtist || '', lyricist: raw.lyricist || '',
+    composer: raw.composer || '', intro: raw.intro || '',
     tags: Array.isArray(raw.tags) ? raw.tags.slice() : ['本地'],
-    audio: raw.audio || '',
-    instrumental: raw.instrumental || '',
-    cover: raw.cover || '',
-    lyric: raw.lyric || '',
+    audio: raw.audio || '', instrumental: raw.instrumental || '',
+    cover: raw.cover || '', lyric: raw.lyric || '',
     mvUrl: raw.mvUrl || '',
-    audioLanzouUrl: raw.audioLanzouUrl || '',
-    audioLanzouPwd: raw.audioLanzouPwd || '',
-    instrumentalLanzouUrl: raw.instrumentalLanzouUrl || '',
-    instrumentalLanzouPwd: raw.instrumentalLanzouPwd || '',
-    duration: 0,
-    source: 'local',
-    _fromManifest: true
+    audioLanzouUrl: raw.audioLanzouUrl || '', audioLanzouPwd: raw.audioLanzouPwd || '',
+    instrumentalLanzouUrl: raw.instrumentalLanzouUrl || '', instrumentalLanzouPwd: raw.instrumentalLanzouPwd || '',
+    duration: 0, source: 'local', _fromManifest: true
   };
 }
 
@@ -1483,13 +1486,10 @@ async function webSync(force){
 /* ============================================================
    本地歌曲读写
    ============================================================ */
-/* 从 IndexedDB 读取 + 合并根目录 song_manifest.json */
 async function loadLocalSongs(){
   let list = [];
   try{ list = await idbGetAll('songs'); }catch(e){ console.warn('[loadLocalSongs]', e); list = []; }
   localSongs = (list || []).filter(s => s && s.source === 'local');
-
-  // 静默读取根目录的 song_manifest.json（无权限则跳过）
   try{
     const root = await ensureRootPermissionSilent();
     if(root){
@@ -1514,39 +1514,23 @@ async function loadLocalSongs(){
         }
       }
     }
-  }catch(e){
-    console.warn('[loadLocalSongs] manifest merge failed:', e);
-  }
+  }catch(e){ console.warn('[loadLocalSongs] manifest merge failed:', e); }
 }
-
-/* 保存到 songs（store 有 keyPath:'id'，put 只传对象） */
 async function saveSong(song){
   if(!song || song.source !== 'local') return;
   const clean = Object.assign({}, song);
-  delete clean.lyricLines;
-  delete clean._fromManifest;
+  delete clean.lyricLines; delete clean._fromManifest;
   await idbPut('songs', clean);
 }
-async function deleteSong(id){
-  await idbDelete('songs', id);
-}
+async function deleteSong(id){ await idbDelete('songs', id); }
 
-/* 解析本地文件 Blob */
 async function resolveFileBlob(relPath){
   if(!relPath) return null;
   if(isUrl(relPath)) return null;
-  try{
-    const cached = await idbGet('files', relPath);
-    if(cached) return cached;
-  }catch(_){}
-  try{
-    return await resolveFileByPath(relPath);
-  }catch(e){
-    console.warn('[resolveFileBlob] failed:', relPath, e);
-    return null;
-  }
+  try{ const cached = await idbGet('files', relPath); if(cached) return cached; }catch(_){}
+  try{ return await resolveFileByPath(relPath); }
+  catch(e){ console.warn('[resolveFileBlob] failed:', relPath, e); return null; }
 }
-
 async function resolveAudioUrl(song, kind){
   const path = kind === 'inst' ? song.instrumental : song.audio;
   if(!path) return '';
@@ -1558,7 +1542,6 @@ async function resolveAudioUrl(song, kind){
     return trackBlobUrl(url);
   }catch(_){ return ''; }
 }
-
 const coverUrlCache = new Map();
 async function getCoverUrl(path){
   if(!path) return '';
@@ -1574,7 +1557,6 @@ async function getCoverUrl(path){
   coverUrlCache.set(path, p);
   return await p;
 }
-
 function hydrateCovers(root){
   root.querySelectorAll('img[data-cover]').forEach(async img=>{
     if(img.dataset.hydrated === '1') return;
@@ -1587,7 +1569,6 @@ function hydrateCovers(root){
     img.src = url;
   });
 }
-
 const lyricTextCache = new Map();
 async function loadLyricText(song){
   if(!song || !song.lyric) return '';
@@ -1605,10 +1586,7 @@ async function loadLyricText(song){
       if(typeof blob === 'string') return blob;
       if(blob instanceof Blob) return await blob.text();
       return String(blob);
-    }catch(e){
-      console.warn('[lyric] load failed:', path, e);
-      return '';
-    }
+    }catch(e){ console.warn('[lyric] load failed:', path, e); return ''; }
   })();
   lyricTextCache.set(path, p);
   return await p;
@@ -1710,15 +1688,12 @@ function renderAll(){
   favBadge.hidden = favSet.size === 0;
   favBadge.textContent = favSet.size > 99 ? '99+' : favSet.size;
 
-  $$('.lib-tab').forEach(b=>{
-    b.classList.toggle('active', b.dataset.lib === state.activeLib);
-  });
+  $$('.lib-tab').forEach(b=>{ b.classList.toggle('active', b.dataset.lib === state.activeLib); });
   const btnSel = $('#btnLocalSelect');
   btnSel.hidden = state.activeLib !== 'local' || state.selectMode;
 
   if(state.selectMode){
-    sectionRecommend.hidden = true;
-    sectionLocal.hidden = false;
+    sectionRecommend.hidden = true; sectionLocal.hidden = false;
   }else{
     sectionRecommend.hidden = state.activeLib !== 'recommend';
     sectionLocal.hidden     = state.activeLib !== 'local';
@@ -1885,9 +1860,7 @@ function renderSide(){
   }
 }
 function renderSideTabs(){
-  $$('.side-tabs button').forEach(b=>{
-    b.classList.toggle('active', b.dataset.tab === state.sideTab);
-  });
+  $$('.side-tabs button').forEach(b=>{ b.classList.toggle('active', b.dataset.tab === state.sideTab); });
 }
 function renderSideList(list, kind){
   sideList.innerHTML = '';
@@ -1934,16 +1907,12 @@ function renderSideList(list, kind){
    收藏 / 置顶 / 历史
    ============================================================ */
 function toggleFav(id){
-  if(favSet.has(id)) favSet.delete(id);
-  else favSet.add(id);
-  persistUser();
-  updateFavPinUI();
+  if(favSet.has(id)) favSet.delete(id); else favSet.add(id);
+  persistUser(); updateFavPinUI();
 }
 function togglePin(id){
-  if(pinnedSet.has(id)) pinnedSet.delete(id);
-  else pinnedSet.add(id);
-  persistUser();
-  updateFavPinUI();
+  if(pinnedSet.has(id)) pinnedSet.delete(id); else pinnedSet.add(id);
+  persistUser(); updateFavPinUI();
 }
 function updateFavPinUI(){
   const song = getCurrent();
@@ -2017,6 +1986,7 @@ function openCardMenu(anchor, song){
           await persistUser();
           if(currentId === song.id){
             audio.pause(); audio.removeAttribute('src');
+            audioInst.pause(); audioInst.removeAttribute('src');
             revokeActiveBlobUrls();
             currentId = null;
             renderNpInfo(null);
@@ -2121,17 +2091,20 @@ async function renderNpInfo(song){
   const coverPath = song.cover || '';
   if(coverPath){
     const url = await getCoverUrl(coverPath);
-    setBigCover(url);
-    setPbCover(url);
+    setBigCover(url); setPbCover(url);
   }else{
-    setBigCover('');
-    setPbCover('');
+    setBigCover(''); setPbCover('');
   }
 
   const instBtn = trackSwitch.querySelector('[data-mode="inst"]');
   if(instBtn){
     instBtn.disabled = !song.instrumental;
-    instBtn.title = song.instrumental ? '切换到伴奏' : '没有伴奏文件';
+    instBtn.title = song.instrumental ? '只播放伴奏' : '没有伴奏文件';
+  }
+  const karBtn = trackSwitch.querySelector('[data-mode="karaoke"]');
+  if(karBtn){
+    karBtn.disabled = !song.instrumental;
+    karBtn.title = song.instrumental ? '唱K：伴奏 + 弱人声（跟唱）' : '没有伴奏文件，无法唱K';
   }
   updateFavPinUI();
 }
@@ -2170,12 +2143,9 @@ function renderLyrics(){
     if(s) parts.push({ cls:'trans', txt:s });
     if(!parts.length) parts.push({ cls:'orig', txt:'♪' });
 
-    if(parts.length === 1){
-      parts[0].cls = 'orig';
-    }else if(parts.length === 2){
-      parts[0].cls = 'orig';
-      parts[1].cls = 'trans';
-    }else{
+    if(parts.length === 1){ parts[0].cls = 'orig'; }
+    else if(parts.length === 2){ parts[0].cls = 'orig'; parts[1].cls = 'trans'; }
+    else{
       parts[0].cls = 'orig';
       parts[parts.length-1].cls = 'trans';
       for(let k=1;k<parts.length-1;k++) parts[k].cls = 'mid';
@@ -2274,11 +2244,7 @@ async function loadLyricsFromSong(song){
     updateDeskLyric();
     return;
   }
-  if(!song.lyric){
-    renderLyrics();
-    updateDeskLyric();
-    return;
-  }
+  if(!song.lyric){ renderLyrics(); updateDeskLyric(); return; }
   state.lyricLoading = true;
   renderLyrics();
   const text = await loadLyricText(song);
@@ -2306,6 +2272,85 @@ function resetLyrics(){
 }
 
 /* ============================================================
+   MV 内嵌逻辑
+   ============================================================ */
+function openMvInline(song){
+  const pane = $('#mvPane');
+  const frame = $('#mvFrame');
+  const title = $('#mvTitle');
+  const loading = $('#mvLoading');
+  if(!pane || !frame) return;
+
+  mvPrevWasPlaying = !audio.paused && !!audio.src;
+  if(mvPrevWasPlaying){
+    try{ audio.pause(); }catch(_){}
+    if(audioInst.src && !audioInst.paused){ try{ audioInst.pause(); }catch(_){} }
+  }
+
+  const bvid = extractBvid(song.mvUrl);
+  mvFallbackUrl = song.mvUrl;
+
+  if(!bvid){
+    openExternal(song.mvUrl);
+    return;
+  }
+
+  if(mvTimer){ clearTimeout(mvTimer); mvTimer = null; }
+  mvLoaded = false;
+
+  const src = 'https://player.bilibili.com/player.html?bvid=' + encodeURIComponent(bvid)
+            + '&isOutside=true&autoplay=0&danmaku=0&high_quality=1';
+
+  frame.onload = ()=>{
+    mvLoaded = true;
+    if(mvTimer){ clearTimeout(mvTimer); mvTimer = null; }
+    if(loading) loading.style.display = 'none';
+  };
+  frame.src = 'about:blank';
+  pane.hidden = false;
+  title.textContent = 'MV · ' + (song.title || bvid);
+  if(loading) loading.style.display = '';
+
+  setTimeout(()=>{ frame.src = src; }, 30);
+
+  mvTimer = setTimeout(()=>{
+    mvTimer = null;
+    if(!mvLoaded){
+      showToast('B站播放器加载失败，已尝试打开新标签页');
+      openExternal(mvFallbackUrl);
+      closeMvInline();
+    }
+  }, 8000);
+}
+
+function closeMvInline(){
+  const pane = $('#mvPane');
+  const frame = $('#mvFrame');
+  const loading = $('#mvLoading');
+  if(mvTimer){ clearTimeout(mvTimer); mvTimer = null; }
+  mvLoaded = false;
+  if(!pane || !frame) return;
+  frame.onload = null;
+  frame.src = 'about:blank';
+  pane.hidden = true;
+  if(loading) loading.style.display = 'none';
+
+  if(mvPrevWasPlaying){
+    mvPrevWasPlaying = false;
+    if(audio.paused && audio.src){
+      setTimeout(()=>{ audio.play().catch(()=>{}); }, 100);
+    }
+  }else{
+    mvPrevWasPlaying = false;
+  }
+}
+
+if($('#mvOpenTab')) $('#mvOpenTab').addEventListener('click', ()=>{
+  if(mvFallbackUrl) openExternal(mvFallbackUrl);
+});
+if($('#mvClose')) $('#mvClose').addEventListener('click', closeMvInline);
+
+/* ============================================================
    播放控制
    ============================================================ */
 async function playFrom(playlistIds, songId){
@@ -2315,6 +2360,8 @@ async function playFrom(playlistIds, songId){
 async function playSong(id){
   const song = getSongById(id);
   if(!song) return;
+  mvPrevWasPlaying = false;
+  closeMvInline();
   if(id === currentId && audio.src){
     if(audio.paused) audio.play().catch(()=>{});
     else audio.pause();
@@ -2328,26 +2375,51 @@ async function playSong(id){
   await renderNpInfo(song);
   closeSidePanel();
   resetLyrics();
+
   audio.pause();
   audio.removeAttribute('src');
   audio.load();
+  audioInst.pause();
+  audioInst.removeAttribute('src');
+  audioInst.load();
   revokeActiveBlobUrls();
+
   state.lastPlayPos = 0;
   audio.playbackRate = playbackRate;
+  audioInst.playbackRate = playbackRate;
 
-  const kind = (vocalMode === 'inst' && song.instrumental) ? 'inst' : 'vocal';
-  const src = await resolveAudioUrl(song, kind);
+  const hasInst = !!song.instrumental;
+  const wantInst = (vocalMode === 'inst') && hasInst;
+  const wantKaraoke = (vocalMode === 'karaoke') && hasInst;
+
+  const mainKind = wantInst ? 'inst' : 'vocal';
+  const mainSrc = await resolveAudioUrl(song, mainKind);
   if(currentId !== id) return;
-  if(!src){
-    pbArtist.textContent = kind === 'inst' ? '没有伴奏文件' : '没有可用音源';
+  if(!mainSrc){
+    pbArtist.textContent = mainKind === 'inst' ? '没有伴奏文件' : '没有可用音源';
     state.lines = []; renderLyrics();
     return;
   }
-  audio.src = src;
+
+  let instSrc = '';
+  if(wantKaraoke){
+    instSrc = await resolveAudioUrl(song, 'inst');
+    if(currentId !== id) return;
+    if(instSrc === mainSrc) instSrc = '';
+  }
+
+  audio.src = mainSrc;
   audio.load();
+  if(instSrc){
+    audioInst.src = instSrc;
+    audioInst.load();
+  }
+  updateAudioVolumes();
+
   audio.play().catch(()=>{});
   loadLyricsFromSong(song);
 }
+
 function getPlaylist(){
   if(currentPlaylist.includes(currentId)) return currentPlaylist;
   return sortList(allSongs).map(s=>s.id);
@@ -2369,7 +2441,12 @@ function playByOffset(dir){
   playSong(list[i]);
 }
 function handleEnded(){
-  if(playMode === 'single'){ audio.currentTime = 0; audio.play().catch(()=>{}); return; }
+  if(playMode === 'single'){
+    audio.currentTime = 0;
+    if(audioInst.src) audioInst.currentTime = 0;
+    audio.play().catch(()=>{});
+    return;
+  }
   const list = getPlaylist();
   if(!list.length) return;
   if(playMode === 'shuffle'){ playByOffset(1); return; }
@@ -2406,11 +2483,16 @@ btnFav.addEventListener('click', ()=>{
   toggleFav(currentId);
   renderAll(); renderSide();
 });
+
 btnMV.addEventListener('click', ()=>{
   const song = getCurrent();
-  if(song && song.mvUrl) openExternal(song.mvUrl);
-  else alert('当前歌曲没有 MV 链接');
+  if(!song || !song.mvUrl){ alert('当前歌曲没有 MV 链接'); return; }
+  const pane = $('#mvPane');
+  if(pane && !pane.hidden){ closeMvInline(); return; }
+  document.body.dataset.view = 'player';
+  openMvInline(song);
 });
+
 btnLz.addEventListener('click', openLanzouManual);
 
 const MODE_META = {
@@ -2438,8 +2520,11 @@ btnSpeed.addEventListener('click', ()=>{
   const next = RATE_STEPS[(i+1) % RATE_STEPS.length];
   playbackRate = next;
   audio.playbackRate = playbackRate;
+  audioInst.playbackRate = playbackRate;
   updateSpeedUI(); persistPref();
 });
+
+/* ★ 轨道切换（人声 / 伴奏 / 唱K） */
 trackSwitch.addEventListener('click', async e=>{
   const b = e.target.closest('button[data-mode]');
   if(!b || b.disabled) return;
@@ -2447,18 +2532,22 @@ trackSwitch.addEventListener('click', async e=>{
   if(mode === vocalMode) return;
   vocalMode = mode;
   trackSwitch.querySelectorAll('button').forEach(x=>x.classList.toggle('active', x.dataset.mode === mode));
+  updateKaraokeUI();
   persistPref();
+  updateAudioVolumes();
   if(currentId){
     const wasPlaying = !audio.paused;
     const t = audio.currentTime;
     const rate = audio.playbackRate;
     const oldId = currentId;
     currentId = null;
+    mvPrevWasPlaying = false;
     await playSong(oldId);
     const seek = ()=>{
       if(isFinite(audio.duration)){
         audio.currentTime = Math.min(t, audio.duration);
         audio.playbackRate = rate;
+        if(audioInst.src) audioInst.currentTime = audio.currentTime;
         audio.removeEventListener('loadedmetadata', seek);
         if(wasPlaying) audio.play().catch(()=>{});
       }
@@ -2467,6 +2556,7 @@ trackSwitch.addEventListener('click', async e=>{
     else audio.addEventListener('loadedmetadata', seek);
   }
 });
+
 function seekFromEvent(e){
   const r = pbTrack.getBoundingClientRect();
   const p = Math.max(0, Math.min(1, (e.clientX - r.left)/r.width));
@@ -2505,6 +2595,14 @@ function loop(ts){
   if(!audio.paused && !audio.ended && ts - state.lastTick > 50){
     state.lastTick = ts;
     updateProgressUI();
+
+    if(audioInst.src && !audioInst.paused && !audio.seeking){
+      const drift = Math.abs(audioInst.currentTime - audio.currentTime);
+      if(drift > 0.25){
+        try{ audioInst.currentTime = audio.currentTime; }catch(_){}
+      }
+    }
+
     const ct = audio.currentTime;
     if(ct < state.lastPlayPos - 1 && ct < 1) resetLyrics();
     state.lastPlayPos = ct;
@@ -2527,6 +2625,7 @@ document.addEventListener('keydown', e=>{
     toolboxPanel.hidden = true;
     const dsp = $('#dlSettingsPanel'); if(dsp) dsp.hidden = true;
     closeCardMenu();
+    if(!$('#mvPane').hidden){ closeMvInline(); return; }
     if(state.selectMode){ exitSelectMode(); }
     else if(document.body.dataset.view === 'player' && isMobile()) document.body.dataset.view = 'list';
   }
@@ -2561,15 +2660,13 @@ $('#chkSelectAll').addEventListener('change', e=>{
 });
 $('#btnInvertSel').addEventListener('click', ()=>{
   const next = new Set();
-  localSongs.forEach(s=>{
-    if(!state.selectedIds.has(s.id)) next.add(s.id);
-  });
+  localSongs.forEach(s=>{ if(!state.selectedIds.has(s.id)) next.add(s.id); });
   state.selectedIds = next;
   renderAll();
 });
 
 /* ============================================================
-   导出 JSON（优先写入根目录）
+   导出 JSON
    ============================================================ */
 $('#btnExportSel').addEventListener('click', async ()=>{
   const ids = state.selectedIds;
@@ -2582,8 +2679,7 @@ $('#btnExportSel').addEventListener('click', async ()=>{
   const verStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
   const out = {
-    version: verStr,
-    baseUrl: '',
+    version: verStr, baseUrl: '',
     songs: songs.map(s=>{
       const o = { id: s.id, title: s.title || '' };
       if(s.coverArtist)           o.coverArtist = s.coverArtist;
@@ -2608,20 +2704,15 @@ $('#btnExportSel').addEventListener('click', async ()=>{
 
   const json = JSON.stringify(out, null, 2);
 
-  // 优先写入音乐根目录 song_manifest.json
   let wroteToRoot = false;
-  try{
-    wroteToRoot = await writeManifestToRoot(json);
-  }catch(e){
-    console.warn('[export] write to root failed:', e);
-  }
+  try{ wroteToRoot = await writeManifestToRoot(json); }
+  catch(e){ console.warn('[export] write to root failed:', e); }
 
   if(wroteToRoot){
     showToast(`已导出 ${songs.length} 首 → song_manifest.json（音乐根目录）`);
     return;
   }
 
-  // 回退到浏览器下载
   const blob = new Blob([json], { type:'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2708,12 +2799,37 @@ toolboxPanel.addEventListener('click', e=>{
 });
 
 /* ============================================================
-   音量
+   音量系统（含唱K模式的音量分配）
    ============================================================ */
 let lastVolume = 1;
+let userVolume = 1;
+
+function updateAudioVolumes(){
+  const isKaraoke = vocalMode === 'karaoke';
+  audio.volume = isKaraoke ? userVolume * karaokeVocalFactor : userVolume;
+  audioInst.volume = userVolume;
+}
+
+/* ★ 显示/隐藏唱K调节器，并同步滑块值 */
+function updateKaraokeUI(){
+  const box = $('#karaokeVol');
+  const slider = $('#karaokeSlider');
+  const val = $('#karaokeVal');
+  if(!box) return;
+  if(vocalMode === 'karaoke'){
+    box.hidden = false;
+    if(slider) slider.value = Math.round(karaokeVocalFactor * 100);
+    if(val) val.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  }else{
+    box.hidden = true;
+  }
+}
+
 function applyVolume(v){
   v = Math.max(0, Math.min(1, v));
-  audio.volume = v;
+  userVolume = v;
+  updateAudioVolumes();
+
   const slider = $('#volSlider');
   const pct = $('#volPct');
   const icon = $('#volIcon');
@@ -2746,8 +2862,24 @@ document.addEventListener('click', e=>{
   if(!e.target.closest('#volumeWrap')) wrap.classList.remove('open');
 });
 $('#volSlider').addEventListener('dblclick', ()=>{
-  applyVolume(1);
-  lastVolume = 1;
+  applyVolume(1); lastVolume = 1;
+});
+
+/* ★ 唱K 人声比例调节 */
+$('#karaokeSlider').addEventListener('input', e=>{
+  karaokeVocalFactor = Math.max(0, Math.min(1, Number(e.target.value) / 100));
+  const val = $('#karaokeVal');
+  if(val) val.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  updateAudioVolumes();
+  persistPref();
+});
+/* 双击数字重置为 25% */
+$('#karaokeVal').addEventListener('dblclick', ()=>{
+  karaokeVocalFactor = 0.25;
+  updateKaraokeUI();
+  updateAudioVolumes();
+  persistPref();
+  showToast('已重置为 25%');
 });
 
 /* ============================================================
@@ -2756,9 +2888,7 @@ $('#volSlider').addEventListener('dblclick', ()=>{
 let _lyricChannel = null;
 function getLyricChannel(){
   if(!('BroadcastChannel' in window)) return null;
-  if(!_lyricChannel){
-    try{ _lyricChannel = new BroadcastChannel('mp_lyric_bus'); }catch(_){ return null; }
-  }
+  if(!_lyricChannel){ try{ _lyricChannel = new BroadcastChannel('mp_lyric_bus'); }catch(_){ return null; } }
   return _lyricChannel;
 }
 function bcPost(msg){
@@ -2769,11 +2899,7 @@ function bcPost(msg){
 let lyricWinRef = null;
 function openLyricWindow(){
   const url = location.origin + location.pathname + '?mode=lyric';
-  lyricWinRef = window.open(
-    url,
-    'mp_lyric_win',
-    'width=900,height=190,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer'
-  );
+  lyricWinRef = window.open(url, 'mp_lyric_win', 'width=900,height=190,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
   if(!lyricWinRef){
     showToast('浏览器拦截了桌面歌词窗口，请允许本站弹出窗口');
     state.deskOn = false;
@@ -2920,21 +3046,9 @@ $('#dlSettings').addEventListener('click', e=>{
   if(!p.hidden) applyLyricStyle();
 });
 $('#dlSettingsPanel').addEventListener('click', e=>{ e.stopPropagation(); });
-$('#dlAlpha').addEventListener('input', e=>{
-  state.lyricStyle.alpha = Number(e.target.value)/100;
-  applyLyricStyle();
-  saveLyricStyle();
-});
-$('#dlTextColor').addEventListener('input', e=>{
-  state.lyricStyle.textColor = e.target.value;
-  applyLyricStyle();
-  saveLyricStyle();
-});
-$('#dlBgColor').addEventListener('input', e=>{
-  state.lyricStyle.bgColor = e.target.value;
-  applyLyricStyle();
-  saveLyricStyle();
-});
+$('#dlAlpha').addEventListener('input', e=>{ state.lyricStyle.alpha = Number(e.target.value)/100; applyLyricStyle(); saveLyricStyle(); });
+$('#dlTextColor').addEventListener('input', e=>{ state.lyricStyle.textColor = e.target.value; applyLyricStyle(); saveLyricStyle(); });
+$('#dlBgColor').addEventListener('input', e=>{ state.lyricStyle.bgColor = e.target.value; applyLyricStyle(); saveLyricStyle(); });
 $('#dlResetStyle').addEventListener('click', ()=>{
   state.lyricStyle = { alpha:0.9, textColor:'#ffffff', bgColor:'#101014' };
   applyLyricStyle();
@@ -2959,25 +3073,48 @@ $('#btnSaveSettings').addEventListener('click', async ()=>{
   settingsModal.hidden = true;
   showToast('已保存，点「立即同步」生效');
 });
+
 $('#btnDownloadDesktop').addEventListener('click', async ()=>{
-  const url = 'https://wwbpm.lanzoue.com/ija5t4c31j0f';
+  const url = 'https://wwbpm.lanzoue.com/b00l36erpi';
   const pwd = '2026';
-  if(pwd){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      try{
-        await navigator.clipboard.writeText(pwd);
-        showToast('提取码 ' + pwd + ' 已复制，正在打开下载页…');
-      }catch(_){
-        showToast('提取码：' + pwd);
-      }
-    }else{
-      showToast('提取码：' + pwd);
-    }
-  }else{
-    showToast('正在打开下载页…');
+
+  let copied = false;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(pwd); copied = true; }catch(_){ copied = false; }
   }
-  openExternal(url);
+
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div class="modal-bg"></div>
+    <div class="modal-card" style="max-width:420px">
+      <h3>Windows 桌面版下载 <button class="close-x">✕</button></h3>
+      <p style="font-size:13px;color:var(--dim);line-height:1.9;margin:2px 0 4px">
+        即将打开蓝奏云下载页。<br>
+        提取码<b style="color:${copied?'#5fd98f':'#ff9aa9'}">${copied?'已自动复制到剪贴板':'如下（请手动复制）'}</b>${copied?'，打开后直接 <b style="color:#fff">Ctrl + V</b> 粘贴即可。':''}
+      </p>
+      <div style="font-size:15px;color:#fff;padding:14px 14px;background:rgba(236,65,65,.1);border:1px solid rgba(236,65,65,.35);border-radius:10px;text-align:center;letter-spacing:3px;font-weight:800;user-select:all;cursor:copy" id="dlPwdBox">提取码：${pwd}</div>
+      <div style="font-size:11.5px;color:var(--dimmer);text-align:center">（点击上方密码框可再次复制）</div>
+      <div class="row" style="justify-content:flex-end;margin-top:6px">
+        <button class="ghost" data-close>取消</button>
+        <button class="primary" data-go>打开下载页</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+
+  const close = ()=>m.remove();
+  m.querySelector('.close-x').onclick = close;
+  m.querySelector('[data-close]').onclick = close;
+  m.querySelector('.modal-bg').onclick = close;
+  m.querySelector('#dlPwdBox').onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(pwd);
+      showToast('提取码已复制');
+    }catch(_){ showToast('复制失败，请手动选择文本'); }
+  };
+  m.querySelector('[data-go]').onclick = ()=>{ openExternal(url); close(); };
 });
+
 $('#btnResetData').addEventListener('click', async ()=>{
   if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、本地曲库、设置等\n重置后页面会自动刷新')) return;
   try{ localStorage.clear(); }catch(_){}
@@ -3030,22 +3167,13 @@ async function refreshRootInfo(){
   if(!box) return;
   let h = null;
   try{ h = await getRootHandle(); }catch(_){}
-  if(!h){
-    box.textContent = '未选择根目录';
-    return;
-  }
+  if(!h){ box.textContent = '未选择根目录'; return; }
   let name = h.name || '(未命名)';
   let perm = '未知';
   let hasJson = false;
-  try{
-    perm = await h.queryPermission({ mode:'readwrite' });
-  }catch(_){
-    try{ perm = await h.queryPermission({ mode:'read' }); }catch(__){}
-  }
-  try{
-    await h.getFileHandle('song_manifest.json');
-    hasJson = true;
-  }catch(_){}
+  try{ perm = await h.queryPermission({ mode:'readwrite' }); }
+  catch(_){ try{ perm = await h.queryPermission({ mode:'read' }); }catch(__){} }
+  try{ await h.getFileHandle('song_manifest.json'); hasJson = true; }catch(_){}
   box.innerHTML = `根目录：<b style="color:#fff">${esc(name)}</b> &nbsp;·&nbsp; 权限：<b style="color:#5fd98f">${esc(perm)}</b> &nbsp;·&nbsp; song_manifest.json：<b style="color:${hasJson?'#5fd98f':'#888'}">${hasJson?'已存在':'未检测到'}</b>`;
 }
 function renderPairs(){
@@ -3071,11 +3199,7 @@ function renderPairs(){
     if(g.lyric) badges.push('<span class="st ok">歌词</span>');
     const card = document.createElement('div');
     card.className = 'pair-card';
-    card.innerHTML = `
-      <div class="pair-head">
-        <div class="nm">${esc(g.title || g.key)}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>
-      </div>`;
+    card.innerHTML = `<div class="pair-head"><div class="nm">${esc(g.title || g.key)}</div><div style="display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div></div>`;
     frag.appendChild(card);
   }
   box.appendChild(frag);
@@ -3112,7 +3236,6 @@ $('#btnPickRoot').addEventListener('click', async ()=>{
     return;
   }
   try{
-    // 使用 readwrite：一次授权，读/写/导出都通
     const root = await window.showDirectoryPicker({ mode:'readwrite' });
     state.storageMode = 'handle';
     await idbPut('kv', 'storageMode', 'handle');
@@ -3126,9 +3249,7 @@ $('#btnPickRoot').addEventListener('click', async ()=>{
     showToast('选择目录失败：' + (e && e.message ? e.message : e));
   }
 });
-$('#btnPickFolder').addEventListener('click', ()=>{
-  $('#dirInput').click();
-});
+$('#btnPickFolder').addEventListener('click', ()=>{ $('#dirInput').click(); });
 $('#dirInput').addEventListener('change', async e=>{
   const files = e.target.files;
   if(!files || !files.length) return;
@@ -3142,7 +3263,6 @@ $('#dirInput').addEventListener('change', async e=>{
 $('#btnRescan').addEventListener('click', async ()=>{
   if(state.storageMode === 'handle'){
     try{
-      // 重新授权（会弹窗）并重新读取根目录 JSON
       await ensureRootPermission();
       await loadLocalSongs();
       mergeAll(); renderTagbar(); renderAll(); renderSide();
@@ -3155,16 +3275,12 @@ $('#btnRescan').addEventListener('click', async ()=>{
   }
 });
 
-/* ============================================================
-   导入（稳定 ID + 三级查重）
-   ============================================================ */
 $('#btnImportAll').addEventListener('click', async ()=>{
   const pairs = state.pendingPairs || [];
   if(!pairs.length){ alert('没有可导入的曲目'); return; }
   const mode = state.storageMode || 'handle';
   showToast('正在导入…');
 
-  // 重新加载一遍，确保 localSongs 里也包含根目录 JSON 里的歌曲
   await loadLocalSongs();
 
   const byAudio = new Map();
@@ -3183,7 +3299,6 @@ $('#btnImportAll').addEventListener('click', async ()=>{
     const coverPath = g.cover ? g.cover.relPath : '';
     const lyricPath = g.lyric ? g.lyric.relPath : '';
 
-    // 三级查重：audio 路径 → inst 路径 → title
     let existing = null;
     if(audioPath && byAudio.has(audioPath))      existing = byAudio.get(audioPath);
     else if(instPath && byAudio.has(instPath))   existing = byAudio.get(instPath);
@@ -3193,13 +3308,11 @@ $('#btnImportAll').addEventListener('click', async ()=>{
     }
 
     if(existing){
-      // 已存在：只补齐路径，不覆盖用户已编辑的 title/artist/intro 等
       let changed = false;
       if(audioPath && existing.audio !== audioPath){ existing.audio = audioPath; changed = true; }
       if(instPath  && existing.instrumental !== instPath){ existing.instrumental = instPath; changed = true; }
       if(coverPath && existing.cover !== coverPath){ existing.cover = coverPath; changed = true; }
       if(lyricPath && existing.lyric !== lyricPath){ existing.lyric = lyricPath; changed = true; }
-
       if(mode === 'blob'){
         try{
           if(g.audio && g.audio.file) await idbPut('files', audioPath, g.audio.file);
@@ -3211,17 +3324,14 @@ $('#btnImportAll').addEventListener('click', async ()=>{
           }
         }catch(e){ console.warn('update blob failed:', e); }
       }
-      // 如果之前只来自 manifest（内存里），现在把它固化到 IndexedDB
       if(changed || mode === 'blob' || existing._fromManifest){
         try{ await saveSong(existing); updated++; }catch(e){ console.warn('[import] saveSong failed:', e); }
       }
       continue;
     }
 
-    // 新增：用稳定 ID 生成
     const id = makeStableId(g);
 
-    // 二次兜底：稳定 ID 是否已在 IndexedDB 里
     let dup = null;
     try{ dup = await idbGet('songs', id); }catch(_){}
     if(dup && dup.source === 'local'){
@@ -3322,10 +3432,7 @@ $('#btnClearLocal').addEventListener('click', async ()=>{
    编辑信息
    ============================================================ */
 function openEditModal(song){
-  if(song.source !== 'local'){
-    showToast('仅本地 DIY 音乐可编辑');
-    return;
-  }
+  if(song.source !== 'local'){ showToast('仅本地 DIY 音乐可编辑'); return; }
   const m = document.createElement('div');
   m.className = 'modal';
   m.innerHTML = `
@@ -3350,13 +3457,11 @@ function openEditModal(song){
           <label style="grid-column:1/-1">标签（逗号分隔）<input type="text" data-f="tags" value="${esc((song.tags||[]).join(', '))}" placeholder="潮州话, 翻唱, 片尾曲"></label>
           <label style="grid-column:1/-1">MV 链接<input type="text" data-f="mvUrl" value="${esc(song.mvUrl||'')}" placeholder="https://..."></label>
           <label style="grid-column:1/-1">简介<textarea data-f="intro" style="min-height:60px">${esc(song.intro||'')}</textarea></label>
-
           <label style="grid-column:1/-1;margin-top:6px;color:var(--accent);font-weight:600">─── 文件路径或直链 ───</label>
           <label style="grid-column:1/-1">人声音频<input type="text" data-f="audio" value="${esc(song.audio||'')}"></label>
           <label style="grid-column:1/-1">伴奏音频<input type="text" data-f="instrumental" value="${esc(song.instrumental||'')}"></label>
           <label style="grid-column:1/-1">封面图片<input type="text" data-f="cover" value="${esc(song.cover||'')}"></label>
           <label style="grid-column:1/-1">歌词文件（.srt / .lrc）<input type="text" data-f="lyric" value="${esc(song.lyric||'')}"></label>
-
           <label style="grid-column:1/-1;margin-top:6px;color:#a78bfa;font-weight:600">─── 蓝奏云下载兜底（可选） ───</label>
           <label style="grid-column:1/-1">人声 蓝奏云链接<input type="text" data-f="audioLanzouUrl" value="${esc(song.audioLanzouUrl||'')}" placeholder="https://..."></label>
           <label>人声 提取码<input type="text" data-f="audioLanzouPwd" value="${esc(song.audioLanzouPwd||'')}"></label>
@@ -3401,19 +3506,16 @@ function openEditModal(song){
 }
 
 /* ============================================================
-   打开导入弹窗（同步显示 + 异步兜底）
+   打开导入弹窗
    ============================================================ */
 $('#btnAdmin').addEventListener('click', async ()=>{
   if(!adminModal){ console.error('[admin] #adminModal not found'); return; }
   adminModal.hidden = false;
-  console.log('[admin] modal shown');
-
   try{
     const mode = await idbGet('kv', 'storageMode');
     state.storageMode = mode || '';
     updateStorageModeLabel();
     await refreshRootInfo();
-
     if(state.storageMode === 'handle'){
       const h = await getRootHandle();
       if(h){
@@ -3438,7 +3540,6 @@ $('#btnAdmin').addEventListener('click', async ()=>{
   }
 });
 
-/* 弹窗关闭 */
 document.addEventListener('click', e=>{
   const id = e.target.dataset && e.target.dataset.close;
   if(id){ const m = document.getElementById(id); if(m) m.hidden = true; }
@@ -3470,15 +3571,9 @@ async function init(){
     if(ch){
       ch.onmessage = ev=>{
         const d = ev.data || {};
-        if(d.type === 'lyric'){
-          dlMain.textContent = d.main || '♪';
-          dlSub.textContent = d.sub || '';
-        }else if(d.type === 'font'){
-          state.dlFont = Number(d.font) || 26;
-          applyDlFont();
-        }else if(d.type === 'close'){
-          try{ window.close(); }catch(_){}
-        }
+        if(d.type === 'lyric'){ dlMain.textContent = d.main || '♪'; dlSub.textContent = d.sub || ''; }
+        else if(d.type === 'font'){ state.dlFont = Number(d.font) || 26; applyDlFont(); }
+        else if(d.type === 'close'){ try{ window.close(); }catch(_){} }
       };
       ch.postMessage({ type:'hello' });
       ch.postMessage({ type:'request-state' });
@@ -3494,6 +3589,7 @@ async function init(){
   setLyricScale(lyricScale);
   updateSpeedUI();
   audio.playbackRate = playbackRate;
+  audioInst.playbackRate = playbackRate;
   deskLyric.classList.toggle('locked', state.dlLocked);
   $('#dlLock').textContent = state.dlLocked ? '🔒' : '🔓';
   if(state.deskOn) $('#btnDesk').classList.add('on');
@@ -3501,6 +3597,7 @@ async function init(){
   trackSwitch.querySelectorAll('button').forEach(b=>{
     b.classList.toggle('active', b.dataset.mode === vocalMode);
   });
+  updateKaraokeUI();
 
   try{ await loadUser(); }catch(e){ console.warn('[loadUser]', e); }
   try{ await loadConfig(); }catch(e){ console.warn('[loadConfig]', e); }
@@ -3509,7 +3606,6 @@ async function init(){
 
   setupLyricBus();
 
-  // 加载本地曲库（含静默合并根目录 song_manifest.json）
   try{ await loadLocalSongs(); }catch(e){ console.warn('[loadLocalSongs]', e); }
   mergeAll();
   cleanupOrphans();
