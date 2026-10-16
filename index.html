@@ -274,7 +274,6 @@ body.playing .play-btn .i-pause{display:block}
 .track-switch button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .track-switch button:disabled{opacity:.3;cursor:not-allowed}
 .track-switch button[data-mode="karaoke"].active{background:linear-gradient(135deg,#f0932b,#ffbe76)}
-/* ★ 唱K 人声比例调节器 */
 .karaoke-vol{display:flex;align-items:center;gap:6px;padding:0 8px;height:32px;background:rgba(240,147,43,.12);border:1px solid rgba(240,147,43,.35);border-radius:9px;flex-shrink:0}
 .karaoke-vol[hidden]{display:none!important}
 .kv-label{font-size:11px;color:#f0932b;font-weight:600;white-space:nowrap}
@@ -552,7 +551,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
             <div class="lyrics-inner" id="lyricsInner"></div>
           </div>
           <div class="lyric-empty" id="lyricEmpty">从榜单选择一首歌曲开始播放</div>
-
           <div class="mv-pane" id="mvPane" hidden>
             <div class="mv-head">
               <span class="mv-title" id="mvTitle">MV</span>
@@ -744,6 +742,8 @@ const LS_NP = 'mp_np_collapsed_v2';
 const LS_SIDE = 'mp_side_collapsed_v2';
 const LS_VOL = 'mp_volume_v1';
 const LS_LYRIC = 'mp_lyric_style_v1';
+/* ★★★ 自动同步间隔：5 分钟 */
+const AUTO_SYNC_INTERVAL = 5 * 60 * 1000;
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -1119,7 +1119,6 @@ function trackBlobUrl(u){
   return u;
 }
 
-/* 主 audio 事件：同步副 audio 的状态 */
 audio.addEventListener('play',()=>{
   document.body.classList.add('playing');
   renderAll(); renderSide();
@@ -1320,26 +1319,55 @@ function applyLyricStyle(){
    ============================================================ */
 const CJK_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/;
 function hasCJK(s){ return CJK_RE.test(s||''); }
-function buildLyricLine(time, texts){
-  const line = { time, text:'', romaji:'', trans:'' };
-  const arr = texts.filter(Boolean);
-  if(!arr.length) return { time, text:'♪', romaji:'', trans:'' };
-  if(arr.length === 1){ line.text = arr[0]; }
-  else if(arr.length === 2){
-    line.text = arr[0];
-    if(hasCJK(arr[1])) line.trans = arr[1]; else line.romaji = arr[1];
-  }else{
-    line.text = arr[0];
-    const rest = arr.slice(1);
-    const transIdx = rest.findIndex(t=>hasCJK(t));
-    if(transIdx >= 0){
-      line.trans = rest.slice(transIdx).join('\n');
-      const mid = rest.slice(0, transIdx).filter(Boolean);
-      if(mid.length) line.romaji = mid.join('\n');
-    }else{ line.romaji = rest.join('\n'); }
+
+/* ★★★ 新增：判断一行是否"看起来像罗马音"（拉丁字母占多数，几乎无 CJK） */
+function looksLikeRomaji(s){
+  const t = String(s||'');
+  let latin = 0, cjk = 0, total = 0;
+  for(const ch of t){
+    if(/\s/.test(ch)) continue;
+    total++;
+    if(/[A-Za-z\u00C0-\u024F]/.test(ch)) latin++;
+    if(CJK_RE.test(ch)) cjk++;
   }
-  return line;
+  if(cjk > 1 || total === 0) return false;
+  return latin / total > 0.5;
 }
+/* ★★★ 新增：剥掉一行两端的括号/花括号，用于提取译文 */
+function stripParen(s){
+  const t = String(s||'').trim();
+  let out = t;
+  const pairs = [['（','）'], ['(',')'], ['[',']'], ['【','】'], ['{','}']];
+  for(const [open, close] of pairs){
+    if(out.startsWith(open) && out.endsWith(close)){
+      out = out.slice(open.length, out.length - close.length);
+    }
+  }
+  return out.trim();
+}
+
+/* ★★★ 关键修复：buildLyricLine 改成「按位置」解析，支持任意多行
+   - 1 行                  → text
+   - 2 行且第 2 行是罗马音   → text + romaji
+   - 其它情况              → 第 1 行 = text，最后 1 行 = trans，中间所有行 = romaji（用 \n 连接）
+   前端会把 romaji 里的 \n 拆成多个 mid 块（蓝色斜体小号）
+*/
+function buildLyricLine(time, texts){
+  const arr = texts.map(s=>String(s||'').trim()).filter(Boolean);
+  if(!arr.length) return { time, text:'♪', romaji:'', trans:'' };
+
+  if(arr.length === 1){
+    return { time, text:arr[0], romaji:'', trans:'' };
+  }
+  if(arr.length === 2 && looksLikeRomaji(arr[1])){
+    return { time, text:arr[0], romaji:arr[1], trans:'' };
+  }
+  const text = arr[0];
+  const trans = stripParen(arr[arr.length - 1]);
+  const romaji = arr.length > 2 ? arr.slice(1, arr.length - 1).join('\n') : '';
+  return { time, text, romaji, trans };
+}
+
 function parseSRTBlocks(text){
   const out = [];
   const blocks = text.split(/\n{2,}/);
@@ -1486,6 +1514,9 @@ async function webSync(force){
 /* ============================================================
    本地歌曲读写
    ============================================================ */
+/* ★★★ 优化：从 song_manifest.json 合并本地曲目时，优先按 id 去重，
+   其次按 audio 路径，再次按 instrumental，最后按 title 兜底；
+   避免同一个文件被多次导入产生重复条目 */
 async function loadLocalSongs(){
   let list = [];
   try{ list = await idbGetAll('songs'); }catch(e){ console.warn('[loadLocalSongs]', e); list = []; }
@@ -1498,20 +1529,27 @@ async function loadLocalSongs(){
         const existingIds = new Set(localSongs.map(s=>s.id));
         const existingAudio = new Set();
         const existingInst = new Set();
+        const existingTitles = new Set();
         for(const s of localSongs){
-          if(s.audio) existingAudio.add(s.audio);
-          if(s.instrumental) existingInst.add(s.instrumental);
+          if(s.audio) existingAudio.add(String(s.audio).replace(/\\/g,'/').toLowerCase());
+          if(s.instrumental) existingInst.add(String(s.instrumental).replace(/\\/g,'/').toLowerCase());
+          if(s.title) existingTitles.add(String(s.title).toLowerCase());
         }
+        let addedFromManifest = 0;
         for(const raw of data.songs){
           const ms = mapManifestSongToLocal(raw);
           if(existingIds.has(ms.id)) continue;
-          if(ms.audio && existingAudio.has(ms.audio)) continue;
-          if(ms.instrumental && existingInst.has(ms.instrumental)) continue;
+          if(ms.audio && existingAudio.has(String(ms.audio).replace(/\\/g,'/').toLowerCase())) continue;
+          if(ms.instrumental && existingInst.has(String(ms.instrumental).replace(/\\/g,'/').toLowerCase())) continue;
+          if(ms.title && existingTitles.has(String(ms.title).toLowerCase())) continue;
           localSongs.push(ms);
           existingIds.add(ms.id);
-          if(ms.audio) existingAudio.add(ms.audio);
-          if(ms.instrumental) existingInst.add(ms.instrumental);
+          if(ms.audio) existingAudio.add(String(ms.audio).replace(/\\/g,'/').toLowerCase());
+          if(ms.instrumental) existingInst.add(String(ms.instrumental).replace(/\\/g,'/').toLowerCase());
+          if(ms.title) existingTitles.add(String(ms.title).toLowerCase());
+          addedFromManifest++;
         }
+        if(addedFromManifest) console.log(`[localManifest] 新增 ${addedFromManifest} 首`);
       }
     }
   }catch(e){ console.warn('[loadLocalSongs] manifest merge failed:', e); }
@@ -1557,15 +1595,34 @@ async function getCoverUrl(path){
   coverUrlCache.set(path, p);
   return await p;
 }
+
+/* ★★★ 修复：封面加载失败时补回 fallback，避免封面区全空 */
+function addFallbackIfMissing(img){
+  const cover = img.parentElement;
+  if(!cover) return;
+  if(cover.querySelector('.fallback, .fb')) return;
+  const initial = img.dataset.initial || '♪';
+  const fb = document.createElement('div');
+  fb.className = cover.classList.contains('item-cover') ? 'fb' : 'fallback';
+  fb.textContent = initial;
+  cover.insertBefore(fb, cover.firstChild);
+}
 function hydrateCovers(root){
   root.querySelectorAll('img[data-cover]').forEach(async img=>{
     if(img.dataset.hydrated === '1') return;
     img.dataset.hydrated = '1';
     const path = img.dataset.cover;
     const url = await getCoverUrl(path);
-    if(!url){ img.remove(); return; }
+    if(!url){
+      img.remove();
+      addFallbackIfMissing(img);
+      return;
+    }
     img.addEventListener('load', ()=>img.classList.add('loaded'), { once:true });
-    img.addEventListener('error', ()=>img.remove(), { once:true });
+    img.addEventListener('error', ()=>{
+      img.remove();
+      addFallbackIfMissing(img);
+    }, { once:true });
     img.src = url;
   });
 }
@@ -1753,11 +1810,12 @@ function renderGrid(box, list){
     const artist = song.coverArtist || song.originalArtist || '未知歌手';
     const tags = (song.tags||[]).slice(0,3).map(t=>`<span class="t">${esc(t)}</span>`).join('');
 
+    /* ★★★ 修复：有封面时不渲染 fallback，避免浅底首字挡住封面 */
     card.innerHTML = `
       <div class="cover">
         ${inSelectMode ? '<div class="card-check"></div>' : ''}
-        <div class="fallback">${esc(initial)}</div>
-        ${coverPath?`<img data-cover="${esc(coverPath)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
+        ${coverPath ? '' : `<div class="fallback">${esc(initial)}</div>`}
+        ${coverPath?`<img data-cover="${esc(coverPath)}" data-initial="${esc(initial)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
         <div class="overlay"></div>
         <div class="badges">
           ${pin?'<div class="badge pin"><svg viewBox="0 0 24 24"><path d="M9 3h6l-1 7 3.5 3.5a1 1 0 0 1-.7 1.7H7.2a1 1 0 0 1-.7-1.7L10 10z"/></svg>顶</div>':''}
@@ -1877,10 +1935,11 @@ function renderSideList(list, kind){
     item.className = 'list-item' + (isCurrent ? ' active' : '');
     const coverPath = song.cover || '';
     const initial = (song.title||'♪').trim().charAt(0);
+    /* ★★★ 修复：有封面时不渲染 fallback */
     item.innerHTML = `
       <div class="item-cover">
-        <div class="fb">${esc(initial)}</div>
-        ${coverPath?`<img data-cover="${esc(coverPath)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
+        ${coverPath ? '' : `<div class="fb">${esc(initial)}</div>`}
+        ${coverPath?`<img data-cover="${esc(coverPath)}" data-initial="${esc(initial)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
       </div>
       <div class="item-info">
         <div class="item-title">${esc(song.title||'未命名')}</div>
@@ -2131,6 +2190,12 @@ function renderLyrics(){
     el.className = 'line';
     el.dataset.index = i;
 
+    /* ★★★ 修复：信任后端/解析器给出的三段式语义
+       - text   → orig（大号发光）
+       - romaji → mid （蓝色斜体小号，多行按 \n 拆开，每行独立 mid）
+       - trans  → trans（小号灰色）
+       不再按 parts 数量重排样式，避免把"只有原文+罗马音"误变成"原文+译文"
+    */
     const parts = [];
     const t = (line.text || '').trim();
     const r = (line.romaji || '').trim();
@@ -2141,14 +2206,11 @@ function renderLyrics(){
       rs.forEach(x => parts.push({ cls:'mid', txt:x }));
     }
     if(s) parts.push({ cls:'trans', txt:s });
-    if(!parts.length) parts.push({ cls:'orig', txt:'♪' });
 
-    if(parts.length === 1){ parts[0].cls = 'orig'; }
-    else if(parts.length === 2){ parts[0].cls = 'orig'; parts[1].cls = 'trans'; }
-    else{
+    if(!parts.length){
+      parts.push({ cls:'orig', txt:'♪' });
+    }else if(parts.length === 1 && parts[0].cls === 'mid'){
       parts[0].cls = 'orig';
-      parts[parts.length-1].cls = 'trans';
-      for(let k=1;k<parts.length-1;k++) parts[k].cls = 'mid';
     }
 
     let html = '<div class="block">';
@@ -2524,7 +2586,6 @@ btnSpeed.addEventListener('click', ()=>{
   updateSpeedUI(); persistPref();
 });
 
-/* ★ 轨道切换（人声 / 伴奏 / 唱K） */
 trackSwitch.addEventListener('click', async e=>{
   const b = e.target.closest('button[data-mode]');
   if(!b || b.disabled) return;
@@ -2809,8 +2870,6 @@ function updateAudioVolumes(){
   audio.volume = isKaraoke ? userVolume * karaokeVocalFactor : userVolume;
   audioInst.volume = userVolume;
 }
-
-/* ★ 显示/隐藏唱K调节器，并同步滑块值 */
 function updateKaraokeUI(){
   const box = $('#karaokeVol');
   const slider = $('#karaokeSlider');
@@ -2824,7 +2883,6 @@ function updateKaraokeUI(){
     box.hidden = true;
   }
 }
-
 function applyVolume(v){
   v = Math.max(0, Math.min(1, v));
   userVolume = v;
@@ -2865,7 +2923,6 @@ $('#volSlider').addEventListener('dblclick', ()=>{
   applyVolume(1); lastVolume = 1;
 });
 
-/* ★ 唱K 人声比例调节 */
 $('#karaokeSlider').addEventListener('input', e=>{
   karaokeVocalFactor = Math.max(0, Math.min(1, Number(e.target.value) / 100));
   const val = $('#karaokeVal');
@@ -2873,7 +2930,6 @@ $('#karaokeSlider').addEventListener('input', e=>{
   updateAudioVolumes();
   persistPref();
 });
-/* 双击数字重置为 25% */
 $('#karaokeVal').addEventListener('dblclick', ()=>{
   karaokeVocalFactor = 0.25;
   updateKaraokeUI();
@@ -3151,6 +3207,75 @@ $('#btnSync').addEventListener('click', async ()=>{
   try{ afterSyncUI(await doSync(true)); }
   catch(e){ alert('同步失败：' + e); }
 });
+
+/* ============================================================
+   ★★★ 自动同步：定时 + 页面可见时检查远程清单 & 本地清单，变了就拉
+   ============================================================ */
+let autoSyncTimer = null;
+let lastAutoSyncAt = 0;
+
+async function autoSync(){
+  if(IS_LYRIC_MODE) return;
+  const now = Date.now();
+  // 30 秒内不重复触发（防止 visibilitychange 和定时器撞车）
+  if(now - lastAutoSyncAt < 30000) return;
+  lastAutoSyncAt = now;
+
+  const prevVersion = appConfig.manifestVersion;
+  const prevLocalCount = localSongs.length;
+  const prevCurrentId = currentId;
+  let changed = false;
+  let toastMsg = '';
+
+  // 1) 远程清单
+  try{
+    await webSync(false);
+    if(appConfig.manifestVersion !== prevVersion){
+      changed = true;
+      toastMsg = `远程清单已更新 · 版本 ${appConfig.manifestVersion.slice(0,19)}`;
+    }
+  }catch(e){ console.warn('[autoSync] remote failed:', e); }
+
+  // 2) 本地 song_manifest.json（按 id / audio / title 去重，幂等）
+  try{
+    await loadLocalSongs();
+    if(localSongs.length !== prevLocalCount){
+      changed = true;
+      const diff = localSongs.length - prevLocalCount;
+      const sign = diff > 0 ? `新增 ${diff}` : `减少 ${-diff}`;
+      if(!toastMsg) toastMsg = `本地清单已更新 · ${sign} 首`;
+      console.log(`[autoSync] local manifest ${sign}`);
+    }
+  }catch(e){ console.warn('[autoSync] local failed:', e); }
+
+  if(!changed) return;
+
+  mergeAll();
+  cleanupOrphans();
+  renderTagbar(); renderAll(); renderSide();
+
+  // 同步设置面板的版本号显示
+  const mv = $('#setManifestVer'); if(mv) mv.textContent = appConfig.manifestVersion || '—';
+  const ls = $('#setLastSync');    if(ls) ls.textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
+  const dot = $('#syncDot');       if(dot) dot.classList.toggle('off', !appConfig.manifestVersion);
+
+  // 处理「正在播放的歌被移除」的情况
+  if(prevCurrentId && !getSongById(prevCurrentId)){
+    try{ audio.pause(); }catch(_){}
+    try{ audio.removeAttribute('src'); audio.load(); }catch(_){}
+    try{ audioInst.pause(); }catch(_){}
+    revokeActiveBlobUrls();
+    currentId = null;
+    renderNpInfo(null);
+    state.lines = []; renderLyrics();
+    document.body.dataset.view = 'list';
+  }else if(prevCurrentId && currentId === prevCurrentId){
+    // 歌曲还在，字段可能有更新，重渲染信息面板
+    renderNpInfo(getCurrent());
+  }
+
+  if(toastMsg) showToast(toastMsg);
+}
 
 /* ============================================================
    本地导入
@@ -3643,6 +3768,13 @@ async function init(){
   window.addEventListener('resize', ()=>updatePanePadding());
   updatePanePadding();
   updateProgressUI();
+
+  /* ★★★ 启动自动同步：定时轮询 + 页面切回时立即检查 */
+  if(autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = setInterval(autoSync, AUTO_SYNC_INTERVAL);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') autoSync();
+  });
 }
 
 init();

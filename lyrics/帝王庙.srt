@@ -32,7 +32,7 @@ cam2 zu6 diêh8  gi1 hng1 ni5 bho5 ziah8 niên5
 00:01:03,929 --> 00:01:10,139
 无 擿竹席 严天时物熁熇烧
 bho5  ti3 dêg4 ciêh8  ngang5 tin1 si5 muêh8 hian5 hah4 siê1
-不然把竹席拆了，严寒天冷时当成柴火烧了取暖
+不然 把竹席拆了  严寒天冷时当成柴火烧了取暖
 
 7
 00:01:10,139 --> 00:01:16,789
@@ -62,24 +62,26 @@ tin1 gong1 siêh4 coh4 nang5 long2 zong2 bên5 iên7
 00:01:31,190 --> 00:01:37,469
 畴忆得 夫若是国家落难我做毋着
 diang5 in3 dig4  da1 na7 si6 gog4 gê1 loh8 lang5 ua2 zo3 m6 diêh8
+【书·尧典】帝曰：“畴咨若时登庸。”【传】畴，谁也。
 谁还记得 要是国家落难是我做得不对
 
 12
 00:01:37,469 --> 00:01:44,919
 于畴昔 后生恬讹暴弗竭
 he1 diang1 si5  hao6 sên1 diam7 huah4 pu2 bhoi6 ziê2
+畴昔：往日，从前。予畴昔之夜，梦坐奠于两楹之间。——《礼记•檀弓上》
 在以前，年轻总吹牛皮的不少
 
 13
 00:01:44,919 --> 00:01:48,539
 我心靡木乍易变
-ua2 sim1	mi6 bhag8 zo3 goi7 biêng3 
+ua2 sim1 mi6 bhag8 zo3 goi7 biêng3 
 我心不是木头如何容易变形
 
 14
 00:01:48,539 --> 00:01:52,289
 我心靡席乍得抢
-ua2 sim1	mi6 ciêh8 zo3 diêh4 ciên2 
+ua2 sim1 mi6 ciêh8 zo3 diêh4 ciên2 
 我心不是竹席哪里需要抢先占领一席之地
 
 15
@@ -127,7 +129,8 @@ sia2 zuah8 zêg8 hiêh8  lêh8 se2  ding1 do3 ria2 nang5 ciê3
 22
 00:02:51,409 --> 00:02:57,879
 寤岂竭 单人眽孤墙
-ug8 kah4 ziê2  duan1 nang5 mo7 gou1 ciên5 
+ug8 kah4 ziê2  duan1 nang5 mo7 gou1 ciên5
+眽，视也。通“脉”。瞰帝唐之嵩高兮，眽隆周之大宁——《汉书》 
 睡得太少了 一个人望着孤独的墙面
 
 23
@@ -163,13 +166,13 @@ si6 dan3 ziê6  da1 ze3 ni5 seng1 gang3 loh8 hiêh8
 28
 00:03:26,029 --> 00:03:29,360
 我心靡木乍易变
-ua2 sim1	mi6 bhag8 zo3 goi7 biêng3 
+ua2 sim1 mi6 bhag8 zo3 goi7 biêng3 
 我心不是木头如何容易变形
 
 29
 00:03:29,360 --> 00:03:33,559
 我心靡席乍得抢
-ua2 sim1	mi6 ciêh8 zo3 diêh4 ciên2 
+ua2 sim1 mi6 ciêh8 zo3 diêh4 ciên2 
 我心不是竹席哪里需要抢先占领一席之地
 
 30
@@ -199,13 +202,13 @@ cang5 gin5 ê6  da1 bou1 bou3 cang5 lo6 kiah4 siêh8
 34
 00:03:53,930 --> 00:03:57,590
 我心靡木乍易变
-ua2 sim1	mi6 bhag8 zo3 goi7 biêng3 
+ua2 sim1 mi6 bhag8 zo3 goi7 biêng3 
 我心不是木头如何容易变形
 
 35
 00:03:57,590 --> 00:04:01,259
 我心靡席乍得抢
-ua2 sim1	mi6 ciêh8 zo3 diêh4 ciên2 
+ua2 sim1 mi6 ciêh8 zo3 diêh4 ciên2 
 我心不是竹席哪里需要抢先占领一席之地
 
 36
