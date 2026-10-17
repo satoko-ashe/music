@@ -794,8 +794,41 @@ const AUTO_SYNC_INTERVAL = 5 * 60 * 1000;
 /* ★★★ 工具箱远程配置地址 */
 const TOOLBOX_CONFIG_URL = 'https://satoko-ashe.github.io/music/app_links.json';
 
-/* ★★★ 在线音乐代理地址 - 替换为你部署的 Cloudflare Worker 地址 */
-let PROXY_BASE = 'https://music-proxy.1793364876.workers.dev';
+/* ★★★ 在线音乐代理地址配置 */
+// 1. 默认走 Cloudflare Worker
+let CLOUDFLARE_PROXY = 'https://music-proxy.1793364876.workers.dev';
+// 2. 本地代理地址
+let LOCAL_PROXY = 'http://127.0.0.1:3000/proxy';
+// 3. 动态使用的代理变量（初始设为 Cloudflare）
+let PROXY_BASE = CLOUDFLARE_PROXY;
+
+/* ★★★ 探测本地 proxy.exe 是否在运行的函数 */
+async function detectLocalProxy() {
+  try {
+    // 加一个 1.5 秒的超时控制，防止没装 exe 时网页卡住
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    
+    // 请求本地的代理（随便带个参数测试）
+    const res = await fetch(`${LOCAL_PROXY}?url=https://www.baidu.com`, { 
+      signal: controller.signal,
+      mode: 'cors' // 必须允许跨域
+    });
+    clearTimeout(timeoutId);
+    
+    if (res.ok) {
+      console.log('✅ 发现本地代理，已切换至 proxy.exe');
+      PROXY_BASE = LOCAL_PROXY; // 动态切换代理地址
+      // 顺便在界面上提示一下用户
+      if (typeof showToast === 'function') {
+        showToast('已连接本地代理，在线音乐已解锁！');
+      }
+    }
+  } catch (e) {
+    // 没通，说明用户没开 exe，或者被防火墙拦了
+    console.log('❌ 未检测到本地代理，继续使用云端代理或提示下载');
+  }
+}
 
 /* 离线兜底 */
 const DEFAULT_TOOLBOX = [
@@ -4191,6 +4224,7 @@ async function init(){
     window.addEventListener('beforeunload', ()=>{ bcPost({ type:'closed' }); });
     return;
   }
+await detectLocalProxy();
 
   initCollapse();
   loadPref();
