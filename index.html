@@ -779,7 +779,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 'use strict';
 
 /* ============================================================
-   常量
+   常量与配置
    ============================================================ */
 const DEFAULT_MANIFEST_URL = 'https://satoko-ashe.github.io/music/song_manifest.json';
 const DEFAULT_LOCAL_MANIFEST = 'D:\\MyMusic\\song_manifest.json';
@@ -791,8 +791,11 @@ const LS_LYRIC = 'mp_lyric_style_v1';
 /* ★★★ 自动同步间隔：5 分钟 */
 const AUTO_SYNC_INTERVAL = 5 * 60 * 1000;
 
-/* ★★★ 工具箱远程配置地址（改为 GitHub Pages 地址，更稳定） */
+/* ★★★ 工具箱远程配置地址 */
 const TOOLBOX_CONFIG_URL = 'https://satoko-ashe.github.io/music/app_links.json';
+
+/* ★★★ 在线音乐代理地址 - 替换为你部署的 Cloudflare Worker 地址 */
+let PROXY_BASE = 'https://music-proxy.1793364876.workers.dev';
 
 /* 离线兜底 */
 const DEFAULT_TOOLBOX = [
@@ -1262,8 +1265,14 @@ audio.addEventListener('error',()=>{
 });
 
 /* ============================================================
-   ★★★ 在线音乐：插件加载器 / 搜索 / 播放
+   ★★★ 在线音乐：代理请求与搜索
    ============================================================ */
+
+/* 通过 Cloudflare Worker 代理请求 */
+async function proxyFetch(url, options = {}){
+  const proxyUrl = `${PROXY_BASE}/proxy?url=${encodeURIComponent(url)}`;
+  return fetch(proxyUrl, options);
+}
 
 /* 动态加载 CDN 依赖 */
 function loadScriptOnce(key, url){
@@ -1326,7 +1335,8 @@ async function loadMusicFreePlugin(url){
   if(onlinePluginCache.has(url)) return onlinePluginCache.get(url);
   await ensureOnlineLibs();
 
-  const res = await fetch(url, { cache: 'no-cache' });
+  // ★★★ 这里改成 proxyFetch，防止 Gitee 拦截跨域
+  const res = await proxyFetch(url, { cache: 'no-cache' });
   if(!res.ok) throw new Error('插件文件请求失败 HTTP ' + res.status);
   const code = await res.text();
 
@@ -1336,7 +1346,6 @@ async function loadMusicFreePlugin(url){
   const sandboxConsole = { log:()=>{}, warn:()=>{}, error:()=>{}, info:()=>{}, debug:()=>{} };
 
   try{
-    // eslint-disable-next-line no-new-func
     const factory = new Function('module','exports','require','console','global','process','Buffer',
       code + '\n;return (typeof module!=="undefined" && module.exports) ? module.exports : (typeof exports!=="undefined" ? exports : undefined);');
     const result = factory(module, exports, require, sandboxConsole, window, { env:{} }, undefined);
@@ -1381,7 +1390,7 @@ function normalizeOnlineItem(item, idx, plugin, pluginUrl){
   };
 }
 
-/* 搜索 */
+/* 在线搜索 */
 async function doOnlineSearch(){
   const kw = ($('#onlineSearchInput').value || '').trim();
   if(!kw){ showToast('请输入搜索关键词'); return; }
@@ -1390,32 +1399,41 @@ async function doOnlineSearch(){
   onlineError = '';
   onlineSongs = [];
   renderAll();
+
   try{
+    // ★★★ 通过代理获取插件（如果插件本身需要跨域）
     const plugin = await loadMusicFreePlugin(ONLINE_PLUGIN_URL);
+
     let result;
     try{
       result = await plugin.search(kw, 1, 'music');
     }catch(e1){
       result = await plugin.search(kw, 1);
     }
+
     let data = [];
     if(Array.isArray(result)) data = result;
     else if(result && Array.isArray(result.data)) data = result.data;
     else if(result && result.data && Array.isArray(result.data.data)) data = result.data.data;
-    onlineSongs = data.map((item, idx)=>normalizeOnlineItem(item, idx, plugin, ONLINE_PLUGIN_URL));
+
+    onlineSongs = data.map((item, idx) => normalizeOnlineItem(item, idx, plugin, ONLINE_PLUGIN_URL));
     if(!onlineSongs.length) onlineError = '没有搜索结果';
   }catch(e){
     console.warn('[online] search failed', e);
-    onlineError = '搜索失败：' + (e && e.message ? e.message : e) + '。浏览器环境限制较多，建议下载桌面版体验完整在线音乐。';
+    onlineError = '搜索失败：' + (e && e.message ? e.message : e) + '。请检查网络或代理配置。';
   }finally{
     onlineLoading = false;
     renderAll();
   }
 }
 
-/* 获取在线音频直链 */
+/* 获取在线音频直链 - 通过代理 */
 async function resolveOnlineAudioUrl(song){
-  const plugin = song._plugin || await loadMusicFreePlugin(song._pluginUrl);
+  /* ★★★ 防御：缓存恢复的在线歌曲可能元数据缺失 */
+  if(!song || !song._raw || typeof song._raw !== 'object'){
+    throw new Error('在线歌曲元数据缺失，请重新搜索并播放');
+  }
+  const plugin = song._plugin || await loadMusicFreePlugin(song._pluginUrl || ONLINE_PLUGIN_URL);
   let mediaSource;
   try{
     mediaSource = await plugin.getMediaSource(song._raw, 'standard');
@@ -1427,7 +1445,9 @@ async function resolveOnlineAudioUrl(song){
   if(typeof mediaSource === 'string') url = mediaSource;
   else if(mediaSource && mediaSource.url) url = mediaSource.url;
   if(!url) throw new Error('插件未返回有效播放链接');
-  return url;
+
+  // ★★★ 通过 Worker 代理音频流，绕过防盗链和 CORS
+  return `${PROXY_BASE}/proxy?url=${encodeURIComponent(url)}`;
 }
 
 /* 渲染在线状态条 */
@@ -1588,11 +1608,38 @@ function renderToolbox(items){
 /* ============================================================
    用户数据
    ============================================================ */
+/* 保存用户数据时，包含在线歌曲的元数据 */
 async function persistUser(){
-  const data = { fav:[...favSet], history:historyList.slice(0,200), pinned:[...pinnedSet], order:{} };
+  const data = {
+    fav:[...favSet],
+    history:historyList.slice(0,200),
+    pinned:[...pinnedSet],
+    order:{},
+    onlineCache:{} // ★★★ 新增在线歌曲缓存
+  };
   orderMap.forEach((v,k)=>data.order[k]=v);
+
+  // 将收藏或历史中的在线歌曲元数据存入缓存
+  onlineSongs.forEach(s => {
+    if(favSet.has(s.id) || historyList.some(h => h.id === s.id)){
+      // ★★★ 只存可序列化的元数据，不存 _plugin 实例
+      data.onlineCache[s.id] = {
+        id: s.id,
+        title: s.title,
+        coverArtist: s.coverArtist,
+        cover: s.cover,
+        duration: s.duration,
+        tags: s.tags,
+        source: s.source,
+        _raw: s._raw,
+        _pluginUrl: s._pluginUrl || ONLINE_PLUGIN_URL
+      };
+    }
+  });
+
   try{ await idbPut('kv', 'user', data); }catch(_){}
 }
+/* 加载用户数据时，恢复在线歌曲缓存 */
 async function loadUser(){
   const d = await idbGet('kv', 'user');
   if(!d || typeof d !== 'object') return;
@@ -1600,6 +1647,21 @@ async function loadUser(){
   if(Array.isArray(d.history)) historyList = d.history.filter(x=>x&&x.id);
   if(Array.isArray(d.pinned)) pinnedSet = new Set(d.pinned);
   if(d.order && typeof d.order==='object') Object.entries(d.order).forEach(([id,v])=>orderMap.set(id,v));
+
+  // ★★★ 恢复缓存的在线歌曲
+  if(d.onlineCache){
+    Object.values(d.onlineCache).forEach(s => {
+      if(!s || !s.id) return;
+      if(onlineSongs.find(x => x.id === s.id)) return;
+      // ★★★ 插件实例无法跨会话复用，清掉 _plugin，播放时按 _pluginUrl 重新加载
+      if(s._plugin) s._plugin = null;
+      // ★★★ 确保 _pluginUrl 存在，否则缓存歌曲无法重新解析播放链接
+      if(!s._pluginUrl) s._pluginUrl = ONLINE_PLUGIN_URL;
+      // ★★★ _raw 若在存取过程中被破坏，给个兜底，避免 getMediaSource 直接抛错
+      if(!s._raw || typeof s._raw !== 'object') s._raw = {};
+      onlineSongs.push(s);
+    });
+  }
 }
 
 /* ============================================================
@@ -1745,7 +1807,11 @@ function parseLRCBlocks(text){
       times.push((+m[1])*3600 + (+m[2])*60 + frac/1000);
     }
     if(!times.length) continue;
-    const txt = line.slice(lastEnd).trim();
+    let txt = line.slice(lastEnd).trim();
+
+    // ★★★ 清洗文本中残留的时间标签
+    txt = txt.replace(/\[\d{2}:\d{2}(?:\.\d{1,3})?\]/g, '').trim();
+
     if(!txt) continue;
     for(const t of times) out.push({ time:t, text:txt, romaji:'', trans:'' });
   }
@@ -1946,22 +2012,37 @@ function addFallbackIfMissing(img){
   fb.textContent = initial;
   cover.insertBefore(fb, cover.firstChild);
 }
+/* 封面加载 - 修复占位符遮挡 */
 function hydrateCovers(root){
   root.querySelectorAll('img[data-cover]').forEach(async img=>{
     if(img.dataset.hydrated === '1') return;
     img.dataset.hydrated = '1';
     const path = img.dataset.cover;
     const url = await getCoverUrl(path);
+
     if(!url){
+      // 无图时显示占位符
       img.remove();
       addFallbackIfMissing(img);
       return;
     }
-    img.addEventListener('load', ()=>img.classList.add('loaded'), { once:true });
+
+    // 有图时，图片加载成功后隐藏占位符
+    img.addEventListener('load', ()=>{
+      img.classList.add('loaded');
+      // ★★★ 图片加载成功后，确保占位符被隐藏
+      const cover = img.parentElement;
+      if(cover){
+        const fb = cover.querySelector('.fallback, .fb');
+        if(fb) fb.style.display = 'none';
+      }
+    }, { once:true });
+
     img.addEventListener('error', ()=>{
       img.remove();
       addFallbackIfMissing(img);
     }, { once:true });
+
     img.src = url;
   });
 }
@@ -2479,6 +2560,7 @@ function setPbCover(src){
     if(fb) fb.style.display = '';
   }
 }
+/* 渲染播放信息 - 同步爱心状态 */
 async function renderNpInfo(song){
   if(!song){
     npTitle.textContent = '未选择歌曲';
@@ -2491,6 +2573,7 @@ async function renderNpInfo(song){
     btnFav.classList.remove('on');
     btnMV.style.display = 'none';
     btnLz.style.display = 'none';
+    updateFavPinUI(); // ★★★ 确保无歌曲时爱心状态重置
     return;
   }
   const artist = song.coverArtist || song.originalArtist || '未知歌手';
@@ -2534,6 +2617,7 @@ async function renderNpInfo(song){
     karBtn.disabled = !song.instrumental;
     karBtn.title = song.instrumental ? '唱K：伴奏 + 弱人声（跟唱）' : '没有伴奏文件，无法唱K';
   }
+  // ★★★ 同步更新底部播放栏的收藏按钮状态
   updateFavPinUI();
 }
 
@@ -4164,6 +4248,8 @@ async function init(){
     console.warn('[sync] failed:', e);
     showToast('远程清单同步失败，请检查网络或清单地址');
   }
+
+  /* ★★★ 移除 checkUpdate() 调用（源文件本来也没有，保持不引入） */
 
   requestAnimationFrame(loop);
   if(window.ResizeObserver && lyricsPane){
