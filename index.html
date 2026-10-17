@@ -1746,7 +1746,11 @@ function parseLRCBlocks(text){
 
     txt = txt.replace(/\[\d{2}:\d{2}(?:\.\d{1,3})?\]/g, '').trim();
 
-    if(!txt) continue;
+        if(!txt) continue;
+    
+    // ★★★ 新增：过滤掉不是时间标签的元数据（如 [by:xxx]）
+    if(/^(作词|作曲|编曲|演唱|原唱|混音|母带|制作|出品|词|曲|by|ti|ar|al)\s*[:：]/i.test(txt)) continue;
+
     for(const t of times) out.push({ time:t, text:txt, romaji:'', trans:'' });
   }
   return out.sort((a,b)=>a.time - b.time);
@@ -2634,6 +2638,8 @@ function setActive(i, force){
 function scrollToActive(){
   const el = state.lineEls[state.activeIndex];
   if(!el || !lyricsPane) return;
+   // ★★★ 新增这行日志
+  console.log('滚动测试: 目标index=', state.activeIndex, '元素存在=', !!el, 'pane高度=', lyricsPane.clientHeight);
   const er = el.getBoundingClientRect();
   const pr = lyricsPane.getBoundingClientRect();
   const target = lyricsPane.scrollTop + (er.top - pr.top) - (pr.height - er.height)/2;
