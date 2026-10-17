@@ -1,0 +1,57 @@
+{
+  "toolbox": [
+    { "icon": "📄", "name": "字幕格式转换", "url": "https://subtitleconverters.com/conversions/" },
+    { "icon": "🎵", "name": "海绵AI免费音乐制作", "url": "https://www.haimian.com/" },
+    { "icon": "📺", "name": "B站视频下载", "url": "https://snapany.com/zh/bilibili" },
+    { "icon": "✏️", "name": "在线字幕编辑器", "url": "https://editsub.com/zh/edit" },
+    { "icon": "🎤", "name": "人声在线分离", "url": "https://vocalremover.org/splitter-ai" },
+    { "icon": "🖼️", "name": "图片尺寸改图宝", "url": "https://www.gaitubao.com/" },
+    { "icon": "✂️", "name": "图片编辑器", "url": "https://satoko-ashe.github.io/label/image-editor.html" },
+    { "icon": "🎼", "name": "QQ音乐发布后台", "url": "https://y.qq.com/vemus/" },
+    { "icon": "☁️", "name": "蓝奏云网盘", "url": "https://up.woozooo.com/" },
+    { "icon": "🔗", "name": "屋舍转直链", "url": "https://www.uhsea.com/" },
+    { "icon": "🎶", "name": "语音在线托管", "url": "https://www.mp3tourl.com/zh/tools/voice-to-link" }
+  ],
+  "musicSources": [
+    {
+      "name": "长青聚合音源",
+      "type": "musicfree_aggregate",
+      "url": "https://13413.kstore.vip/yuanli/yuanli.json"
+    },
+    {
+      "name": "洛雪独家音源",
+      "type": "lx",
+      "url": "https://s3.liumingye.cn/files/tool/lx-dujia.js"
+    },
+    {
+      "name": "元力·网易云",
+      "type": "musicfree",
+      "url": "https://13413.kstore.vip/yuanli/wy.js"
+    },
+    {
+      "name": "元力·QQ音乐",
+      "type": "musicfree",
+      "url": "https://13413.kstore.vip/yuanli/qq.js"
+    },
+    {
+      "name": "元力·酷我",
+      "type": "musicfree",
+      "url": "https://13413.kstore.vip/yuanli/kw.js"
+    },
+    {
+      "name": "元力·酷狗",
+      "type": "musicfree",
+      "url": "https://13413.kstore.vip/yuanli/kg.js"
+    },
+    {
+      "name": "元力·小米",
+      "type": "musicfree",
+      "url": "https://13413.kstore.vip/yuanli/xiaomi.js"
+    },
+    {
+      "name": "Bilibili",
+      "type": "musicfree",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js"
+    }
+  ]
+}
