@@ -1,0 +1,11 @@
+{
+  "version": "0.4.0",
+  "downloadUrl": "https://wwbpm.lanzoue.com/iKo9k4cbrbef",
+  "password": "2026",
+  "releaseNotes": [
+    "全面支持在线音乐（B站、洛雪、元力聚合）",
+    "优化了搜索与播放的稳定性",
+    "修复了部分歌词解析错乱的问题",
+    "新增自动检测更新功能"
+  ]
+}

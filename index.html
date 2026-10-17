@@ -806,7 +806,8 @@ const CDN_LIBS = {
   CryptoJS: 'https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js',
   dayjs:    'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js',
   he:       'https://cdn.jsdelivr.net/npm/he@1.2.0/he.min.js',
-  Qs:       'https://cdn.jsdelivr.net/npm/qs@6.12.0/dist/qs.js'
+  Qs:       'https://cdn.jsdelivr.net/npm/qs@6.12.0/dist/qs.js',
+  bigInt:   'https://cdn.jsdelivr.net/npm/big-integer@1.6.51/BigInteger.min.js'
 };
 
 const $  = (s,r=document)=>r.querySelector(s);
@@ -1261,7 +1262,7 @@ audio.addEventListener('error',()=>{
 });
 
 /* ============================================================
-   ★★★ 在线音乐：B站插件加载器 / 搜索 / 播放
+   ★★★ 在线音乐：插件加载器 / 搜索 / 播放
    ============================================================ */
 
 /* 动态加载 CDN 依赖 */
@@ -1284,7 +1285,8 @@ async function ensureOnlineLibs(){
     loadScriptOnce('CryptoJS', CDN_LIBS.CryptoJS).catch(()=>null),
     loadScriptOnce('dayjs',    CDN_LIBS.dayjs).catch(()=>null),
     loadScriptOnce('he',       CDN_LIBS.he).catch(()=>null),
-    loadScriptOnce('Qs',       CDN_LIBS.Qs).catch(()=>null)
+    loadScriptOnce('Qs',       CDN_LIBS.Qs).catch(()=>null),
+    loadScriptOnce('bigInt',   CDN_LIBS.bigInt).catch(()=>null)
   ]);
 }
 
@@ -1295,7 +1297,23 @@ function createRequireShim(){
     'crypto-js': window.CryptoJS,
     'dayjs': window.dayjs,
     'he': window.he,
-    'qs': window.Qs
+    'qs': window.Qs,
+    'big-integer': window.bigInt,
+    // 极简 Mock，让依赖 cheerio 的插件不崩溃
+    'cheerio': {
+      load: function() {
+        return function() {
+          return {
+            text: () => '',
+            html: () => '',
+            attr: () => '',
+            find: function() { return this; },
+            each: function() { return this; },
+            length: 0
+          };
+        };
+      }
+    }
   };
   return function require(name){
     if(map[name]) return map[name];
