@@ -92,7 +92,17 @@ body[data-view="player"] .pane-player{display:flex}
 .cover{position:relative;aspect-ratio:1/1;background:linear-gradient(135deg,#2a2138,#16161f);overflow:hidden}
 .cover img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s;position:relative;z-index:2;background:#1a1a23}
 .cover img.loaded{opacity:1}
-.cover .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.18;z-index:1}
+/* 主界面大卡片 */
+.cover .fallback{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size: clamp(50px, 5vw, 90px);
+  color: var(--accent);          /* 鲜艳红，跟主题色一致 */
+  opacity: .55;                  /* 从 .08 提到 .55，明显但不刺眼 */
+  z-index: 1;
+  transition: opacity .3s;
+  text-shadow: 0 0 24px rgba(236,65,65,.35);  /* 轻微发光，更突出 */
+}
 .cover .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,transparent 35%,transparent 55%,rgba(0,0,0,.75) 100%);pointer-events:none;z-index:3}
 .play-fab{position:absolute;right:12px;bottom:12px;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;opacity:0;transform:translateY(6px) scale(.9);transition:.22s;box-shadow:0 6px 18px -4px rgba(236,65,65,.9);z-index:4}
 .card:hover .play-fab,.card.playing .play-fab{opacity:1;transform:translateY(0) scale(1)}
@@ -102,7 +112,7 @@ body[data-view="player"] .pane-player{display:flex}
 .play-fab .i-pause{display:none}
 .card.playing-now .play-fab .i-play{display:none}
 .card.playing-now .play-fab .i-pause{display:block}
-.badges{position:absolute;top:10px;left:10px;display:flex;gap:5px;z-index:2}
+.badges{position:absolute;top:10px;left:10px;display:flex;gap:5px;z-index:3}
 .card.selectable .badges{left:auto;right:10px}
 .badge{height:24px;min-width:24px;padding:0 7px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-size:11px;color:#ddd;border:1px solid rgba(255,255,255,.1);gap:3px}
 .badge.pin{color:#ffc45e;border-color:rgba(255,196,94,.35)}
@@ -218,7 +228,14 @@ body.side-collapsed .side-panel{flex:0 0 0;width:0;border-left:none;opacity:0;po
 .list-item.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:56%;border-radius:0 2px 2px 0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
 .item-cover{width:38px;height:38px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#2a2138,#16161f);overflow:hidden;position:relative}
 .item-cover img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:2;background:#1a1a23}
-.item-cover .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#555;z-index:1}
+.item-cover .fb, .pb-cover .fb {
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size: 20px;
+  color: var(--accent);
+  opacity: .6;
+  z-index: 1;
+}
 .item-info{flex:1;min-width:0}
 .item-title{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .list-item.active .item-title{color:var(--accent);font-weight:600}
@@ -544,22 +561,28 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
         </div>
         <div class="grid-wrap" id="gridWrap">
           <section class="section" id="sectionRecommend"><div class="grid" id="gridRecommend"></div></section>
+          
           <section class="section" id="sectionOnline" hidden>
+            <!-- ★★★ 备用音乐快捷入口 -->
+            <div class="online-desktop-banner" style="margin-bottom: 20px; border-color: rgba(255,255,255,.15); background: rgba(255,255,255,.03);">
+              <div class="txt" style="color:#aaa;">
+                搜不到想要的歌？可以前往以下免费备用平台直接听歌：
+              </div>
+              <div class="row wrap" style="gap: 8px;">
+                <button class="ghost sm" onclick="window.open('https://tonzhon.com/','_blank')">铜钟音乐</button>
+                <button class="ghost sm" onclick="window.open('https://www.xmwsyy.com/','_blank')">熊猫无损</button>
+                <button class="ghost sm" onclick="window.open('https://www.dtwav.com/','_blank')">动听音乐</button>
+              </div>
+            </div>
+
             <div class="online-bar">
-              <input type="text" id="onlineSearchInput" placeholder="搜索 B站 音乐或视频…" autocomplete="off">
-              <select id="onlinePluginSelect">
-                <option value="https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js">Bilibili (网页版支持)</option>
-                <option disabled>网易云 / QQ音乐 (需桌面版)</option>
-              </select>
+              <input type="text" id="onlineSearchInput" placeholder="搜索网易云音乐歌曲…" autocomplete="off">
               <button class="primary" id="onlineSearchBtn">搜索</button>
             </div>
             <div class="online-status" id="onlineStatus" hidden></div>
             <div class="grid" id="gridOnline"></div>
-            <div class="online-desktop-banner" id="onlineDesktopBanner" hidden>
-              <div class="txt">想要搜索 <b>网易云、QQ音乐、酷狗</b> 等海量版权音源？</div>
-              <button class="btn" id="onlineDownloadDesktopBanner">💻 下载桌面版解锁</button>
-            </div>
           </section>
+          
           <section class="section" id="sectionLocal" hidden><div class="grid" id="gridLocal"></div></section>
           <div class="empty" id="emptyAll" hidden></div>
         </div>
@@ -728,7 +751,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
     <div class="tip">
       <b>工作方式</b>
       选择音乐根目录，程序按 <code>audio/</code>、<code>instrumental/</code>、<code>covers/</code>、<code>lyrics/</code> 子目录里的同名文件自动配对。<br>
-      导入后数据存入浏览器本地数据库，且与根目录下的 <code>song_manifest.json</code> 联动 —— 该文件会作为权威曲库参考，导入时自动去重。
+      导入后数据存入浏览器本地数据库。
     </div>
     <div class="row wrap" style="flex-shrink:0">
       <button class="primary" id="btnPickRoot">📁 选择音乐根目录</button>
@@ -792,54 +815,14 @@ const AUTO_SYNC_INTERVAL = 5 * 60 * 1000;
 
 const TOOLBOX_CONFIG_URL = 'https://satoko-ashe.github.io/music/app_links.json';
 
-/* ★★★ 在线音乐代理地址配置 */
-// 1. 默认走 Cloudflare Worker
-let CLOUDFLARE_PROXY = 'https://music-proxy.1793364876.workers.dev';
-// 2. 本地代理地址
-let LOCAL_PROXY = 'http://127.0.0.1:3000/proxy';
-// 3. 动态使用的代理变量（初始设为 Cloudflare）
-let PROXY_BASE = CLOUDFLARE_PROXY;
+/* ★★★ 免代理直接请求的网易云公共 API */
+const NETEASE_API = 'https://music-api.gdstudio.xyz/api.php'; 
 
-/* ★★★ 探测本地 proxy.exe 是否在运行的函数 */
-async function detectLocalProxy() {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
-    
-    const res = await fetch(`${LOCAL_PROXY}?url=https://www.baidu.com`, { 
-      signal: controller.signal,
-      mode: 'cors' 
-    });
-    clearTimeout(timeoutId);
-    
-    if (res.ok) {
-      console.log('✅ 发现本地代理，已切换至 proxy.exe');
-      PROXY_BASE = LOCAL_PROXY;
-      if (typeof showToast === 'function') {
-        showToast('已连接本地代理，在线音乐已解锁！');
-      }
-      // 隐藏提示横幅
-      const banner = document.getElementById('localProxyBanner');
-      if (banner) banner.hidden = true;
-    }
-  } catch (e) {
-    console.log('❌ 未检测到本地代理，继续使用云端代理或提示下载');
-  }
-}
-
+/* 离线兜底 */
 const DEFAULT_TOOLBOX = [
   { icon: '☁️', name: '蓝奏云网盘', url: 'https://up.woozooo.com/' },
   { icon: '🎼', name: 'QQ音乐发布后台', url: 'https://y.qq.com/vemus/' }
 ];
-
-const CDN_LIBS = {
-  axios:    'https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js',
-  CryptoJS: 'https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js',
-  dayjs:    'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js',
-  he:       'https://cdn.jsdelivr.net/npm/he@1.2.0/he.min.js',
-  Qs:       'https://cdn.jsdelivr.net/npm/qs@6.12.0/dist/qs.js',
-  bigInt:   'https://cdn.jsdelivr.net/npm/big-integer@1.6.51/BigInteger.min.js'
-};
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -1119,10 +1102,6 @@ const RATE_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 let onlineSongs = [];
 let onlineLoading = false;
 let onlineError = '';
-let onlineKeyword = '';
-const onlinePluginCache = new Map();
-const onlineLibPromises = {};
-const ONLINE_PLUGIN_URL = 'https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js';
 
 const state = {
   lines:[], lineEls:[], activeIndex:-1,
@@ -1284,189 +1263,141 @@ audio.addEventListener('error',()=>{
 });
 
 /* ============================================================
-   ★★★ 在线音乐：代理请求与搜索
+   ★★★ 在线音乐：免代理直接请求的网易云公共 API (带缓存)
    ============================================================ */
-
-/* 通过 Cloudflare Worker 代理请求 */
-async function proxyFetch(url, options = {}){
-  const proxyUrl = `${PROXY_BASE}?url=${encodeURIComponent(url)}`;
-  return fetch(proxyUrl, options);
-}
-
-/* 动态加载 CDN 依赖 */
-function loadScriptOnce(key, url){
-  if(onlineLibPromises[key]) return onlineLibPromises[key];
-  onlineLibPromises[key] = new Promise((resolve, reject)=>{
-    if(window[key]){ resolve(window[key]); return; }
-    const s = document.createElement('script');
-    s.src = url;
-    s.async = true;
-    s.onload = ()=>resolve(window[key]);
-    s.onerror = ()=>reject(new Error('加载依赖失败: ' + key));
-    document.head.appendChild(s);
-  });
-  return onlineLibPromises[key];
-}
-async function ensureOnlineLibs(){
-  await Promise.all([
-    loadScriptOnce('axios',    CDN_LIBS.axios).catch(()=>null),
-    loadScriptOnce('CryptoJS', CDN_LIBS.CryptoJS).catch(()=>null),
-    loadScriptOnce('dayjs',    CDN_LIBS.dayjs).catch(()=>null),
-    loadScriptOnce('he',       CDN_LIBS.he).catch(()=>null),
-    loadScriptOnce('Qs',       CDN_LIBS.Qs).catch(()=>null),
-    loadScriptOnce('bigInt',   CDN_LIBS.bigInt).catch(()=>null)
-  ]);
-}
-
-/* 模拟 CommonJS 的 require */
-function createRequireShim(){
-  const map = {
-    'axios': window.axios,
-    'crypto-js': window.CryptoJS,
-    'dayjs': window.dayjs,
-    'he': window.he,
-    'qs': window.Qs,
-    'big-integer': window.bigInt,
-    'cheerio': {
-      load: function() {
-        return function() {
-          return {
-            text: () => '',
-            html: () => '',
-            attr: () => '',
-            find: function() { return this; },
-            each: function() { return this; },
-            length: 0
-          };
-        };
-      }
-    }
-  };
-  return function require(name){
-    if(map[name]) return map[name];
-    throw new Error('模块不可用: ' + name);
-  };
-}
-
-/* 加载 MusicFree 插件 */
-async function loadMusicFreePlugin(url){
-  if(onlinePluginCache.has(url)) return onlinePluginCache.get(url);
-  await ensureOnlineLibs();
-
-  // ★★★ 这里改成 proxyFetch，防止 Gitee 拦截跨域
-  const res = await proxyFetch(url, { cache: 'no-cache' });
-  if(!res.ok) throw new Error('插件文件请求失败 HTTP ' + res.status);
-  const code = await res.text();
-
-  const module = { exports: {} };
-  const exports = module.exports;
-  const require = createRequireShim();
-  const sandboxConsole = { log:()=>{}, warn:()=>{}, error:()=>{}, info:()=>{}, debug:()=>{} };
-
-  try{
-    const factory = new Function('module','exports','require','console','global','process','Buffer',
-      code + '\n;return (typeof module!=="undefined" && module.exports) ? module.exports : (typeof exports!=="undefined" ? exports : undefined);');
-    const result = factory(module, exports, require, sandboxConsole, window, { env:{} }, undefined);
-    const plugin = result || module.exports;
-    if(!plugin || typeof plugin !== 'object') throw new Error('插件导出为空');
-    if(typeof plugin.search !== 'function') throw new Error('插件缺少 search 方法');
-    onlinePluginCache.set(url, plugin);
-    return plugin;
-  }catch(e){
-    throw new Error('插件执行失败: ' + (e && e.message ? e.message : e));
-  }
-}
-
-/* 归一化在线歌曲字段 */
-function normalizeOnlineItem(item, idx, plugin, pluginUrl){
-  const rawId = item.id || item.songmid || item.songId || item.bvid || item.title || '';
-  const id = 'online_' + djb2(String(rawId) + '_' + idx + '_' + Date.now()).toString(36);
-  const title = item.title || item.name || item.songname || item.songName || '未知歌曲';
-  let artist = '';
-  if(Array.isArray(item.artist)) artist = item.artist.join(' / ');
-  else if(item.artist) artist = String(item.artist);
-  else if(item.singer) artist = String(item.singer);
-  else if(item.artists) artist = String(item.artists);
-  else if(item.author) artist = String(item.author);
-  let cover = item.artwork || item.pic || item.cover || item.albumArt || item.coverUrl || '';
-  if(Array.isArray(cover)) cover = cover[0] || '';
-  if(cover && typeof cover === 'object') cover = cover.url || cover.src || '';
-  let duration = item.duration || item.interval || 0;
-  if(typeof duration === 'string'){ duration = parseFloat(duration) || 0; }
-  if(duration > 10000) duration = duration / 1000;
-  return {
-    id,
-    title: String(title),
-    coverArtist: artist,
-    cover: typeof cover === 'string' ? cover : '',
-    duration: duration,
-    tags: ['在线'],
-    source: 'online',
-    _raw: item,
-    _plugin: plugin,
-    _pluginUrl: pluginUrl
-  };
-}
-
-/* 在线搜索 */
-async function doOnlineSearch(){
+async function doOnlineSearch() {
   const kw = ($('#onlineSearchInput').value || '').trim();
-  if(!kw){ showToast('请输入搜索关键词'); return; }
-  onlineKeyword = kw;
+  if (!kw) { showToast('请输入搜索关键词'); return; }
+  
   onlineLoading = true;
   onlineError = '';
   onlineSongs = [];
   renderAll();
 
-  try{
-    // ★★★ 通过代理获取插件（如果插件本身需要跨域）
-    const plugin = await loadMusicFreePlugin(ONLINE_PLUGIN_URL);
+  // 1. 尝试读取本地缓存 (缓存保留 12 小时)
+  const cacheKey = 'nt_search_' + kw;
+  const cachedStr = localStorage.getItem(cacheKey);
+  if (cachedStr) {
+    try {
+      const cached = JSON.parse(cachedStr);
+      if (cached.time && (Date.now() - cached.time < 43200000)) {
+        console.log('⚡ 从缓存加载搜索结果:', kw);
+        onlineSongs = cached.data;
+        onlineLoading = false;
+        renderAll();
+        return;
+      }
+    } catch(e) {}
+  }
 
-    let result;
-    try{
-      result = await plugin.search(kw, 1, 'music');
-    }catch(e1){
-      result = await plugin.search(kw, 1);
-    }
+  // 2. 缓存没有，去请求 API
+  try {
+    const url = `${NETEASE_API}?types=search&source=netease&name=${encodeURIComponent(kw)}&count=30`;
+    const res = await fetch(url);
+    const list = await res.json();
 
-    let data = [];
-    if(Array.isArray(result)) data = result;
-    else if(result && Array.isArray(result.data)) data = result.data;
-    else if(result && result.data && Array.isArray(result.data.data)) data = result.data.data;
+    if (!Array.isArray(list) || !list.length) throw new Error('没有找到相关歌曲');
 
-    onlineSongs = data.map((item, idx) => normalizeOnlineItem(item, idx, plugin, ONLINE_PLUGIN_URL));
-    if(!onlineSongs.length) onlineError = '没有搜索结果';
-  }catch(e){
+    onlineSongs = list.map(item => {
+      let cover = '';
+      if (item.pic) cover = item.pic;
+      else if (item.pic_id) cover = `https://p1.music.126.net/${item.pic_id}.jpg`;
+      else if (item.al && item.al.picUrl) cover = item.al.picUrl;
+      
+      // 如果都没有，就留空，让前端显示 🎵
+      if (!cover) cover = ''; 
+
+      return {
+        id: 'nt_' + item.id,
+        title: item.name || '未知歌曲',
+        coverArtist: item.artist ? item.artist.join(' / ') : '未知歌手',
+        cover: cover,
+        duration: 0,
+        tags: ['网易云'],
+        source: 'online',
+        _raw: item
+      };
+    });
+
+    // 3. 请求成功，写入本地缓存
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: onlineSongs }));
+    } catch(e) {}
+
+  } catch (e) {
     console.warn('[online] search failed', e);
-    onlineError = '搜索失败：' + (e && e.message ? e.message : e) + '。请检查网络或代理配置。';
-  }finally{
+    onlineError = '搜索失败：' + (e.message || e) + '。接口可能已失效。';
+  } finally {
     onlineLoading = false;
     renderAll();
   }
+}  // <--- 注意这里：doOnlineSearch 函数结束
+
+
+async function resolveOnlineAudioUrl(song) {
+  if (!song || !song._raw) throw new Error('歌曲元数据丢失');
+  const songId = song._raw.id;
+  if (!songId) throw new Error('缺少歌曲 ID');
+
+  // 1. 尝试从 localStorage 获取歌词和音频链接缓存
+  const cacheKey = 'nt_detail_' + songId;
+  let cachedData = null;
+  try {
+    const c = localStorage.getItem(cacheKey);
+    if (c) cachedData = JSON.parse(c);
+  } catch(_) {}
+
+  // 2. 如果有歌词缓存，直接加载
+  if (cachedData && cachedData.lyricLines) {
+    song.lyricLines = cachedData.lyricLines;
+    song._lyricFetched = true;
+  }
+
+  // 如果没有歌词缓存，去请求歌词
+  if (!song._lyricFetched) {
+    try {
+      const lyricRes = await fetch(`${NETEASE_API}?types=lyric&source=netease&id=${songId}`);
+      const lyricJson = await lyricRes.json();
+      if (lyricJson && lyricJson.lyric) {
+        song.lyricLines = parseLyricText(lyricJson.lyric);
+      }
+      song._lyricFetched = true; 
+    } catch(e) { console.warn('[online] 歌词获取失败', e); }
+  }
+
+  // 3. 检查音频链接缓存（缓存 1 小时）
+  if (cachedData && cachedData.url && cachedData.urlTime) {
+    if (Date.now() - cachedData.urlTime < 3600000) {
+      return cachedData.url;
+    }
+  }
+
+  // 4. 获取新的播放链接
+  try {
+    const url = `${NETEASE_API}?types=url&source=netease&id=${songId}&br=320`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const playUrl = data.url;
+    if (!playUrl) throw new Error('未获取到有效播放链接（可能受版权限制）');
+    const finalUrl = playUrl.replace(/^http:/, 'https:');
+
+    // 5. 将新的歌词和 URL 写入缓存
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({
+        lyricLines: song.lyricLines || [],
+        url: finalUrl,
+        urlTime: Date.now()
+      }));
+    } catch(_) {}
+
+    return finalUrl; 
+  } catch (e) {
+    console.warn('[online] get url failed', e);
+    throw new Error('获取播放地址失败，可能受版权限制');
+  }
 }
 
-/* 获取在线音频直链 - 通过代理 */
-async function resolveOnlineAudioUrl(song){
-  if(!song || !song._raw || typeof song._raw !== 'object'){
-    throw new Error('在线歌曲元数据缺失，请重新搜索并播放');
-  }
-  const plugin = song._plugin || await loadMusicFreePlugin(song._pluginUrl || ONLINE_PLUGIN_URL);
-  let mediaSource;
-  try{
-    mediaSource = await plugin.getMediaSource(song._raw, 'standard');
-  }catch(e1){
-    try{ mediaSource = await plugin.getMediaSource(song._raw); }
-    catch(e2){ throw new Error('getMediaSource 失败: ' + (e2 && e2.message ? e2.message : e2)); }
-  }
-  let url = '';
-  if(typeof mediaSource === 'string') url = mediaSource;
-  else if(mediaSource && mediaSource.url) url = mediaSource.url;
-  if(!url) throw new Error('插件未返回有效播放链接');
-
-  return `${PROXY_BASE}?url=${encodeURIComponent(url)}`;
-}
-
-/* 渲染在线状态条 */
 function renderOnlineStatus(){
   const box = $('#onlineStatus');
   if(!box) return;
@@ -1489,7 +1420,6 @@ function renderOnlineStatus(){
   box.innerHTML = '';
 }
 
-/* 在线失败弹窗 */
 function showOnlineFailDialog(err){
   const m = document.createElement('div');
   m.className = 'modal online-fail-modal';
@@ -1644,8 +1574,7 @@ async function persistUser(){
         duration: s.duration,
         tags: s.tags,
         source: s.source,
-        _raw: s._raw,
-        _pluginUrl: s._pluginUrl || ONLINE_PLUGIN_URL
+        _raw: s._raw
       };
     }
   });
@@ -1664,8 +1593,6 @@ async function loadUser(){
     Object.values(d.onlineCache).forEach(s => {
       if(!s || !s.id) return;
       if(onlineSongs.find(x => x.id === s.id)) return;
-      if(s._plugin) s._plugin = null;
-      if(!s._pluginUrl) s._pluginUrl = ONLINE_PLUGIN_URL;
       if(!s._raw || typeof s._raw !== 'object') s._raw = {};
       onlineSongs.push(s);
     });
@@ -2009,14 +1936,13 @@ async function getCoverUrl(path){
   return await p;
 }
 
-function addFallbackIfMissing(img){
-  const cover = img.parentElement;
+/* ★★★ 封面兜底：始终先渲染 .fallback，图片加载成功后再隐藏 */
+function addFallbackTo(cover, initial){
   if(!cover) return;
   if(cover.querySelector('.fallback, .fb')) return;
-  const initial = img.dataset.initial || '♪';
   const fb = document.createElement('div');
   fb.className = cover.classList.contains('item-cover') ? 'fb' : 'fallback';
-  fb.textContent = initial;
+  fb.textContent = initial || '🎵';
   cover.insertBefore(fb, cover.firstChild);
 }
 function hydrateCovers(root){
@@ -2024,26 +1950,27 @@ function hydrateCovers(root){
     if(img.dataset.hydrated === '1') return;
     img.dataset.hydrated = '1';
     const path = img.dataset.cover;
+    const initial = img.dataset.initial || '🎵';
+    const cover = img.parentElement;   // 先取容器，防止后续 remove 后拿不到
     const url = await getCoverUrl(path);
 
+    if(!cover){ try{ img.remove(); }catch(_){} return; }
+
     if(!url){
-      img.remove();
-      addFallbackIfMissing(img);
+      try{ img.remove(); }catch(_){}
+      addFallbackTo(cover, initial);
       return;
     }
 
     img.addEventListener('load', ()=>{
       img.classList.add('loaded');
-      const cover = img.parentElement;
-      if(cover){
-        const fb = cover.querySelector('.fallback, .fb');
-        if(fb) fb.style.display = 'none';
-      }
+      const fb = cover.querySelector('.fallback, .fb');
+      if(fb) fb.style.display = 'none';
     }, { once:true });
 
     img.addEventListener('error', ()=>{
-      img.remove();
-      addFallbackIfMissing(img);
+      try{ img.src = ''; img.remove(); }catch(_){}
+      addFallbackTo(cover, initial);
     }, { once:true });
 
     img.src = url;
@@ -2084,11 +2011,11 @@ function cleanupOrphans(){
   const validIds = new Set(allSongs.map(s=>s.id));
   onlineSongs.forEach(s=>validIds.add(s.id));
   let changed = false;
-  for(const id of [...favSet]) if(!validIds.has(id) && !String(id).startsWith('online_')){ favSet.delete(id); changed = true; }
-  for(const id of [...pinnedSet]) if(!validIds.has(id) && !String(id).startsWith('online_')){ pinnedSet.delete(id); changed = true; }
-  for(const id of [...orderMap.keys()]) if(!validIds.has(id) && !String(id).startsWith('online_')){ orderMap.delete(id); changed = true; }
+  for(const id of [...favSet]) if(!validIds.has(id) && !String(id).startsWith('online_') && !String(id).startsWith('nt_')){ favSet.delete(id); changed = true; }
+  for(const id of [...pinnedSet]) if(!validIds.has(id) && !String(id).startsWith('online_') && !String(id).startsWith('nt_')){ pinnedSet.delete(id); changed = true; }
+  for(const id of [...orderMap.keys()]) if(!validIds.has(id) && !String(id).startsWith('online_') && !String(id).startsWith('nt_')){ orderMap.delete(id); changed = true; }
   const before = historyList.length;
-  historyList = historyList.filter(h=>validIds.has(h.id) || String(h.id).startsWith('online_'));
+  historyList = historyList.filter(h=>validIds.has(h.id) || String(h.id).startsWith('online_') || String(h.id).startsWith('nt_'));
   if(historyList.length !== before) changed = true;
   if(changed) persistUser();
 }
@@ -2180,7 +2107,6 @@ function renderAll(){
   btnSel.hidden = state.activeLib !== 'local' || state.selectMode;
 
   const sectionOnlineEl = $('#sectionOnline');
-  const banner = $('#onlineDesktopBanner');
   if(state.selectMode){
     sectionRecommend.hidden = true; sectionLocal.hidden = false;
     if(sectionOnlineEl) sectionOnlineEl.hidden = true;
@@ -2212,10 +2138,8 @@ function renderAll(){
     }else{
       emptyAll.hidden = true;
     }
-    if(banner) banner.hidden = true;
   }else{
     emptyAll.hidden = true;
-    if(banner) banner.hidden = (onlineSongs.length > 0 || onlineLoading);
   }
   renderGrid(gridRecommend, recs);
   renderGrid(gridLocal, locs);
@@ -2254,14 +2178,14 @@ function renderGrid(box, list){
       + (isSelected ? ' selected' : '');
 
     const coverPath = song.cover || '';
-    const initial = (song.title||'♪').trim().charAt(0);
+    const initial = '🎵';
     const artist = song.coverArtist || song.originalArtist || '未知歌手';
     const tags = (song.tags||[]).slice(0,3).map(t=>`<span class="t">${esc(t)}</span>`).join('');
 
     card.innerHTML = `
       <div class="cover">
         ${inSelectMode ? '<div class="card-check"></div>' : ''}
-        ${coverPath ? '' : `<div class="fallback">${esc(initial)}</div>`}
+        <div class="fallback">${esc(initial)}</div>
         ${coverPath?`<img data-cover="${esc(coverPath)}" data-initial="${esc(initial)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
         <div class="overlay"></div>
         <div class="badges">
@@ -2385,10 +2309,10 @@ function renderSideList(list, kind){
     const isCurrent = song.id === currentId;
     item.className = 'list-item' + (isCurrent ? ' active' : '');
     const coverPath = song.cover || '';
-    const initial = (song.title||'♪').trim().charAt(0);
+    const initial = '🎵';
     item.innerHTML = `
       <div class="item-cover">
-        ${coverPath ? '' : `<div class="fb">${esc(initial)}</div>`}
+        <div class="fb">${esc(initial)}</div>
         ${coverPath?`<img data-cover="${esc(coverPath)}" data-initial="${esc(initial)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
       </div>
       <div class="item-info">
@@ -4190,7 +4114,6 @@ async function init(){
     window.addEventListener('beforeunload', ()=>{ bcPost({ type:'closed' }); });
     return;
   }
-  await detectLocalProxy();
 
   initCollapse();
   loadPref();
