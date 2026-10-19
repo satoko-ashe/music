@@ -434,6 +434,13 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 .online-desktop-banner .txt b{color:#fff}
 .online-desktop-banner .btn{padding:8px 16px;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:.2s;white-space:nowrap}
 .online-desktop-banner .btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+/* ★ ===== AI 修音入口 & 录音 ===== */
+.ctrl.fix{color:#e879f9}
+.ctrl.fix:hover{color:#f0abfc;background:rgba(232,121,249,.14)}
+.ctrl.fix .lbl{color:#e879f9}
+.record-timer{font-variant-numeric:tabular-nums;letter-spacing:2px}
+
 @media(max-width:640px){
   .online-bar input{min-width:120px}
   .online-bar .primary{padding:0 14px}
@@ -713,6 +720,14 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
           <input type="range" id="karaokeSlider" min="0" max="100" value="25">
           <span class="kv-val" id="karaokeVal">25%</span>
         </div>
+        <!-- ★ 新增：AI 修音入口 -->
+        <button class="ctrl fix" id="btnAiFix" title="AI 修音 / 录制干声">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/>
+            <circle cx="12" cy="12" r="3.5"/>
+          </svg>
+          <span class="lbl">修音</span>
+        </button>
         <button class="speed-btn" id="btnSpeed" title="倍速播放">1.0x</button>
         <button class="ctrl" id="btnMode" title="播放模式">
           <svg id="modeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
@@ -759,6 +774,59 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   <div class="dl-sub" id="dlSub"></div>
 </div>
 
+<!-- ★ 新增：AI 修音入口选择弹窗 -->
+<div class="modal" id="aiFixModal" hidden>
+  <div class="modal-bg" data-close="aiFixModal"></div>
+  <div class="modal-card" style="width:min(520px,100%)">
+    <h3>🎵 AI 修音工坊 <button class="close-x" data-close="aiFixModal">✕</button></h3>
+    <div style="font-size:13px;color:var(--dim);line-height:1.8;margin-bottom:14px">
+      当前歌曲：<b style="color:#fff" id="aiFixSongName">—</b>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="primary" id="btnFixRecord" style="padding:14px">
+        🎤 录制我的干声后去修音
+        <span style="display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:2px">先打开修音工坊，再录音，完成后自动回传</span>
+      </button>
+      <button class="ghost" id="btnFixDirect" style="padding:14px">
+        🎼 直接打开修音工坊
+        <span style="display:block;font-size:11px;font-weight:400;opacity:.75;margin-top:2px">使用歌曲原声/伴奏作为修音素材</span>
+      </button>
+    </div>
+    <div style="font-size:11.5px;color:var(--dimmer);line-height:1.7;margin-top:4px">
+      💡 推荐戴耳机录音，避免播放器的伴奏被麦克风拾取。
+    </div>
+  </div>
+</div>
+
+<!-- ★ 新增：录音弹窗 -->
+<div class="modal" id="recordModal" hidden>
+  <div class="modal-bg" data-close="recordModal"></div>
+  <div class="modal-card" style="width:min(540px,100%)">
+    <h3>🎤 录制干声 <button class="close-x" data-close="recordModal">✕</button></h3>
+    <p style="font-size:13px;color:var(--dim);line-height:1.8;margin:4px 0 10px">
+      跟着伴奏清唱你的声部。<strong style="color:#fff">录音时仅捕获麦克风</strong>，不混入伴奏。<br>
+      <span style="color:#ff9aa9">请戴耳机</span>，否则外放伴奏会被麦克风串入。
+    </p>
+    <div id="recordSongInfo" style="font-size:12.5px;color:var(--dim);padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:14px"></div>
+
+    <div id="recordStatus" style="text-align:center;font-size:13px;color:var(--accent);font-weight:600;margin:10px 0">准备就绪</div>
+    <div id="recordTimer" class="record-timer" style="text-align:center;font-size:34px;font-weight:700;margin:8px 0">00:00</div>
+
+    <div style="display:flex;gap:10px;justify-content:center;margin:16px 0">
+      <button class="primary" id="btnStartRecord" style="padding:12px 26px">● 开始录音</button>
+      <button class="ghost" id="btnStopRecord" hidden style="padding:12px 26px">■ 停止</button>
+    </div>
+
+    <div id="recordResult" hidden>
+      <audio id="recordedAudio" controls style="width:100%;margin-bottom:12px"></audio>
+      <div style="display:flex;gap:8px">
+        <button class="ghost" id="btnReRecord" style="flex:1">重新录制</button>
+        <button class="primary" id="btnSendToStudio" style="flex:1">发送到修音工坊</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="adminModal" hidden>
   <div class="modal-bg" data-close="adminModal"></div>
   <div class="modal-card wide">
@@ -799,6 +867,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
       本地清单地址（song_manifest.json）
       <input type="text" id="setLocalManifest" placeholder="D:\MyMusic\song_manifest.json" spellcheck="false">
     </label>
+    <!-- ★ 新增：K歌修音工坊地址 -->
+    <label class="field">
+      K歌修音工坊 地址
+      <input type="text" id="setStudioUrl" placeholder="https://satoko-ashe.github.io/music/k-song-tuner/" spellcheck="false">
+    </label>
     <div class="cache-bar">
       <span><span class="cache-dot" id="syncDot"></span>清单版本：<span id="setManifestVer">—</span></span>
       <span>上次同步：<span id="setLastSync">—</span></span>
@@ -821,6 +894,8 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
    ============================================================ */
 const DEFAULT_MANIFEST_URL = 'https://satoko-ashe.github.io/music/song_manifest.json';
 const DEFAULT_LOCAL_MANIFEST = 'D:\\MyMusic\\song_manifest.json';
+// ★ 新增：K歌修音工坊默认地址
+const DEFAULT_STUDIO_URL = 'https://satoko-ashe.github.io/music/k-song-tuner/';
 const LS_PREF = 'mp_pref_v1';
 const LS_NP = 'mp_np_collapsed_v2';
 const LS_SIDE = 'mp_side_collapsed_v2';
@@ -1090,14 +1165,18 @@ function groupLocalFilesFromInput(files){
 /* ============================================================
    配置
    ============================================================ */
-let appConfig = { manifestUrl: DEFAULT_MANIFEST_URL, localManifestPath: DEFAULT_LOCAL_MANIFEST, manifestVersion:'', lastSync:'' };
+let appConfig = { manifestUrl: DEFAULT_MANIFEST_URL, localManifestPath: DEFAULT_LOCAL_MANIFEST, studioUrl: DEFAULT_STUDIO_URL, manifestVersion:'', lastSync:'' };
 async function loadConfig(){
   const c = await idbGet('kv', 'config');
   if(c && typeof c === 'object'){
     appConfig.manifestUrl = c.manifestUrl || DEFAULT_MANIFEST_URL;
     appConfig.localManifestPath = c.localManifestPath || DEFAULT_LOCAL_MANIFEST;
+    // ★ 新增：读取修音地址（如果用户曾保存空字符串则保留空，表示禁用 AI 修音）
+    appConfig.studioUrl = (typeof c.studioUrl === 'string') ? c.studioUrl : DEFAULT_STUDIO_URL;
     appConfig.manifestVersion = c.manifestVersion || '';
     appConfig.lastSync = c.lastSync || '';
+  } else {
+    appConfig.studioUrl = DEFAULT_STUDIO_URL;
   }
 }
 async function saveConfig(){ await idbPut('kv', 'config', appConfig); }
@@ -3567,6 +3646,9 @@ function openSettings(){
   $('#setMusicRoot').value = appConfig.manifestUrl || DEFAULT_MANIFEST_URL;
   const lm = $('#setLocalManifest');
   if(lm) lm.value = appConfig.localManifestPath || DEFAULT_LOCAL_MANIFEST;
+  // ★ 新增：填充修音地址
+  const su = $('#setStudioUrl');
+  if(su) su.value = appConfig.studioUrl || '';
   $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
   $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
   $('#syncDot').classList.toggle('off', !appConfig.manifestVersion);
@@ -3578,6 +3660,9 @@ $('#btnSaveSettings').addEventListener('click', async ()=>{
   appConfig.manifestUrl = url || DEFAULT_MANIFEST_URL;
   const lm = $('#setLocalManifest');
   if(lm) appConfig.localManifestPath = lm.value.trim() || DEFAULT_LOCAL_MANIFEST;
+  // ★ 新增：保存修音地址（允许清空表示禁用）
+  const su = $('#setStudioUrl');
+  if(su) appConfig.studioUrl = su.value.trim();
   await saveConfig();
   settingsModal.hidden = true;
   showToast('已保存，点「立即同步」生效');
@@ -4118,6 +4203,321 @@ document.addEventListener('click', e=>{
 });
 
 /* ============================================================
+   ★ AI 修音入口 & 录音（双向打通）
+   ============================================================ */
+let fixWindowRef = null;
+
+const recordState = {
+  stream: null,
+  recorder: null,
+  chunks: [],
+  startTime: 0,
+  timerId: null,
+  companionAudio: null,
+  blob: null,
+  song: null,
+  autoSend: false
+};
+
+/* —— 入口选择 —— */
+$('#btnAiFix').addEventListener('click', ()=>{
+  const song = getCurrent();
+  if(!song){ showToast('请先播放一首歌曲'); return; }
+  if(!appConfig.studioUrl){
+    showToast('请先在设置里填写「K歌修音工坊 地址」');
+    openSettings();
+    return;
+  }
+  $('#aiFixSongName').textContent = song.title || '未命名';
+  $('#aiFixModal').hidden = false;
+});
+
+/* —— 直接打开修音工坊（带 songId）—— */
+$('#btnFixDirect').addEventListener('click', ()=>{
+  const song = getCurrent();
+  $('#aiFixModal').hidden = true;
+  if(!song) return;
+  try{
+    const u = new URL(appConfig.studioUrl);
+    u.searchParams.set('songId', song.id);
+    u.searchParams.set('manifestUrl', appConfig.manifestUrl || DEFAULT_MANIFEST_URL);
+    u.searchParams.set('playerUrl', location.origin + location.pathname);
+    window.open(u.toString(), '_blank', 'noopener,noreferrer');
+  }catch(e){
+    showToast('修音工坊地址无效，请到设置里修改');
+  }
+});
+
+/* —— 先打开修音窗口，再录音，录完自动回传 —— */
+$('#btnFixRecord').addEventListener('click', async ()=>{
+  const song = getCurrent();
+  $('#aiFixModal').hidden = true;
+  if(!song) return;
+
+  // 尝试打开修音工坊（用户点击触发，通常不会被拦截）
+  let opened = false;
+  try{
+    const u = new URL(appConfig.studioUrl);
+    u.searchParams.set('songId', song.id);
+    u.searchParams.set('waiting', '1');
+    u.searchParams.set('playerUrl', location.origin + location.pathname);
+    fixWindowRef = window.open(u.toString(), 'k_song_tuner');
+    opened = !!fixWindowRef;
+  }catch(_){ fixWindowRef = null; opened = false; }
+
+  await openRecordModal(song, opened);
+  if(!opened){
+    showToast('修音工坊窗口被拦截，请允许弹窗；否则录音后将降级为下载');
+  }
+});
+
+/* —— 录音弹窗控制 —— */
+async function openRecordModal(song, autoSend){
+  recordState.song = song;
+  recordState.autoSend = !!autoSend;
+  recordState.blob = null;
+  recordState.chunks = [];
+
+  const hasInst = !!song.instrumental;
+  $('#recordSongInfo').innerHTML =
+    `当前歌曲：<b style="color:#fff">${esc(song.title||'未命名')}</b>` +
+    (hasInst ? '' : ' <span style="color:#ff9aa9">（无伴奏文件，将用原声引导）</span>');
+  $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音';
+  $('#recordTimer').textContent = '00:00';
+  $('#btnStartRecord').hidden = false;
+  $('#btnStopRecord').hidden = true;
+  $('#recordResult').hidden = true;
+  $('#recordModal').hidden = false;
+
+  if(autoSend){
+    $('#recordStatus').textContent = '🎯 请点击「开始录音」，唱完后会自动发送到修音工坊';
+  }
+}
+
+$('#btnStartRecord').addEventListener('click', startRecording);
+$('#btnStopRecord').addEventListener('click', stopRecording);
+$('#btnReRecord').addEventListener('click', ()=>{
+  recordState.blob = null;
+  $('#recordResult').hidden = true;
+  $('#btnStartRecord').hidden = false;
+  $('#recordTimer').textContent = '00:00';
+  $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音';
+});
+$('#btnSendToStudio').addEventListener('click', sendRecordingBack);
+
+async function startRecording(){
+  const song = recordState.song;
+  if(!song){ showToast('未选择歌曲'); return; }
+
+  // 暂停主播放器，避免录音时混入
+  try{ audio.pause(); }catch(_){}
+  try{ audioInst.pause(); }catch(_){}
+
+  try{
+    recordState.stream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    });
+  }catch(e){
+    $('#recordStatus').textContent = '❌ 无法访问麦克风：' + (e && e.message ? e.message : e);
+    return;
+  }
+
+  recordState.chunks = [];
+  const mime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+    ? 'audio/webm;codecs=opus'
+    : 'audio/webm';
+  recordState.recorder = new MediaRecorder(recordState.stream, { mimeType:mime });
+  recordState.recorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordState.chunks.push(e.data); };
+  recordState.recorder.onstop = finalizeRecording;
+  recordState.recorder.start();
+
+  recordState.startTime = Date.now();
+  recordState.timerId = setInterval(()=>{
+    const el = Math.floor((Date.now()-recordState.startTime)/1000);
+    const m = Math.floor(el/60), s = el%60;
+    $('#recordTimer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 200);
+
+  $('#btnStartRecord').hidden = true;
+  $('#btnStopRecord').hidden = false;
+  $('#recordStatus').textContent = '🎙️ 录音中…（跟着伴奏唱）';
+
+  // 异步加载伴奏做引导
+  (async ()=>{
+    try{
+      let instSrc = '';
+      if(song.instrumental){
+        instSrc = await resolveAudioUrl(song, 'inst');
+      }
+      if(!instSrc){
+        instSrc = await resolveAudioUrl(song, 'vocal');
+      }
+      if(instSrc && recordState.recorder && recordState.recorder.state === 'recording'){
+        recordState.companionAudio = new Audio(instSrc);
+        recordState.companionAudio.volume = 0.5;
+        recordState.companionAudio.play().catch(()=>{});
+      }
+    }catch(_){}
+  })();
+}
+
+function stopRecording(){
+  if(recordState.recorder && recordState.recorder.state !== 'inactive'){
+    try{ recordState.recorder.stop(); }catch(_){}
+  }
+  if(recordState.stream){
+    try{ recordState.stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+    recordState.stream = null;
+  }
+  if(recordState.companionAudio){
+    try{ recordState.companionAudio.pause(); }catch(_){}
+    recordState.companionAudio = null;
+  }
+  if(recordState.timerId){ clearInterval(recordState.timerId); recordState.timerId = null; }
+  $('#btnStopRecord').hidden = true;
+  $('#recordStatus').textContent = '正在处理录音…';
+}
+
+function cleanupRecord(){
+  if(recordState.recorder && recordState.recorder.state !== 'inactive'){
+    try{ recordState.recorder.stop(); }catch(_){}
+  }
+  if(recordState.stream){
+    try{ recordState.stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+    recordState.stream = null;
+  }
+  if(recordState.companionAudio){
+    try{ recordState.companionAudio.pause(); }catch(_){}
+    recordState.companionAudio = null;
+  }
+  if(recordState.timerId){ clearInterval(recordState.timerId); recordState.timerId = null; }
+}
+
+async function finalizeRecording(){
+  if(!recordState.chunks.length){
+    $('#recordStatus').textContent = '⚠️ 录音为空，请重试';
+    return;
+  }
+  const webmBlob = new Blob(recordState.chunks, { type:'audio/webm' });
+  recordState.chunks = [];
+
+  // 尽量转 WAV（兼容性更好，修音端 decodeAudioData 也更稳）
+  let wavBlob = webmBlob;
+  try{ wavBlob = await blobToWav(webmBlob); }
+  catch(e){ console.warn('[record] wav 转换失败，使用 webm', e); }
+
+  recordState.blob = wavBlob;
+  $('#recordedAudio').src = URL.createObjectURL(wavBlob);
+  $('#recordResult').hidden = false;
+  $('#recordStatus').textContent = '✅ 录制完成，请试听后发送';
+
+  if(recordState.autoSend){
+    // 给用户一点时间看结果，自动发送
+    setTimeout(()=>{ if(recordState.blob) sendRecordingBack(); }, 400);
+  }
+}
+
+async function blobToWav(blob){
+  const arr = await blob.arrayBuffer();
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioBuf = await ctx.decodeAudioData(arr);
+  return encodeWavBlob(audioBuf);
+}
+
+function encodeWavBlob(buffer){
+  const ch = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const bd = 16;
+  const bps = bd / 8;
+  const align = ch * bps;
+  let samples;
+  if(ch === 2){
+    const L = buffer.getChannelData(0), R = buffer.getChannelData(1);
+    samples = new Float32Array(L.length * 2);
+    for(let i=0, j=0; j<L.length; i+=2, j++){ samples[i]=L[j]; samples[i+1]=R[j]; }
+  } else {
+    samples = buffer.getChannelData(0);
+  }
+  const buf = new ArrayBuffer(44 + samples.length * bps);
+  const v = new DataView(buf);
+  const ws = (o, s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  ws(0, 'RIFF'); v.setUint32(4, 36 + samples.length * bps, true);
+  ws(8, 'WAVE'); ws(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr * align, true); v.setUint16(32, align, true);
+  v.setUint16(34, bd, true); ws(36, 'data'); v.setUint32(40, samples.length * bps, true);
+  let off = 44;
+  for(let i=0;i<samples.length;i++,off+=2){
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    v.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true);
+  }
+  return new Blob([buf], { type:'audio/wav' });
+}
+
+function safeFileName(name){
+  return String(name || 'recording').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+}
+
+function sendRecordingBack(){
+  if(!recordState.blob){ showToast('还没有录音'); return; }
+  const song = recordState.song;
+  const fileName = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
+
+  let target = null;
+  // 优先发给「本次自己打开的修音窗口」
+  if(fixWindowRef && !fixWindowRef.closed) target = fixWindowRef;
+  // 否则回传给「打开本窗口的父窗口」（从修音工坊「前往录音」进入的场景）
+  if(!target && window.opener && !window.opener.closed) target = window.opener;
+
+  if(target){
+    let ok = false;
+    try{
+      target.postMessage({
+        type: 'RETURN_RECORDING',
+        blob: recordState.blob,
+        name: fileName,
+        songId: song ? song.id : '',
+        manifestUrl: appConfig.manifestUrl || DEFAULT_MANIFEST_URL,
+        playerUrl: location.origin + location.pathname
+      }, '*');
+      ok = true;
+    }catch(e){ console.warn('[record] postMessage failed', e); }
+
+    if(ok){
+      try{ target.focus(); }catch(_){}
+      $('#recordStatus').textContent = '✅ 录音已发送，请回到修音工坊查看';
+      showToast('已发送到修音工坊');
+      return;
+    }
+  }
+
+  // 都不可用 → 降级下载
+  downloadRecordingFallback();
+}
+
+function downloadRecordingFallback(){
+  const song = recordState.song;
+  const fileName = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
+  try{
+    const url = URL.createObjectURL(recordState.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
+    $('#recordStatus').textContent = '📥 已下载录音，请到修音工坊「上传你的录音」处选择';
+    showToast('录音已下载，请手动上传到修音工坊');
+  }catch(e){
+    showToast('下载失败：' + (e && e.message ? e.message : e));
+  }
+}
+
+/* 关闭录音弹窗时清理资源（不销毁已录制 blob） */
+$$('#recordModal [data-close="recordModal"]').forEach(el=>{
+  el.addEventListener('click', ()=>cleanupRecord());
+});
+
+/* ============================================================
    启动
    ============================================================ */
 async function init(){
@@ -4224,6 +4624,30 @@ async function init(){
   document.addEventListener('visibilitychange', ()=>{
     if(document.visibilityState === 'visible') autoSync();
   });
+
+  /* ★ 从修音工坊「前往录音」跳转过来：?record=1 自动弹录音 */
+  (function autoOpenRecordIfRequested(){
+    const p = new URLSearchParams(location.search);
+    if(p.get('record') !== '1') return;
+    const wantId = p.get('songId') || '';
+    // 修音工坊可能还会传 playerUrl 作为回退宿主地址，我们这里用不到，忽略
+    let tries = 0;
+    const iv = setInterval(async ()=>{
+      tries++;
+      let song = wantId ? getSongById(wantId) : null;
+      if(!song) song = getCurrent() || remoteSongs[0] || localSongs[0] || allSongs[0];
+      if(song){
+        clearInterval(iv);
+        if(currentId !== song.id){
+          try{ await playSong(song.id); }catch(_){}
+        }
+        setTimeout(()=>openRecordModal(song, !!window.opener), 500);
+      } else if(tries > 30){
+        clearInterval(iv);
+        showToast('未找到可录制的歌曲');
+      }
+    }, 500);
+  })();
 }
 
 init();

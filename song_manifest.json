@@ -3,11 +3,13 @@
   "baseUrl": "https://satoko-ashe.github.io/music/",
   "songs": [
     {
-      "id": "533anfvosofua",
+      "id": "3971vr7r5enyy",
       "title": "无到",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1791916056372-869ce0ac-4e4c-4220-8bef-c063183987c0.mp3",
+      "vocal": "https://mp3tourl.com/audio/1792357905207-4218826e-0f77-4fe3-951f-2ebe0e5bf42a.mp3",
       "instrumental": "https://mp3tourl.com/audio/1791916159907-7c7dc6da-93c0-4f32-b57d-032ee48f2079.mp3",
+      "midi": "k-song-tuner/midi/bhodo.mid",
       "cover": "https://file.uhsea.com/2610/2957848711b776e6bb599f9f39b8cd05G9.png",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/无到.srt",
       "originalTitle": "舍得",
@@ -26,10 +28,12 @@
       ]
     },
     {
-      "id": "xk3fqyhd8ufwp",
+      "id": "bnrwczxllf74x",
       "title": "帝王庙",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792105533225-8b437ed3-9d1e-4e29-a69a-677f964ceeda.mp3",
+      "instrumental": "https://mp3tourl.com/audio/1792358621921-2e034539-3f23-44aa-9c3e-27e525ea006b.mp3",
+      "midi": "k-song-tuner/midi/diuangbhiê.mid",
       "cover": "https://file.uhsea.com/2610/daa670150ce7040a5c7c5ad0006bfa69X5.png",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/帝王庙.srt",
       "originalTitle": "春庭雪",
@@ -39,6 +43,7 @@
       "intro": "帝王庙 di3 uang5 bhiê7（帝王庙宇）",
       "audioLanzouUrl": "https://wwbpm.lanzoue.com/iIoFC4c45ypa",
       "audioLanzouPwd": "2026",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iii2X4chkomf",
       "instrumentalLanzouPwd": "2026",
       "mvUrl": "https://www.bilibili.com/video/BV1nRo7BZEa3/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
       "tags": [
@@ -49,10 +54,11 @@
       ]
     },
     {
-      "id": "s0ovz51sziab0",
+      "id": "k5pbxzbwv8qxn",
       "title": "九幺幺事变",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792085839011-cd2b948b-b219-4925-a20a-ea083a2bfd47.mp3",
+      "midi": "k-song-tuner/midi/911sebiang.mid",
       "cover": "https://file.uhsea.com/2610/0244d17837e28fe90c02f3917787c72aR9.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/九幺幺事变.srt",
       "originalTitle": "沉默的羔羊",
@@ -70,10 +76,11 @@
       ]
     },
     {
-      "id": "pmlnjgqtreiqa",
+      "id": "n98282j8u6yom",
       "title": "命理",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792093549137-8d094f7b-3dfc-4136-ac0e-0bfb84ae1114.mp3",
+      "midi": "k-song-tuner/midi/mianli.mid",
       "cover": "https://file.uhsea.com/2610/a8cf00acba250f32a31eefc1225c62ff8J.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/命理.srt",
       "originalTitle": "命运",
@@ -93,10 +100,11 @@
       ]
     },
     {
-      "id": "wujt3dojy02mj",
+      "id": "01wumvsptfx2j",
       "title": "孤城",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792092305374-2a49d54d-e00c-4ffb-9cee-ea56383dd95d.mp3",
+      "midi": "k-song-tuner/midi/gousian.mid",
       "cover": "https://file.uhsea.com/2610/ddab1136316e391bef09b82bddb3f7fe44.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/孤城.srt",
       "originalTitle": "荒城渡",
@@ -116,10 +124,11 @@
       ]
     },
     {
-      "id": "lzfdb89px22rz",
+      "id": "ywnxu3moiu5bt",
       "title": "暝舞",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792087484563-522136f1-ddc4-4b98-b324-65aca223f0b6.mp3",
+      "midi": "k-song-tuner/midi/mênbhu.mid",
       "cover": "https://file.uhsea.com/2610/a89e9e04b0f2c30b4b7b455326381c06H3.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/暝舞.srt",
       "originalTitle": "越南神曲Dạ Vũ（夜舞）",
@@ -129,6 +138,7 @@
       "intro": "暝舞 mên5 bhu2（杜十娘人物曲）",
       "audioLanzouUrl": "https://wwbpm.lanzoue.com/i4ztz4c4i3xa",
       "audioLanzouPwd": "2026",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/i14op4chkooh",
       "instrumentalLanzouPwd": "2026",
       "mvUrl": "https://www.bilibili.com/video/BV1oVRdBpEYK/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
       "tags": [
@@ -138,11 +148,12 @@
       ]
     },
     {
-      "id": "3ye065dq4keou",
+      "id": "zljwves7mqb3f",
       "title": "只是岂爱",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792080640597-314c81aa-43a0-419d-b3ac-8007dfa3afd2.mp3",
       "instrumental": "https://mp3tourl.com/audio/1792078107649-100572b5-9650-484d-b336-f72e9f31e3d0.mp3",
+      "midi": "k-song-tuner/midi/zisikahain.mid",
       "cover": "https://file.uhsea.com/2610/8b9d2849d2975a0ea4020bb0dcdb1887N6.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/只是岂爱.srt",
       "originalTitle": "只是太爱你",
@@ -161,10 +172,11 @@
       ]
     },
     {
-      "id": "e6hodr626cnvx",
+      "id": "66iyjzfioh1te",
       "title": "过番垂帑",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792086612588-df76e539-1f43-4164-a3fc-313821c4d823.mp3",
+      "midi": "k-song-tuner/midi/ghct.mid",
       "cover": "https://file.uhsea.com/2610/0a2992f6b1c46edcdde9c0a99f24887cM9.png",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/过番垂帑.srt",
       "originalTitle": "来去打工",
@@ -184,10 +196,12 @@
       ]
     },
     {
-      "id": "3km56tf5ch4py",
+      "id": "ug6fnjw6c19sj",
       "title": "月下炰荼",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792092889996-d3fc7b14-3b14-4a52-8253-8ccad581a96e.mp3",
+      "instrumental": "https://mp3tourl.com/audio/1792358578030-add09ebf-a3d0-4dd9-bfa1-df3d969257c4.mp3",
+      "midi": "k-song-tuner/midi/yebd.mid",
       "cover": "https://file.uhsea.com/2610/94816e443e3ca0457a1cecb5983141052H.jpg",
       "lyric": "https://satoko-ashe.github.io/music/lyrics/月下炰荼.srt",
       "originalTitle": "月下煮荼",
@@ -197,8 +211,26 @@
       "intro": "月下炰荼 ghuêh8 ê6 bu5 dê5（月下煮荼）\n——电影《给阿嬷的情书》谢南枝人物曲",
       "audioLanzouUrl": "https://wwbpm.lanzoue.com/ibrwL4c4p9vg",
       "audioLanzouPwd": "2026",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iWtMN4chkopi",
       "instrumentalLanzouPwd": "2026",
       "mvUrl": "https://www.bilibili.com/video/BV1WkdTBAEq6/?share_source=copy_web&vd_source=f101902fb224f6cf5bff3fdedd7bad94",
+      "tags": [
+        "潮州话",
+        "翻唱",
+        "电影",
+        "OST"
+      ]
+    },
+    {
+      "id": "adyyaf8b8m981",
+      "title": "主人",
+      "coverArtist": "Xstudio_AI",
+      "audio": "https://mp3tourl.com/audio/1792357641071-d67675bb-66c5-4d61-8c42-48a416192a96.mp3",
+      "midi": "k-song-tuner/midi/renshi.mid",
+      "originalArtist": "周深",
+      "lyricist": "B站_金瓯阿舍",
+      "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iohl34chkoxg",
+      "instrumentalLanzouPwd": "2026",
       "tags": [
         "潮州话",
         "翻唱",
