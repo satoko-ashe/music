@@ -3,7 +3,7 @@
   "baseUrl": "https://satoko-ashe.github.io/music/",
   "songs": [
     {
-      "id": "3971vr7r5enyy",
+      "id": "b62kenw0gv06e",
       "title": "无到",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1791916056372-869ce0ac-4e4c-4220-8bef-c063183987c0.mp3",
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "id": "bnrwczxllf74x",
+      "id": "xczuwo3vh4c20",
       "title": "帝王庙",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792105533225-8b437ed3-9d1e-4e29-a69a-677f964ceeda.mp3",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": "k5pbxzbwv8qxn",
+      "id": "dyl6lipmc96f5",
       "title": "九幺幺事变",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792085839011-cd2b948b-b219-4925-a20a-ea083a2bfd47.mp3",
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "id": "n98282j8u6yom",
+      "id": "qgpg3ggmuldk6",
       "title": "命理",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792093549137-8d094f7b-3dfc-4136-ac0e-0bfb84ae1114.mp3",
@@ -100,7 +100,7 @@
       ]
     },
     {
-      "id": "01wumvsptfx2j",
+      "id": "sx5tpvzyu27tw",
       "title": "孤城",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792092305374-2a49d54d-e00c-4ffb-9cee-ea56383dd95d.mp3",
@@ -124,7 +124,7 @@
       ]
     },
     {
-      "id": "ywnxu3moiu5bt",
+      "id": "n5f9h220y29b3",
       "title": "暝舞",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792087484563-522136f1-ddc4-4b98-b324-65aca223f0b6.mp3",
@@ -148,7 +148,7 @@
       ]
     },
     {
-      "id": "zljwves7mqb3f",
+      "id": "y1ujww57s2ne4",
       "title": "只是岂爱",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792080640597-314c81aa-43a0-419d-b3ac-8007dfa3afd2.mp3",
@@ -172,7 +172,7 @@
       ]
     },
     {
-      "id": "66iyjzfioh1te",
+      "id": "7tkamt7fm1mbz",
       "title": "过番垂帑",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792086612588-df76e539-1f43-4164-a3fc-313821c4d823.mp3",
@@ -196,7 +196,7 @@
       ]
     },
     {
-      "id": "ug6fnjw6c19sj",
+      "id": "prj8u96uz8nhd",
       "title": "月下炰荼",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792092889996-d3fc7b14-3b14-4a52-8253-8ccad581a96e.mp3",
@@ -222,13 +222,18 @@
       ]
     },
     {
-      "id": "adyyaf8b8m981",
+      "id": "exr248tl27b7x",
       "title": "主人",
       "coverArtist": "Xstudio_AI",
       "audio": "https://mp3tourl.com/audio/1792357641071-d67675bb-66c5-4d61-8c42-48a416192a96.mp3",
       "midi": "k-song-tuner/midi/renshi.mid",
+      "cover": "https://file.uhsea.com/2610/aefc6d532694f1bb49c49b9b218cc8173E.jpg",
+      "lyric": "https://satoko-ashe.github.io/music/lyrics/主人.srt",
+      "originalTitle": "人是",
       "originalArtist": "周深",
       "lyricist": "B站_金瓯阿舍",
+      "composer": "钱雷",
+      "intro": "主人 zu2 ring5——电影《流浪地球2》主题曲",
       "instrumentalLanzouUrl": "https://wwbpm.lanzoue.com/iohl34chkoxg",
       "instrumentalLanzouPwd": "2026",
       "tags": [

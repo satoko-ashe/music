@@ -116,6 +116,16 @@
         .dep-warning { display: none; margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); color: #b45309; font-size: 13px; line-height: 1.6; }
         .dep-warning strong { display: block; margin-bottom: 4px; }
 
+        /* ★ 等待录音横幅 */
+        #waitingBanner { display: none; margin-bottom: 16px; padding: 14px 20px; background: linear-gradient(135deg, rgba(59,130,246,.12), rgba(139,92,246,.12)); border: 1px solid rgba(59,130,246,.3); border-radius: 12px; color: var(--text); font-size: 13.5px; font-weight: 500; line-height: 1.6; }
+        #waitingBanner .wb-row { display: flex; align-items: center; gap: 12px; }
+        #waitingBanner .wb-icn { font-size: 22px; line-height: 1; }
+        #waitingBanner .wb-txt { flex: 1; min-width: 0; }
+        #waitingBanner .wb-txt b { color: var(--accent-1); }
+        #waitingBanner .wb-txt span { display: block; color: var(--text-sub); font-weight: 400; margin-top: 2px; }
+        #waitingBanner .wb-close { padding: 6px 12px; background: #fff; border: 1px solid var(--line); border-radius: 6px; color: var(--text-sub); font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: none; flex-shrink: 0; }
+        #waitingBanner .wb-close:hover { background: #f9fafb; color: var(--text); transform: none; }
+
         /* ============ 精准校音面板 ============ */
         .precise-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: .25s; }
         .precise-overlay.show { opacity: 1; pointer-events: auto; }
@@ -186,6 +196,18 @@
 <body>
 
 <div class="app-container">
+    <!-- ★ 等待录音横幅 -->
+    <div id="waitingBanner">
+        <div class="wb-row">
+            <span class="wb-icn">🎤</span>
+            <div class="wb-txt">
+                <b>播放器正在录音中…</b>
+                <span>唱完后录音会自动回传到此处，请勿关闭本窗口。</span>
+            </div>
+            <button class="wb-close" id="waitingBannerClose">知道了</button>
+        </div>
+    </div>
+
     <div class="step-header">
         <div class="step-item active" data-step="1">1. 选择参考</div>
         <div class="step-item" data-step="2">2. 我的干声</div>
@@ -462,8 +484,13 @@
 </div>
 
 <script>
-    const MANIFEST_URL = 'https://satoko-ashe.github.io/music/song_manifest.json';
-    const PLAYER_URL = 'https://satoko-ashe.github.io/music/';
+    /* ★ 从 URL 读取动态配置（回退到默认值） */
+    const _urlParams = new URLSearchParams(location.search);
+    const MANIFEST_URL = _urlParams.get('manifestUrl') || 'https://satoko-ashe.github.io/music/song_manifest.json';
+    const PLAYER_URL = _urlParams.get('playerUrl') || 'https://satoko-ashe.github.io/music/';
+    const WAITING_FOR_RECORDING = _urlParams.get('waiting') === '1';
+    const INIT_SONG_ID = _urlParams.get('songId') || '';
+    let _autoSelectDone = false;
 
     let appState = {
         currentStep: 1,
@@ -555,21 +582,72 @@
     document.getElementById('vocalUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'vocal'));
     document.getElementById('instUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'inst'));
 
+    /* ★ 接收播放器回传的录音 */
     window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'RETURN_RECORDING') {
-            const blob = event.data.blob;
-            if (blob) {
-                const file = new File([blob], "my_recording.wav", { type: "audio/wav" });
-                appState.localFiles.vocal = file;
-                appState.hasSynthesized = false;
-                alert("✅ 成功接收到你刚刚在网页版播放器录制的干声！");
-                document.getElementById('vocalUpload').value = '';
-                updateUI();
+        const d = event.data;
+        if (!d || d.type !== 'RETURN_RECORDING') return;
+        const blob = d.blob;
+        if (!blob) return;
+
+        const fileName = d.name || 'my_recording.wav';
+        const mimeType = blob.type || 'audio/wav';
+        const file = new File([blob], fileName, { type: mimeType });
+        appState.localFiles.vocal = file;
+        appState.hasSynthesized = false;
+        document.getElementById('vocalUpload').value = '';
+
+        // 如果传来的 songId 和当前选中不同，尝试自动选中
+        if (d.songId && (!appState.selectedSong || appState.selectedSong.id !== d.songId)) {
+            const match = appState.manifestSongs.find(s => s.id === d.songId);
+            if (match) {
+                appState.selectedSong = match;
+                const sel = document.getElementById('songSelect');
+                if (sel) {
+                    sel.value = match.id;
+                    sel.dispatchEvent(new Event('change'));
+                }
             }
+        }
+
+        // 隐藏等待横幅
+        hideWaitingBanner();
+
+        // 自动跳到第 2 步让用户确认
+        appState.currentStep = 2;
+        updateUI();
+
+        alert('✅ 成功接收到你在播放器录制的干声！请确认后点击「下一步」继续。');
+    });
+
+    /* ★ 前往录音（带 songId / record=1，回到播放器录制） */
+    document.getElementById('goRecordBtn').addEventListener('click', () => {
+        try {
+            const u = new URL(PLAYER_URL, location.href);
+            u.searchParams.set('record', '1');
+            if (appState.selectedSong && appState.selectedSong.id) {
+                u.searchParams.set('songId', appState.selectedSong.id);
+            }
+            const win = window.open(u.toString(), 'player_recorder');
+            if (!win) {
+                alert('⚠️ 播放器窗口被浏览器拦截了。\n请允许本站弹出窗口，或手动打开播放器使用「AI 修音 → 录制我的干声后去修音」。');
+                return;
+            }
+            showWaitingBanner();
+        } catch (e) {
+            alert('无法打开播放器：' + (e.message || e));
         }
     });
 
-    document.getElementById('goRecordBtn').addEventListener('click', () => { window.open(PLAYER_URL, '_blank'); });
+    /* ★ 等待横幅显隐 */
+    function showWaitingBanner() {
+        const b = document.getElementById('waitingBanner');
+        if (b) b.style.display = 'block';
+    }
+    function hideWaitingBanner() {
+        const b = document.getElementById('waitingBanner');
+        if (b) b.style.display = 'none';
+    }
+    document.getElementById('waitingBannerClose').addEventListener('click', hideWaitingBanner);
 
     async function fetchManifest() {
         const select = document.getElementById('songSelect');
@@ -586,6 +664,16 @@
                 select.appendChild(opt);
             });
             select.disabled = false;
+
+            /* ★ 首次拉取完成后，按 URL 参数 songId 自动选中（只执行一次） */
+            if (INIT_SONG_ID && !_autoSelectDone) {
+                _autoSelectDone = true;
+                const match = appState.manifestSongs.find(s => s.id === INIT_SONG_ID);
+                if (match) {
+                    select.value = INIT_SONG_ID;
+                    select.dispatchEvent(new Event('change'));
+                }
+            }
         } catch (err) { select.innerHTML = '<option value="">拉取失败，请检查网络</option>'; }
     }
 
@@ -713,6 +801,9 @@
         preciseState.duration = 0;
         preciseState.playheadTime = 0;
         preciseState.isPlaying = false;
+
+        // ★ 隐藏等待横幅
+        hideWaitingBanner();
         
         updateUI();
         fetchManifest();
@@ -822,7 +913,7 @@
             return 0;
         }
         userMidiArr.sort((a,b)=>a-b);
-        const userAvg = userMidiArr[Math.floor(userMidiArr.length/2)];
+        const userAvg = userMidiArr[Math.floor(userMidiArr.length / 2)];
         
         let refAvg = null;
         let refSourceName = '无';
@@ -831,7 +922,7 @@
             const refMidiArr = preciseState.curves.ref.filter(p => p.midi !== null).map(p => p.midi);
             if (refMidiArr.length > 0) {
                 refMidiArr.sort((a,b)=>a-b);
-                refAvg = refMidiArr[Math.floor(refMidiArr.length/2)];
+                refAvg = refMidiArr[Math.floor(refMidiArr.length / 2)];
                 refSourceName = '原唱干声';
             }
         }
@@ -839,7 +930,7 @@
         if (refAvg === null && preciseState.curves.midi.length > 0) {
             const allNotes = preciseState.curves.midi.map(n => n.midi);
             allNotes.sort((a,b)=>a-b);
-            refAvg = allNotes[Math.floor(allNotes.length/2)];
+            refAvg = allNotes[Math.floor(allNotes.length / 2)];
             refSourceName = 'MIDI乐谱';
         }
 
@@ -2463,6 +2554,11 @@
     checkDependencies();
     fetchManifest();
     updateUI();
+
+    /* ★ 如果 URL 带 waiting=1，说明是播放器主动打开发起录音，显示等待横幅 */
+    if (WAITING_FOR_RECORDING) {
+        showWaitingBanner();
+    }
 </script>
 </body>
 </html>
