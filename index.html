@@ -24,6 +24,8 @@ input,textarea,select{font-family:inherit}
 .topbar-row{display:flex;align-items:center;gap:12px;padding:14px 22px 10px}
 .back-btn{display:none}
 body[data-view="player"] .back-btn{display:flex}
+body[data-view="player"] .search{display:none}
+body[data-view="player"] .tagbar{display:none}
 .brand{display:flex;align-items:center;gap:11px;flex-shrink:0;cursor:pointer}
 .brand .logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px -4px rgba(236,65,65,.75)}
 .brand .nm{font-size:16px;font-weight:800;letter-spacing:.3px}
@@ -67,6 +69,8 @@ body[data-view="player"] .pane-player{display:flex}
 .lib-tab{padding:8px 16px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--dim);font-size:13px;font-weight:600;border:1px solid transparent;transition:.2s;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 .lib-tab:hover{background:rgba(255,255,255,.1);color:#fff}
 .lib-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 16px -6px rgba(236,65,65,.8)}
+.lib-tab .full-label{display:inline}
+.lib-tab .short-label{display:none}
 .lib-tab .cnt{font-size:11px;padding:1px 8px;border-radius:99px;background:rgba(0,0,0,.28);color:inherit;font-weight:600}
 .lib-tab-multi{margin-left:auto;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:#d5d5e0;font-size:12px;font-weight:500;transition:.15s;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .lib-tab-multi:hover{background:rgba(236,65,65,.15);border-color:rgba(236,65,65,.4);color:#fff}
@@ -197,7 +201,7 @@ body.np-collapsed .np-left{flex:0 0 0;width:0;padding:0;border-right:none;overfl
 .np-details .row .v{color:#c9c9d6;flex:1;min-width:0;word-break:break-word}
 .np-intro{margin-top:14px;font-size:12.5px;color:var(--dim);line-height:1.75;padding:13px 15px;background:rgba(255,255,255,.025);border-radius:12px;border:1px solid var(--line)}
 .np-intro::before{content:"简介";display:block;font-size:11px;color:var(--dimmer);margin-bottom:6px;letter-spacing:.5px}
-.lyrics-pane{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent 0,#000 6%,#000 94%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 6%,#000 94%,transparent 100%)}
+.lyrics-pane{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-y;mask-image:linear-gradient(to bottom,transparent 0,#000 6%,#000 94%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 6%,#000 94%,transparent 100%)}
 .lyrics-pane::-webkit-scrollbar{width:0;height:0}
 .lyrics-inner{padding:0}
 .line{padding:12px 26px;text-align:center;cursor:pointer;opacity:.28;transition:opacity .35s;will-change:opacity}
@@ -308,23 +312,45 @@ body.playing .play-btn .i-pause{display:block}
 .track-switch button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .track-switch button:disabled{opacity:.3;cursor:not-allowed}
 .track-switch button[data-mode="karaoke"].active{background:linear-gradient(135deg,#f0932b,#ffbe76)}
-.karaoke-vol{display:flex;align-items:center;gap:6px;padding:0 8px;height:32px;background:rgba(240,147,43,.12);border:1px solid rgba(240,147,43,.35);border-radius:9px;flex-shrink:0}
+.mobile-mode-toggle{display:none}
+.mobile-mode-sheet{position:fixed;inset:0;pointer-events:none;z-index:1200}
+.mobile-mode-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:opacity .25s ease}
+.mobile-mode-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(17,17,23,.98);border-top:1px solid rgba(255,255,255,.12);border-radius:18px 18px 0 0;box-shadow:0 -16px 40px rgba(0,0,0,.35);padding:10px 16px 18px;transform:translateY(110%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:72vh;overflow:hidden}
+.mobile-mode-sheet.open{pointer-events:auto}
+.mobile-mode-sheet.open .mobile-mode-backdrop{opacity:1}
+.mobile-mode-sheet.open .mobile-mode-panel{transform:translateY(0)}
+.mobile-mode-handle{width:42px;height:4px;border-radius:99px;background:rgba(255,255,255,.2);margin:2px auto 12px}
+.mobile-mode-header{display:flex;align-items:center;justify-content:space-between;padding:0 2px 12px;font-size:15px;font-weight:700}
+.mobile-mode-close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.06);color:#d7d7df;display:grid;place-items:center;font-size:15px}
+.mobile-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mobile-mode-option{border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:14px 12px;font-size:15px;font-weight:600;color:#edf1ff;transition:.2s}
+.mobile-mode-option.active{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;box-shadow:0 8px 18px rgba(236,65,65,.35)}
+.mobile-mode-option[data-mode="karaoke"].active{background:linear-gradient(135deg,#f0932b,#ffbe76);color:#2a1b12}
+.mobile-mode-option[data-mode="fix"]{background:rgba(232,121,249,.12);border-color:rgba(232,121,249,.4);color:#f3b7ff}
+.mobile-mode-option[data-mode="fix"].active{background:linear-gradient(135deg,#d946ef,#a855f7);border-color:transparent;color:#fff}
+.mobile-karaoke-panel{display:none;margin-top:16px;padding:12px 12px 8px;border-radius:12px;background:rgba(240,147,43,.09);border:1px solid rgba(240,147,43,.32)}
+.mobile-karaoke-panel.visible{display:block}
+.mobile-karaoke-head{display:flex;align-items:center;justify-content:space-between;color:#ffd59d;font-size:12px;margin-bottom:8px}
+.mobile-karaoke-panel input[type="range"]{appearance:none;-webkit-appearance:none;width:100%;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;accent-color:#f0932b}
+.mobile-karaoke-panel input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#f0932b;cursor:pointer;box-shadow:0 0 6px rgba(240,147,43,.8)}
+.karaoke-vol{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;width:auto;height:32px;background:rgba(240,147,43,.12);border:1px solid rgba(240,147,43,.35);border-radius:9px;flex-shrink:0;overflow:visible}
 .karaoke-vol[hidden]{display:none!important}
-.kv-label{font-size:11px;color:#f0932b;font-weight:600;white-space:nowrap}
-.kv-val{font-size:11px;color:#ffbe76;font-weight:700;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;cursor:pointer;user-select:none}
+.kv-label{font-size:11px;color:#f0932b;font-weight:600;white-space:nowrap;display:block;text-align:center}
+.kv-val{font-size:11px;color:#ffbe76;font-weight:700;min-width:36px;text-align:center;font-variant-numeric:tabular-nums;cursor:pointer;user-select:none;display:block}
 .kv-val:hover{color:#fff}
-.karaoke-vol input[type="range"]{-webkit-appearance:none;appearance:none;width:80px;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer}
+.karaoke-vol input[type="range"]{appearance:none;-webkit-appearance:none;width:80px;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer;transform:none;-webkit-transform:none;margin:0;accent-color:#f0932b}
 .karaoke-vol input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#f0932b;cursor:pointer;box-shadow:0 0 6px rgba(240,147,43,.8)}
 .karaoke-vol input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f0932b;cursor:pointer;border:none}
 .speed-btn{width:auto;min-width:44px;padding:0 10px;border-radius:9px;height:32px;font-size:11.5px;font-weight:700;color:#c7c7d2;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
 .speed-btn:hover{background:rgba(255,255,255,.08);color:#fff}
 .speed-btn.changed{color:var(--accent)}
 .volume-wrap{position:relative;display:flex;align-items:center;flex-shrink:0}
-.volume-pop{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:160px;padding:12px 14px;background:#1c1c26;border:1px solid var(--line2);border-radius:10px;display:none;flex-direction:column;gap:8px;box-shadow:0 16px 40px -10px rgba(0,0,0,.9);z-index:60}
+.volume-pop{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);width:56px;height:180px;padding:10px 6px;background:#1c1c26;border:1px solid var(--line2);border-radius:10px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:0;box-shadow:0 16px 40px -10px rgba(0,0,0,.9);z-index:60}
 .volume-wrap.open .volume-pop{display:flex}
-.volume-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer}
+.volume-slider{appearance:none;-webkit-appearance:none;width:120px;height:4px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;cursor:pointer;transform:rotate(-90deg);-webkit-transform:rotate(-90deg);margin:58px -38px;accent-color:var(--accent)}
 .volume-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(236,65,65,.85)}
-.volume-pct{font-size:11px;color:var(--dim);text-align:center;letter-spacing:.3px}
+.volume-pct{font-size:11px;color:var(--dim);text-align:center;letter-spacing:.3px;margin-top:0}
+
 .desk-lyric{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(760px,calc(100vw - 24px));padding:16px 22px 18px;border-radius:16px;background:rgba(16,16,22,.78);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 60px -16px rgba(0,0,0,.9);z-index:900;text-align:center;user-select:none;cursor:grab;touch-action:none}
 .desk-lyric:active{cursor:grabbing}
 .desk-lyric.locked{cursor:default}
@@ -336,6 +362,9 @@ body.playing .play-btn .i-pause{display:block}
 .dl-sub{font-size:13.5px;color:rgba(255,255,255,.48);margin-top:5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body[data-mode="lyric"]{background:transparent!important}
 body[data-mode="lyric"] .app{display:none!important}
+body[data-mode="lyric"] .topbar{display:none!important}
+body[data-mode="lyric"] .tagbar{display:none!important}
+body[data-mode="lyric"] .search{display:none!important}
 body[data-mode="lyric"] .desk-lyric{--dl-bg-rgb:16,16,22;--dl-alpha:.9;--dl-text-color:#ffffff;position:fixed;inset:0;left:0;top:0;right:0;bottom:0;transform:none;width:100%;height:100%;border-radius:14px;padding:10px 70px 10px 26px;margin:0;display:flex;flex-direction:column;justify-content:center;background:rgba(var(--dl-bg-rgb), var(--dl-alpha));backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);cursor:grab;border:none;box-shadow:0 0 0 1px rgba(255,255,255,.06) inset, 0 0 34px -10px rgba(236,65,65,.3);overflow:hidden;transition:box-shadow .2s, background .2s}
 body[data-mode="lyric"] .desk-lyric:hover{box-shadow:0 0 0 1px rgba(236,65,65,.45) inset, 0 0 46px -8px rgba(236,65,65,.55)}
 body[data-mode="lyric"] .desk-lyric:active{cursor:grabbing}
@@ -481,6 +510,17 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .side-scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:199;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
   .side-scrim.show{opacity:1;pointer-events:auto}
   body.side-collapsed .side-panel{display:flex;opacity:1;pointer-events:auto}
+  .karaoke-vol{width:44px;height:150px;flex-direction:column;padding:8px 6px}
+  .kv-label,.kv-val{width:100%}
+  .karaoke-vol input[type="range"]{width:120px;min-width:120px;transform:rotate(-90deg);-webkit-transform:rotate(-90deg);margin:0 -38px}
+  /* ★ 平板也把 人声/伴奏/唱K/修音 收进音轨面板 */
+  .track-switch{display:none}
+  .karaoke-vol{display:none!important}
+  .pb-right .ctrl.fix{display:none}
+  .mobile-mode-toggle{display:flex;align-items:center;justify-content:center;border-radius:9px;height:32px;padding:0 11px;background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:700;border:1px solid var(--line);flex-shrink:0}
+  .mobile-mode-toggle.active{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+  /* ★ 列表/搜索页隐藏音轨按钮，进播放页才显示 */
+  body[data-view="list"] .mobile-mode-toggle{display:none}
 }
 @media(max-width:860px){
   .topbar-row{padding:11px 14px 9px;gap:9px;flex-wrap:wrap}
@@ -492,8 +532,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .icon-btn{width:34px;height:34px}
   .tagbar{padding:0 14px 10px}
   .toolbox-panel{width:230px;right:-4px}
-  .lib-tabs{padding:10px 14px 10px}
-  .lib-tab{padding:6px 12px;font-size:12px}
+  .lib-tabs{padding:10px 14px 10px;gap:6px}
+  .lib-tab{padding:6px 10px;font-size:11px;gap:4px;white-space:nowrap;min-width:0}
+  .lib-tab .full-label{display:none}
+  .lib-tab .short-label{display:inline}
+  .lib-tab .cnt{font-size:8.5px;padding:1px 5px}
   .select-bar{padding:8px 14px;gap:6px}
   .grid-wrap{padding:14px 14px 26px}
   .grid{grid-template-columns:repeat(auto-fill,clamp(130px,30vw,180px));gap:12px}
@@ -521,20 +564,21 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .playbar{padding:0 12px 10px}
   .pb-time{width:36px;font-size:10px}
   .pb-row{gap:8px;margin-top:4px}
-  .pb-song{max-width:none;flex:1;gap:9px}
-  .pb-cover{width:38px;height:38px;border-radius:8px}
-  .pb-title{font-size:12.5px}
-  .pb-artist{font-size:11px}
+  .pb-song{max-width:78px;flex:0 0 auto;gap:8px;padding:3px 2px}
+  .pb-cover{width:34px;height:34px;border-radius:8px}
+  .pb-meta{display:none}
   .pb-btns{gap:1px}
   .ctrl{width:32px;height:32px}
   .ctrl svg{width:17px;height:17px}
   .play-btn{width:44px;height:44px;margin:0 3px}
   .play-btn svg{width:18px;height:18px}
-  .pb-right{gap:3px;flex:0 0 auto}
-  .track-switch{display:none}
-  .karaoke-vol{display:none!important}
+   .pb-right{gap:3px;flex:0 0 auto}
   .pb-right .ctrl:nth-child(n+4){display:none}
-  .speed-btn{min-width:38px;padding:0 7px;font-size:11px}
+  .speed-btn{min-width:34px;padding:0 6px;font-size:10.5px}
+  .np-left{position:absolute;left:0;top:0;bottom:0;z-index:40;width:min(78vw,300px);max-width:300px;transform:translateX(-110%);opacity:0;pointer-events:none;transition:transform .28s ease, opacity .25s ease, box-shadow .2s ease;background:rgba(18,18,24,.96);box-shadow:10px 0 32px rgba(0,0,0,.38);border-right:1px solid rgba(255,255,255,.08)}
+  body:not(.np-collapsed) .np-left{transform:translateX(0);opacity:1;pointer-events:auto}
+  .np-right{position:relative;z-index:1}
+  .pane-player{position:relative}
   .desk-lyric{bottom:100px;padding:12px 16px 14px;border-radius:12px}
   .dl-main{font-size:19px}
   .dl-sub{font-size:12px}
@@ -598,9 +642,9 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
     <div class="content">
       <div class="pane-list">
         <div class="lib-tabs" id="libTabs">
-          <button class="lib-tab active" data-lib="recommend">🌐 推荐榜单音乐 <span class="cnt" id="countRecommend">0 首</span></button>
-          <button class="lib-tab" data-lib="online">🎧 在线音乐 <span class="cnt" id="countOnline">0 首</span></button>
-          <button class="lib-tab" data-lib="local">💾 我的 DIY 音乐 <span class="cnt" id="countLocal">0 首</span></button>
+          <button class="lib-tab active" data-lib="recommend"><span class="full-label">🌐 推荐榜单</span><span class="short-label">🌐 榜单</span><span class="cnt" id="countRecommend">0 首</span></button>
+          <button class="lib-tab" data-lib="online"><span class="full-label">🎧 在线音乐</span><span class="short-label">🎧 在线</span><span class="cnt" id="countOnline">0 首</span></button>
+          <button class="lib-tab" data-lib="local"><span class="full-label">💾 我的DIY音乐</span><span class="short-label">💾 我的</span><span class="cnt" id="countLocal">0 首</span></button>
           <button class="lib-tab-multi" id="btnLocalSelect" hidden>☑ 多选导出</button>
         </div>
         <div class="select-bar" id="selectBar" hidden>
@@ -699,6 +743,29 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
     </aside>
     <div class="side-scrim" id="sideScrim"></div>
   </div>
+  <div class="mobile-mode-sheet" id="mobileModeSheet" aria-hidden="true">
+    <div class="mobile-mode-backdrop" data-close-mobile-mode="1"></div>
+    <div class="mobile-mode-panel" role="dialog" aria-modal="true" aria-label="音轨和修音面板">
+      <div class="mobile-mode-handle"></div>
+      <div class="mobile-mode-header">
+        <span>音轨 / 修音</span>
+        <button class="mobile-mode-close" type="button" aria-label="关闭面板" data-close-mobile-mode="1">✕</button>
+      </div>
+      <div class="mobile-mode-grid">
+        <button type="button" class="mobile-mode-option active" data-mode="vocal">人声</button>
+        <button type="button" class="mobile-mode-option" data-mode="inst">伴奏</button>
+        <button type="button" class="mobile-mode-option" data-mode="karaoke">唱K</button>
+        <button type="button" class="mobile-mode-option fix" data-mode="fix">修音</button>
+      </div>
+      <div class="mobile-karaoke-panel" id="mobileKaraokePanel">
+        <div class="mobile-karaoke-head">
+          <span>人声比例</span>
+          <strong id="mobileKaraokeVal">25%</strong>
+        </div>
+        <input type="range" id="mobileKaraokeSlider" min="0" max="100" value="25">
+      </div>
+    </div>
+  </div>
   <footer class="playbar">
     <div class="pb-progress">
       <span class="pb-time" id="pbCur">0:00</span>
@@ -755,6 +822,9 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
             <circle cx="12" cy="12" r="3.5"/>
           </svg>
           <span class="lbl">修音</span>
+        </button>
+        <button class="mobile-mode-toggle" id="btnMobileModeToggle" type="button" aria-expanded="false" title="打开音轨/修音面板">
+          <span>音轨</span>
         </button>
         <button class="speed-btn" id="btnSpeed" title="倍速播放">1.0x</button>
         <button class="ctrl" id="btnMode" title="播放模式">
@@ -928,7 +998,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
     </div>
     <div class="row" style="justify-content:flex-end">
       <button class="ghost danger" id="btnResetData" title="清空本地数据并刷新">重置数据</button>
-      <button class="ghost" id="btnDownloadDesktop" title="下载 Windows 桌面版（提取码 2026）">💻 桌面版下载</button>
+      <button class="ghost" id="btnDownloadDesktop" title="下载 Windows 桌面版（提取码 2026）">💻 桌面版</button>
       <button class="ghost" id="btnSyncNow">立即同步</button>
       <button class="primary" id="btnSaveSettings">保存</button>
     </div>
@@ -996,7 +1066,11 @@ function extractBvid(url){
 const IS_LYRIC_MODE = (()=>{
   try{ return new URLSearchParams(location.search).get('mode') === 'lyric'; }catch(_){ return false; }
 })();
-if(IS_LYRIC_MODE){
+if(!IS_LYRIC_MODE){
+  document.body.removeAttribute('data-mode');
+  document.body.setAttribute('data-view','list');
+  document.documentElement.style.background = '';
+}else{
   document.body.dataset.mode = 'lyric';
   document.body.setAttribute('data-view','list');
   document.documentElement.style.background = 'transparent';
@@ -2965,11 +3039,11 @@ async function playSong(id){
   if(id === currentId && audio.src){
     if(audio.paused) audio.play().catch(()=>{});
     else audio.pause();
-    document.body.dataset.view = 'player';
+    setPlayerView('player');
     return;
   }
   currentId = id;
-  document.body.dataset.view = 'player';
+  setPlayerView('player');
   pushHistory(id);
   renderAll(); renderSide();
   await renderNpInfo(song);
@@ -3115,7 +3189,7 @@ btnMV.addEventListener('click', ()=>{
   if(!song || !song.mvUrl){ alert('当前歌曲没有 MV 链接'); return; }
   const pane = $('#mvPane');
   if(pane && !pane.hidden){ closeMvInline(); return; }
-  document.body.dataset.view = 'player';
+  setPlayerView('player');
   openMvInline(song);
 });
 
@@ -3150,13 +3224,48 @@ btnSpeed.addEventListener('click', ()=>{
   updateSpeedUI(); persistPref();
 });
 
-trackSwitch.addEventListener('click', async e=>{
-  const b = e.target.closest('button[data-mode]');
-  if(!b || b.disabled) return;
-  const mode = b.dataset.mode;
-  if(mode === vocalMode) return;
-  vocalMode = mode;
+const mobileModeSheet = $('#mobileModeSheet');
+const mobileModeToggle = $('#btnMobileModeToggle');
+const mobileModeOptions = $$('.mobile-mode-option');
+const mobileKaraokePanel = $('#mobileKaraokePanel');
+const mobileKaraokeSlider = $('#mobileKaraokeSlider');
+const mobileKaraokeVal = $('#mobileKaraokeVal');
+
+function syncMobileModeUI(){
+  const mode = vocalMode;
   trackSwitch.querySelectorAll('button').forEach(x=>x.classList.toggle('active', x.dataset.mode === mode));
+  mobileModeOptions.forEach(x=>x.classList.toggle('active', x.dataset.mode === mode));
+  if(mobileKaraokePanel) mobileKaraokePanel.classList.toggle('visible', mode === 'karaoke');
+  if(mobileKaraokeSlider) mobileKaraokeSlider.value = Math.round(karaokeVocalFactor * 100);
+  if(mobileKaraokeVal) mobileKaraokeVal.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  if(mobileModeToggle){
+    mobileModeToggle.classList.toggle('active', mode === 'karaoke');
+    mobileModeToggle.setAttribute('aria-expanded', String(mobileModeSheet && mobileModeSheet.classList.contains('open')));
+  }
+}
+
+function openMobileModeSheet(){
+  if(!mobileModeSheet) return;
+  mobileModeSheet.classList.add('open');
+  mobileModeSheet.setAttribute('aria-hidden', 'false');
+  if(mobileModeToggle) mobileModeToggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeMobileModeSheet(){
+  if(!mobileModeSheet) return;
+  mobileModeSheet.classList.remove('open');
+  mobileModeSheet.setAttribute('aria-hidden', 'true');
+  if(mobileModeToggle) mobileModeToggle.setAttribute('aria-expanded', 'false');
+}
+
+async function applyTrackMode(mode){
+  if(mode === vocalMode && !mobileModeSheet?.classList.contains('open')) return;
+  if(mode === vocalMode && mobileModeSheet?.classList.contains('open')) {
+    closeMobileModeSheet();
+    return;
+  }
+  vocalMode = mode;
+  syncMobileModeUI();
   updateKaraokeUI();
   persistPref();
   updateAudioVolumes();
@@ -3180,6 +3289,35 @@ trackSwitch.addEventListener('click', async e=>{
     if(audio.readyState >= 1) seek();
     else audio.addEventListener('loadedmetadata', seek);
   }
+}
+
+trackSwitch.addEventListener('click', async e=>{
+  const b = e.target.closest('button[data-mode]');
+  if(!b || b.disabled) return;
+  await applyTrackMode(b.dataset.mode);
+});
+
+mobileModeToggle?.addEventListener('click', ()=>{
+  if(!mobileModeSheet) return;
+  if(mobileModeSheet.classList.contains('open')) closeMobileModeSheet();
+  else openMobileModeSheet();
+});
+
+mobileModeOptions.forEach(btn=>{
+  btn.addEventListener('click', async e=>{
+    const mode = e.currentTarget.dataset.mode;
+    if(mode === 'fix'){
+      closeMobileModeSheet();
+      $('#btnAiFix').click();
+      return;
+    }
+    await applyTrackMode(mode);
+     // 所有模式切换后都保持打开，由用户手动关闭
+  });
+});
+
+document.querySelectorAll('[data-close-mobile-mode]').forEach(el=>{
+  el.addEventListener('click', closeMobileModeSheet);
 });
 
 function seekFromEvent(e){
@@ -3252,7 +3390,7 @@ document.addEventListener('keydown', e=>{
     closeCardMenu();
     if(!$('#mvPane').hidden){ closeMvInline(); return; }
     if(state.selectMode){ exitSelectMode(); }
-    else if(document.body.dataset.view === 'player' && isMobile()) document.body.dataset.view = 'list';
+    else if(document.body.dataset.view === 'player' && isMobile()) setPlayerView('list');
   }
 });
 
@@ -3265,10 +3403,10 @@ $$('.lib-tab').forEach(b=>{
 });
 pbSong.addEventListener('click', ()=>{
   if(!audio.src) return;
-  document.body.dataset.view = 'player';
+  setPlayerView('player');
 });
-$('#btnBackToList').addEventListener('click', ()=>{ document.body.dataset.view = 'list'; });
-$('#brandHome').addEventListener('click', ()=>{ document.body.dataset.view = 'list'; });
+$('#btnBackToList').addEventListener('click', ()=>{ setPlayerView('list'); });
+$('#brandHome').addEventListener('click', ()=>{ setPlayerView('list'); });
 searchInput.addEventListener('input', e=>{
   state.search = e.target.value.trim();
   renderAll();
@@ -3384,8 +3522,24 @@ function initCollapse(){
   const npCollapsed = savedNp === null ? isMobile() : savedNp === '1';
   document.body.classList.toggle('np-collapsed', npCollapsed);
 }
+function applyMobilePlayerDefaultState(){
+  if(!isMobile()) return;
+  closeSidePanel();
+  document.body.classList.add('np-collapsed');
+  localStorage.setItem(LS_NP, '1');
+}
+function setPlayerView(view){
+  document.body.dataset.view = view;
+  if(view === 'player' && isMobile()) applyMobilePlayerDefaultState();
+}
 function openSidePanel(){ sidePanel.classList.add('open'); sideScrim.classList.add('show'); }
 function closeSidePanel(){ sidePanel.classList.remove('open'); sideScrim.classList.remove('show'); }
+function toggleNpLeftMobile(next){
+  const collapsed = typeof next === 'boolean' ? next : !document.body.classList.contains('np-collapsed');
+  document.body.classList.toggle('np-collapsed', collapsed);
+  localStorage.setItem(LS_NP, collapsed ? '1' : '0');
+  setTimeout(updatePanePadding, 260);
+}
 $('#btnSidePanel').addEventListener('click', ()=>{
   if(isMobile()){
     if(sidePanel.classList.contains('open')) closeSidePanel();
@@ -3399,11 +3553,45 @@ $('#btnSidePanel').addEventListener('click', ()=>{
 });
 sideScrim.addEventListener('click', closeSidePanel);
 $('#btnToggleNpLeft').addEventListener('click', ()=>{
+  if(isMobile()){
+    const next = document.body.classList.contains('np-collapsed');
+    toggleNpLeftMobile(!next);
+    return;
+  }
   const next = !document.body.classList.contains('np-collapsed');
   document.body.classList.toggle('np-collapsed', next);
   localStorage.setItem(LS_NP, next ? '1' : '0');
   setTimeout(updatePanePadding, 260);
 });
+
+let touchStartX = 0, touchStartY = 0;
+document.addEventListener('touchstart', e=>{
+  if(!isMobile()) return;
+  const t = e.touches[0] || e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+}, {passive:true});
+document.addEventListener('touchend', e=>{
+  if(!isMobile()) return;
+  const t = e.changedTouches[0] || e.touches[0];
+  if(!t) return;
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if(Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+  if(document.body.dataset.view === 'player' && touchStartX < 30 && dx > 40){
+    toggleNpLeftMobile(false);
+  }
+  if(document.body.dataset.view === 'player' && !document.body.classList.contains('np-collapsed') && dx < -40 && touchStartX < 220){
+    toggleNpLeftMobile(true);
+  }
+  if(touchStartX > window.innerWidth - 30 && dx < -40){
+    openSidePanel();
+  }
+  if(sidePanel.classList.contains('open') && dx > 50){
+    closeSidePanel();
+  }
+}, {passive:true});
 
 function toggleFullscreen(){
   const el = document.documentElement;
@@ -3418,7 +3606,53 @@ function setLyricScale(v){
 }
 $('#lyricMinus').addEventListener('click', ()=>setLyricScale(lyricScale - 0.1));
 $('#lyricPlus').addEventListener('click', ()=>setLyricScale(lyricScale + 0.1));
+/* ★ 歌词双指捏合缩放（手机 / 平板竖屏） */
+(function enableLyricPinch(){
+  if(!lyricsPane) return;
+  let pinching = false, startDist = 0, startScale = 1;
 
+  const twoFingerDist = (t1, t2)=>Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+
+  lyricsPane.addEventListener('touchstart', e=>{
+    if(e.touches.length !== 2) return;
+    pinching = true;
+    startDist = twoFingerDist(e.touches[0], e.touches[1]);
+    startScale = lyricScale;
+    // 捏合期间暂停自动滚动，避免字号变化时歌词乱跳
+    cancelAnimationFrame(state.scrollRaf);
+    clearTimeout(state.scrollTimer);
+    state.userScrollUntil = Date.now() + 2000;
+  }, { passive:true });
+
+  lyricsPane.addEventListener('touchmove', e=>{
+    if(!pinching) return;
+    if(e.touches.length < 2){ pinching = false; return; }
+    e.preventDefault();
+    const d = twoFingerDist(e.touches[0], e.touches[1]);
+    if(startDist <= 0 || d <= 0) return;
+    const next = startScale * (d / startDist);
+    lyricScale = Math.max(0.7, Math.min(1.8, Math.round(next * 100) / 100));
+    document.documentElement.style.setProperty('--lyric-scale', lyricScale);
+  }, { passive:false });
+
+  const endPinch = ()=>{
+    if(!pinching) return;
+    pinching = false;
+    startDist = 0;
+    persistPref(); // 记住字号，下次打开还是这个大小
+    // 松手后 1.2 秒再恢复自动滚动，避免立刻跳回当前行
+    state.userScrollUntil = Date.now() + 1200;
+    clearTimeout(state.scrollTimer);
+    state.scrollTimer = setTimeout(()=>{ state.userScrollUntil = 0; scrollToActive(); }, 1200);
+  };
+
+  lyricsPane.addEventListener('touchend', endPinch, { passive:true });
+  lyricsPane.addEventListener('touchcancel', endPinch, { passive:true });
+
+  // iOS Safari 的手势事件兜底，防止页面整体被缩放
+  lyricsPane.addEventListener('gesturestart', e=>e.preventDefault(), { passive:false });
+  lyricsPane.addEventListener('gesturechange', e=>e.preventDefault(), { passive:false });
+})();
 $('#btnToolbox').addEventListener('click', e=>{
   e.stopPropagation();
   toolboxPanel.hidden = !toolboxPanel.hidden;
@@ -3451,13 +3685,36 @@ function updateKaraokeUI(){
   const box = $('#karaokeVol');
   const slider = $('#karaokeSlider');
   const val = $('#karaokeVal');
+  const mobileSlider = $('#mobileKaraokeSlider');
+  const mobileVal = $('#mobileKaraokeVal');
   if(!box) return;
   if(vocalMode === 'karaoke'){
     box.hidden = false;
     if(slider) slider.value = Math.round(karaokeVocalFactor * 100);
     if(val) val.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+    if(mobileSlider) mobileSlider.value = Math.round(karaokeVocalFactor * 100);
+    if(mobileVal) mobileVal.textContent = Math.round(karaokeVocalFactor * 100) + '%';
   }else{
     box.hidden = true;
+  }
+}
+function applyMobileSliderLayout(){
+  const kara = $('#karaokeSlider');
+  const vol = $('#volSlider');
+  const vertical = isMobile();
+
+  if(kara){
+    kara.style.transform = vertical ? 'rotate(-90deg)' : '';
+    kara.style.webkitTransform = vertical ? 'rotate(-90deg)' : '';
+    kara.style.margin = vertical ? '0 -38px' : '';
+    kara.style.width = vertical ? '120px' : '';
+  }
+
+  if(vol){
+    vol.style.transform = '';
+    vol.style.webkitTransform = '';
+    vol.style.margin = '';
+    vol.style.width = '';
   }
 }
 function applyVolume(v){
@@ -3500,10 +3757,27 @@ $('#volSlider').addEventListener('dblclick', ()=>{
   applyVolume(1); lastVolume = 1;
 });
 
+window.addEventListener('resize', applyMobileSliderLayout);
+document.addEventListener('DOMContentLoaded', applyMobileSliderLayout);
+applyMobileSliderLayout();
+
 $('#karaokeSlider').addEventListener('input', e=>{
   karaokeVocalFactor = Math.max(0, Math.min(1, Number(e.target.value) / 100));
   const val = $('#karaokeVal');
+  const mobileVal = $('#mobileKaraokeVal');
   if(val) val.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  if(mobileVal) mobileVal.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  if(mobileKaraokeSlider) mobileKaraokeSlider.value = Math.round(karaokeVocalFactor * 100);
+  updateAudioVolumes();
+  persistPref();
+});
+$('#mobileKaraokeSlider')?.addEventListener('input', e=>{
+  karaokeVocalFactor = Math.max(0, Math.min(1, Number(e.target.value) / 100));
+  const val = $('#karaokeVal');
+  const mobileVal = $('#mobileKaraokeVal');
+  if(val) val.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  if(mobileVal) mobileVal.textContent = Math.round(karaokeVocalFactor * 100) + '%';
+  if($('#karaokeSlider')) $('#karaokeSlider').value = Math.round(karaokeVocalFactor * 100);
   updateAudioVolumes();
   persistPref();
 });
@@ -4788,6 +5062,7 @@ async function init(){
   trackSwitch.querySelectorAll('button').forEach(b=>{
     b.classList.toggle('active', b.dataset.mode === vocalMode);
   });
+  syncMobileModeUI();
   updateKaraokeUI();
 
   try{ await loadUser(); }catch(e){ console.warn('[loadUser]', e); }
