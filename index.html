@@ -248,7 +248,10 @@ body.side-collapsed .side-panel{flex:0 0 0;width:0;border-left:none;opacity:0;po
 .mt-btn[data-m="fix"]{color:#f0abfc;border-color:rgba(232,121,249,.35);background:rgba(232,121,249,.1)}
 .mt-btn:disabled{opacity:.3}
 .mt-btn[hidden]{display:none!important}
-@media(max-width:860px){ .mt-bar{display:flex} }
+@media(max-width:860px){
+  .mt-bar { display:flex; }
+  .pb-right .volume-pop { left: auto; right: -6px; transform: none; }
+}
 
 .playbar{flex:0 0 auto;background:linear-gradient(180deg,rgba(20,20,28,.85),rgba(13,13,18,.98));backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-top:1px solid var(--line);padding:0 22px 12px;z-index:100;position:relative}
 .playbar::before{content:"";position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(236,65,65,.35),transparent);opacity:0;transition:opacity .4s}
@@ -469,18 +472,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .online-bar select{min-width:90px}
   .online-desktop-banner{flex-direction:column;align-items:flex-start;padding:14px}
 }
-@media(max-width:1000px){
-  /* 平板：平铺 4 按钮，整体紧凑一档，避免底栏溢出 */
-  .pb-song{max-width:170px}
-  .pb-btns{gap:2px}
-  .ctrl{width:32px;height:32px}
-  .ctrl svg{width:17px;height:17px}
-  .play-btn{width:42px;height:42px;margin:0 3px}
-  .play-btn svg{width:18px;height:18px}
-  .track-switch{padding:2px;gap:1px}
-  .track-switch button{padding:4px 8px;font-size:10.5px}
-  .speed-btn{min-width:36px;padding:0 6px;font-size:10.5px}
-  .pb-right{gap:3px}
+/* ★ 平板及中等屏幕的电脑版微调 */
+@media (min-width:861px) and (max-width:1180px){
+  .np-left{flex-basis:300px;padding:22px}
+  .side-panel{flex-basis:260px;width:260px}
+  .big-cover{max-width:240px}
 }
 @media(max-width:860px){
     /* ★ 确保手机端顶栏和爱心永远在最顶层且可点击 */
@@ -580,7 +576,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .pb-btns #btnMV, .pb-btns #btnLz { display: none !important; }
   .pb-right .ctrl#btnMode { display: none; }
   .pb-right .ctrl#btnDesk { display: none; }
-  .pb-right .volume-wrap { display: none; }
   .pb-right .ctrl#btnFav { display: flex; }
   .speed-btn{min-width:34px;padding:0 6px;font-size:10.5px}
   .np-left{position:absolute;left:0;top:0;bottom:0;z-index:40;width:min(78vw,300px);max-width:300px;transform:translateX(-110%);opacity:0;pointer-events:none;transition:transform .28s ease, opacity .25s ease, box-shadow .2s ease;background:rgba(18,18,24,.96);box-shadow:10px 0 32px rgba(0,0,0,.38);border-right:1px solid rgba(255,255,255,.08)}
@@ -1024,7 +1019,7 @@ const DEFAULT_TOOLBOX = [
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const isMobile = ()=>window.matchMedia('(max-width:1000px)').matches;
+const isMobile = ()=>window.matchMedia('(max-width:860px)').matches;
 const isUrl = s => /^(https?:|blob:|data:|\/\/)/i.test(s||'');
 
 function fmtTime(sec){
@@ -2603,6 +2598,24 @@ function setupLyricBus(){
     if(d.type === 'hello' || d.type === 'request-state'){ state.deskOn = true; const b = $('#btnDesk'); if(b) b.classList.add('on'); bcPost({ type:'font', font: state.dlFont }); updateDeskLyric(); }
     else if(d.type === 'closed'){ state.deskOn = false; const b = $('#btnDesk'); if(b) b.classList.remove('on'); persistPref(); }
   };
+
+  // ★ 新增：每秒检测一次，如果用户直接点了浏览器右上角的 X 关掉弹窗，自动把主界面的按钮恢复白色
+  setInterval(() => {
+    if (state.deskOn && lyricWinRef && lyricWinRef.closed) {
+      state.deskOn = false;
+      const b = $('#btnDesk'); if(b) b.classList.remove('on');
+      persistPref();
+    }
+  }, 1000);
+
+  // ★ 新增：当用户从其他窗口切回主页面时，也立刻检查一次
+  window.addEventListener('focus', () => {
+    if (state.deskOn && lyricWinRef && lyricWinRef.closed) {
+      state.deskOn = false;
+      const b = $('#btnDesk'); if(b) b.classList.remove('on');
+      persistPref();
+    }
+  });
 }
 function computeDeskText(){
   let m = '♪ 桌面歌词', s = ''; const cur = state.lines[state.activeIndex]; const next = state.lines[state.activeIndex + 1];
@@ -2613,6 +2626,12 @@ function computeDeskText(){
 }
 function updateDeskLyric(){ const { m, s } = computeDeskText(); if(IS_LYRIC_MODE){ dlMain.textContent = m; dlSub.textContent = s; } else if(state.deskOn){ bcPost({ type:'lyric', main:m, sub:s }); } }
 $('#btnDesk').addEventListener('click', ()=>{
+  // ★ 新增：点击前先检查实际窗口是否被叉掉了，如果已关闭则强行恢复状态
+  if (state.deskOn && lyricWinRef && lyricWinRef.closed) {
+    state.deskOn = false;
+    $('#btnDesk').classList.remove('on');
+  }
+  
   state.deskOn = !state.deskOn; $('#btnDesk').classList.toggle('on', state.deskOn);
   if(state.deskOn){ openLyricWindow(); setTimeout(()=>{ updateDeskLyric(); bcPost({ type:'font', font: state.dlFont }); }, 700); }
   else{ closeLyricWindow(); } persistPref();
