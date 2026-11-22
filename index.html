@@ -251,7 +251,8 @@ body.side-collapsed .side-panel{flex:0 0 0;width:0;border-left:none;opacity:0;po
 .mt-btn[data-m="fix"]{color:#f0abfc;border-color:rgba(232,121,249,.35);background:rgba(232,121,249,.1)}
 .mt-btn:disabled{opacity:.3}
 .mt-btn[hidden]{display:none!important}
-@media(max-width:860px){
+/* ★ 手机 / 竖屏平板：走手机版布局 */
+@media(max-width:860px), (orientation:portrait) and (max-width:1100px){
   .mt-bar { display:flex; }
   .pb-right .volume-pop { left: auto; right: -6px; transform: none; }
     /* 隐藏原按钮 */
@@ -482,13 +483,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .online-bar select{min-width:90px}
   .online-desktop-banner{flex-direction:column;align-items:flex-start;padding:14px}
 }
-/* ★ 平板及中等屏幕的电脑版微调 */
-@media (min-width:861px) and (max-width:1180px){
-  .np-left{flex-basis:300px;padding:22px}
-  .side-panel{flex-basis:260px;width:260px}
-  .big-cover{max-width:240px}
-}
-@media(max-width:860px){
+@media(max-width:860px), (orientation:portrait) and (max-width:1100px){
     /* ★ 确保手机端顶栏和爱心永远在最顶层且可点击 */
   .topbar-row { position: relative; z-index: 9999; }
   .top-actions { position: relative; z-index: 9999; }
@@ -602,6 +597,121 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .mv-hint{display:none}
   body[data-mode="lyric"] .dl-settings{width:260px}
 }
+/* ★ 平板横屏：电脑版的紧凑自适应 —— 左封面收紧成窄栏，右侧歌词占主区，收藏栏改为抽屉 */
+@media (min-width:861px) and (max-width:1280px) and (orientation:landscape),
+       (min-width:861px) and (max-width:1400px) and (orientation:landscape) and (pointer:coarse){
+  .topbar-row{padding:11px 18px 8px;gap:10px}
+  .brand .logo{width:32px;height:32px;font-size:16px;border-radius:10px}
+  .brand .nm{font-size:15px}
+  .brand .ct{font-size:10.5px}
+  .search{max-width:320px}
+  .search input{height:36px}
+  .icon-btn{width:36px;height:36px}
+  .tagbar{padding:0 18px 10px}
+  .lib-tabs{padding:10px 18px 9px;gap:6px}
+  .lib-tab{padding:7px 13px;font-size:12px}
+  .select-bar{padding:9px 18px}
+  .grid-wrap{padding:16px 18px 26px}
+  .grid{grid-template-columns:repeat(auto-fill,clamp(140px,17vw,200px));gap:14px}
+  .card-info{padding:10px 11px 11px}
+
+  /* 播放页：两栏 */
+  .pane-player{flex-direction:row}
+  .np-left{flex:0 0 238px;width:238px;padding:18px 16px 22px}
+  body.np-collapsed .np-left{flex:0 0 0;width:0;padding:0;border-right:none;overflow:hidden;opacity:0}
+  .big-cover{max-width:188px;border-radius:14px}
+  .np-title{font-size:17px;margin-top:14px;line-height:1.28}
+  .np-artist{font-size:12px;margin-top:5px}
+  .np-details{margin-top:12px;padding:10px 12px;gap:7px}
+  .np-details .row{font-size:11.5px;gap:8px}
+  .np-details .row .k{min-width:42px}
+  .np-intro{margin-top:10px;padding:10px 12px;font-size:11.5px;line-height:1.65}
+  .np-right-head{padding:10px 18px}
+  .lyric-zoom button{width:28px;height:28px}
+  .line{padding:10px 16px}
+  .line .orig{font-size:calc(16px * var(--lyric-scale))}
+  .line .mid{font-size:calc(10.5px * var(--lyric-scale))}
+  .line .trans{font-size:calc(12.5px * var(--lyric-scale))}
+  .line.active .block{transform:scale(1.03)}
+
+  /* 收藏 / 历史 / K歌待播：改为右侧抽屉，不占歌词宽度 */
+  body .side-panel,
+  body.side-collapsed .side-panel{
+    position:fixed;top:0;right:0;bottom:0;
+    width:min(70vw,290px);flex:0 0 auto;
+    opacity:1;pointer-events:auto;
+    border-left:1px solid var(--line);
+    background:#13131a;
+    transform:translateX(100%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    z-index:10001;
+    box-shadow:-16px 0 48px rgba(0,0,0,.6);
+  }
+  body .side-panel.open,
+  body.side-collapsed .side-panel.open{transform:translateX(0)}
+  .side-scrim{
+    display:block;position:fixed;inset:0;
+    background:rgba(0,0,0,.55);z-index:10000;
+    opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .side-scrim.show{opacity:1;pointer-events:auto}
+
+  /* 播放条紧凑，避免在 900–1000px 宽度里挤成两行 */
+  .playbar{padding:0 16px 10px}
+  .pb-song{max-width:200px}
+  .pb-cover{width:40px;height:40px}
+  .pb-title{font-size:12.5px}
+  .pb-artist{font-size:11px}
+  .pb-row{gap:6px;margin-top:3px}
+  .pb-btns{flex:1;justify-content:center;gap:0}
+  .ctrl{width:36px;height:36px}
+  .ctrl svg{width:19px;height:19px}
+  .play-btn{width:46px;height:46px;margin:0 3px}
+  .pb-right{gap:3px}
+  .track-switch button{padding:5px 8px;font-size:10.5px}
+  .speed-btn{min-width:38px;padding:0 7px;font-size:11px;height:30px}
+  /* 带文字说明的按钮改为「图标在上、文字在下」的小方块，避免文字压在图标上 */
+  #btnMV, #btnLz, #btnAiFix, #btnMode{width:40px;height:44px;border-radius:10px;flex-direction:column;justify-content:flex-start;padding-top:6px;gap:2px}
+  #btnMV svg, #btnLz svg, #btnAiFix svg, #btnMode svg{width:17px;height:17px}
+  #btnMV .lbl, #btnLz .lbl, #btnAiFix .lbl, #btnMode .lbl{position:static;transform:none;font-size:7.5px;line-height:1;letter-spacing:.2px}
+  .pb-right .volume-pop{left:auto;right:-6px;transform:none}
+}
+
+/* ★ 12–14 寸平板横屏（如 12.9" iPad Pro）：左栏与歌词字号放大一档 */
+@media (min-width:1200px) and (max-width:1400px) and (orientation:landscape) and (pointer:coarse){
+  .np-left{flex:0 0 280px;width:280px}
+  .big-cover{max-width:226px}
+  .np-title{font-size:19px}
+  .np-artist{font-size:12.5px}
+  .line{padding:12px 20px}
+  .line .orig{font-size:calc(19px * var(--lyric-scale))}
+  .line .mid{font-size:calc(11.5px * var(--lyric-scale))}
+  .line .trans{font-size:calc(13.5px * var(--lyric-scale))}
+}
+
+/* ★ 大屏竖屏（竖放的平板）：仍是手机版结构，但把播放条铺开、补回歌名 */
+@media (min-width:641px) and (max-width:860px) and (orientation:portrait),
+       (min-width:861px) and (max-width:1100px) and (orientation:portrait){
+  .pb-song{max-width:200px;flex:0 1 auto}
+  .pb-meta{display:block}
+  .pb-cover{width:40px;height:40px}
+  .pb-title{font-size:13px}
+  .pb-artist{font-size:11.5px}
+  .pb-btns{flex:1;justify-content:center;gap:4px}
+  .ctrl{width:34px;height:34px}
+  .play-btn{width:46px;height:46px}
+  .pb-right{gap:6px}
+  .line .orig{font-size:calc(18px * var(--lyric-scale))}
+}
+
+/* ★ 1281–1400 的电脑版：三栏略微收紧，保证歌词列不被压窄 */
+@media (min-width:1281px) and (max-width:1400px) and (orientation:landscape) and (pointer:fine){
+  .np-left{flex-basis:300px;width:300px;padding:24px}
+  .big-cover{max-width:250px}
+  .side-panel{flex-basis:240px;width:240px}
+  .line{padding:11px 22px}
+}
+
 @media(max-width:400px){
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .pb-cover{width:34px;height:34px}
@@ -1069,7 +1179,15 @@ const DEFAULT_TOOLBOX = [
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const isMobile = ()=>window.matchMedia('(max-width:860px)').matches;
+/* ★ 三种布局：手机/竖屏平板（抽屉版）、平板横屏（紧凑两栏）、电脑版 */
+const MQ_PHONE  = '(max-width:860px), (orientation:portrait) and (max-width:1100px)';
+const MQ_TABLET = '(min-width:861px) and (max-width:1280px) and (orientation:landscape), (min-width:861px) and (max-width:1400px) and (orientation:landscape) and (pointer:coarse)';
+const mqPhone = window.matchMedia(MQ_PHONE);
+const mqTablet = window.matchMedia(MQ_TABLET);
+const isMobile = ()=>mqPhone.matches;
+const isTabletLandscape = ()=>mqTablet.matches;
+const isDrawerSide = ()=>isMobile() || isTabletLandscape();
+const layoutMode = ()=>isMobile() ? 'phone' : (isTabletLandscape() ? 'tablet' : 'desktop');
 const isUrl = s => /^(https?:|blob:|data:|\/\/)/i.test(s||'');
 
 function fmtTime(sec){
@@ -2553,7 +2671,30 @@ function initCollapse(){
   const savedNp = localStorage.getItem(LS_NP); const npCollapsed = savedNp === null ? isMobile() : savedNp === '1';
   document.body.classList.toggle('np-collapsed', npCollapsed);
 }
-function applyMobilePlayerDefaultState(){ if(!isMobile()) return; closeSidePanel(); document.body.classList.add('np-collapsed'); localStorage.setItem(LS_NP, '1'); }
+/* ★ 旋转 / 改窗口尺寸时，按新布局同步面板状态，避免抽屉盖住歌词 */
+let _layoutMode = layoutMode();
+function handleLayoutChange(){
+  const mode = layoutMode();
+  if(mode === _layoutMode) return;
+  _layoutMode = mode;
+  closeSidePanel();
+  if(mode === 'phone'){
+    /* 竖屏：信息面板收进抽屉，绝不压在歌词上 */
+    document.body.classList.add('np-collapsed');
+  }else{
+    /* 横屏平板 / 电脑：信息面板是并排的一栏，可以展开 */
+    document.body.classList.remove('np-collapsed');
+  }
+  setTimeout(()=>{ updatePanePadding(); positionKaraokePopover(); }, 320);
+}
+window.addEventListener('resize', handleLayoutChange);
+window.addEventListener('orientationchange', ()=>setTimeout(handleLayoutChange, 220));
+if(mqPhone.addEventListener){ mqPhone.addEventListener('change', handleLayoutChange); }
+if(mqTablet.addEventListener){ mqTablet.addEventListener('change', handleLayoutChange); }
+function applyMobilePlayerDefaultState(){
+  if(!isMobile()) return;
+  closeSidePanel(); document.body.classList.add('np-collapsed'); localStorage.setItem(LS_NP, '1');
+}
 function setPlayerView(view){
   document.body.dataset.view = view;
   if(view === 'list'){
@@ -2561,7 +2702,11 @@ function setPlayerView(view){
     if(mobileModeToggle){ mobileModeToggle.classList.remove('active'); mobileModeToggle.setAttribute('aria-expanded','false'); }
     const pop = $('#karaokePop'); if(pop) pop.hidden = true;
   }
-  if(view === 'player' && isMobile()) applyMobilePlayerDefaultState();
+  if(view === 'player'){
+    /* ★ 平板横屏 / 手机：收藏栏都是抽屉，进播放页先收起，避免盖住歌词 */
+    if(isDrawerSide()) closeSidePanel();
+    if(isMobile()) applyMobilePlayerDefaultState();
+  }
 }
 function openSidePanel(){
   try{ renderSide(); }catch(_){}
@@ -2593,11 +2738,11 @@ if(btnSide) {
   newSide.addEventListener('pointerdown', function(e) {
     e.preventDefault();
     e.stopPropagation(); 
-    if (isMobile()) {
+    if (isDrawerSide()) {
       if (sidePanel.classList.contains('open')) {
         closeSidePanel();
       } else {
-        toggleNpLeftMobile(true); // 强制收起左侧
+        if (isMobile()) toggleNpLeftMobile(true); // 手机版：先收起左侧信息抽屉
         openSidePanel();          // 弹出右侧
       }
     } else {
