@@ -352,15 +352,15 @@ body.playing .play-btn .i-pause{display:block}
   pointer-events:none;
 }
 
-.desk-lyric{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(760px,calc(100vw - 24px));padding:16px 22px 18px;border-radius:16px;background:rgba(16,16,22,.78);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 60px -16px rgba(0,0,0,.9);z-index:900;text-align:center;user-select:none;cursor:grab;touch-action:none}
+.desk-lyric{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(760px,calc(100vw - 24px));padding:16px 22px 18px;border-radius:16px;background:rgba(var(--dl-bg-rgb,16,16,22),var(--dl-alpha,.78));backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.09);box-shadow:0 24px 60px -16px rgba(0,0,0,.9);z-index:900;text-align:center;user-select:none;cursor:grab;touch-action:none}
 .desk-lyric:active{cursor:grabbing}
 .desk-lyric.locked{cursor:default}
 .dl-head{position:absolute;top:5px;right:7px;display:flex;gap:2px;opacity:0;transition:opacity .2s;z-index:100}
 .desk-lyric:hover .dl-head{opacity:1}
 .dl-btn{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9a9aae;transition:.15s}
 .dl-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.dl-main{font-size:26px;font-weight:700;line-height:1.35;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.75),0 0 30px rgba(236,65,65,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dl-sub{font-size:13.5px;color:rgba(255,255,255,.48);margin-top:5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-main{font-size:26px;font-weight:700;line-height:1.35;color:var(--dl-text-color,#fff);text-shadow:0 2px 16px rgba(0,0,0,.75),0 0 30px rgba(236,65,65,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-sub{font-size:13.5px;color:var(--dl-text-color,#fff);opacity:.5;margin-top:5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body[data-mode="lyric"]{background:transparent!important}
 body[data-mode="lyric"] .app{display:none!important}
 body[data-mode="lyric"] .topbar{display:none!important}
@@ -994,20 +994,49 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 </div>
 <div class="desk-lyric" id="deskLyric" hidden>
   <div class="dl-head">
-    <button class="dl-btn" id="dlSettings" title="样式设置">🎨</button>
+    <button class="dl-btn" id="dlSettings" title="歌词样式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.2 0 1.9-.8 1.9-1.8 0-1.5-1.4-1.5-1.4-2.9 0-1.1.9-1.9 2-1.9h2.3a4.7 4.7 0 0 0 4.7-4.7c0-3.6-3.9-6.3-9.5-6.3z"/><circle cx="7.4" cy="9.6" r="1.1"/><circle cx="11.4" cy="6.9" r="1.1"/><circle cx="15.9" cy="8.4" r="1.1"/></svg></button>
     <button class="dl-btn" id="dlLock" title="锁定/解锁">🔓</button>
     <button class="dl-btn" id="dlMinus" title="缩小">A-</button>
     <button class="dl-btn" id="dlPlus" title="放大">A+</button>
     <button class="dl-btn" id="dlClose" title="关闭">✕</button>
   </div>
   <div class="dl-settings" id="dlSettingsPanel" hidden>
-    <div class="row"><span class="k">透明度</span><input type="range" id="dlAlpha" min="20" max="100" value="90"><span class="val" id="dlAlphaV">90%</span></div>
-    <div class="row"><span class="k">文字色</span><input type="color" id="dlTextColor" value="#ffffff"></div>
-    <div class="row"><span class="k">面板色</span><input type="color" id="dlBgColor" value="#101014"></div>
-    <button class="reset-btn" id="dlResetStyle">恢复默认</button>
+    <div class="dl-s-title">歌词样式</div>
+    <div class="dl-s-row"><span class="dl-s-k">透明度</span><input type="range" id="dlAlpha" min="20" max="100" value="90"><span class="dl-s-val" id="dlAlphaV">90%</span></div>
+    <button class="dl-s-row dl-s-btn" id="dlTextColor" type="button"><span class="dl-s-k">文字色</span><span class="dl-swatch"><i class="dl-sw-dot"></i><i class="dl-sw-hex">#ffffff</i></span><span class="dl-s-arrow">›</span></button>
+    <button class="dl-s-row dl-s-btn" id="dlBgColor" type="button"><span class="dl-s-k">面板色</span><span class="dl-swatch"><i class="dl-sw-dot"></i><i class="dl-sw-hex">#101014</i></span><span class="dl-s-arrow">›</span></button>
+    <button class="dl-s-row dl-s-btn" id="dlBgClear" type="button"><span class="dl-s-k">面板</span><span class="dl-s-val" id="dlBgMode">半透明</span><span class="dl-s-arrow">›</span></button>
+    <button class="dl-s-reset" id="dlResetStyle" type="button">恢复默认</button>
   </div>
   <div class="dl-main" id="dlMain">♪ 桌面歌词</div>
   <div class="dl-sub" id="dlSub"></div>
+  <div class="dl-tools" id="dlTools">
+    <button class="dl-tb" id="dlPrev" type="button" title="上一首"><svg viewBox="0 0 24 24"><path d="M6 5h2.5v14H6zM19 5.6v12.8c0 .82-.9 1.3-1.6.85l-9.4-6.4a1 1 0 0 1 0-1.7l9.4-6.4c.7-.45 1.6.03 1.6.85z"/></svg></button>
+    <button class="dl-tb dl-play" id="dlPlay" type="button" title="播放/暂停">
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.85l10.2-6.8a1 1 0 0 0 0-1.7L9.6 4.35C8.9 3.9 8 4.4 8 5.2z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24"><path d="M8 4.5h3.2v15H8zM12.8 4.5H16v15h-3.2z"/></svg>
+    </button>
+    <button class="dl-tb" id="dlNext" type="button" title="下一首"><svg viewBox="0 0 24 24"><path d="M15.5 5H18v14h-2.5zM5 5.6v12.8c0 .82.9 1.3 1.6.85l9.4-6.4a1 1 0 0 0 0-1.7L6.6 4.75C5.9 4.3 5 4.78 5 5.6z"/></svg></button>
+    <span class="dl-t" id="dlCur">0:00</span>
+    <div class="dl-prog" id="dlProg"><div class="dl-prog-bg"><div class="dl-prog-fill" id="dlFill"></div></div><div class="dl-prog-thumb" id="dlThumb"></div></div>
+    <span class="dl-t" id="dlDur">0:00</span>
+  </div>
+</div>
+
+<!-- ★ 调到色盘：自定义取色（不使用预选色） -->
+<div class="dl-colorpop" id="dlColorPop" hidden>
+  <div class="cp-head">
+    <span class="cp-title" id="cpTitle">文字色</span>
+    <input class="cp-hex" id="cpHex" type="text" inputmode="text" maxlength="7" value="#ffffff" spellcheck="false">
+    <button class="cp-x" id="cpClose" type="button" aria-label="关闭">✕</button>
+  </div>
+  <div class="cp-sv" id="cpSV"><div class="cp-thumb" id="cpThumbSV"></div></div>
+  <div class="cp-hue" id="cpHue"><div class="cp-thumb cp-thumb-h" id="cpThumbH"></div></div>
+  <div class="cp-prev-row">
+    <span class="cp-prev" id="cpPrev"></span>
+    <span class="cp-tip" id="cpTip">拖动取色，也可直接输入色值</span>
+    <button class="cp-ok" id="cpOk" type="button">完成</button>
+  </div>
 </div>
 
 <!-- ★ 唱K人声悬浮竖条 -->
@@ -1190,6 +1219,56 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 .ms-volwrap{position:relative}
 .ms-volwrap .volume-pop{position:fixed;right:18px;top:50%;transform:translateY(-50%);left:auto;bottom:auto;z-index:10020;display:none}
 .ms-volwrap.open .volume-pop{display:flex}
+
+/* ===== 歌词样式面板（页内浮层通用，不再只对独立歌词窗生效） ===== */
+.desk-lyric .dl-settings{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);width:min(300px,calc(100vw - 24px));padding:12px 12px 10px;background:rgba(22,22,30,.99);border:1px solid rgba(255,255,255,.14);border-radius:14px;display:flex;flex-direction:column;gap:8px;z-index:130;font-size:12px;color:#d6d6e2;cursor:default;box-shadow:0 18px 44px -14px rgba(0,0,0,.95);text-align:left;user-select:none}
+.dl-s-title{font-size:11.5px;color:#8f8fa3;letter-spacing:.5px;margin:0 0 2px 2px}
+.dl-s-row{display:flex;align-items:center;gap:10px;width:100%}
+.dl-s-k{flex:0 0 56px;font-size:12px;color:#9d9db2;text-align:left}
+.dl-s-val{min-width:44px;text-align:right;font-size:11.5px;color:#e2e2ee}
+.dl-s-btn{padding:6px 8px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);transition:.15s;color:#d6d6e2}
+.dl-s-btn:active{background:rgba(236,65,65,.16);border-color:rgba(236,65,65,.4)}
+.dl-swatch{flex:1 1 auto;display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.dl-sw-dot{display:block;width:22px;height:22px;border-radius:7px;background:#fff;border:1px solid rgba(255,255,255,.3);box-shadow:0 0 0 1px rgba(0,0,0,.35) inset}
+.dl-sw-hex{font-style:normal;font-size:11.5px;color:#d6d6e2;letter-spacing:.4px;font-family:ui-monospace,monospace}
+.dl-s-arrow{color:#7c7c92;font-size:14px;line-height:1}
+.dl-s-reset{margin-top:2px;padding:7px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#c9c9d8;font-size:11.5px}
+.desk-lyric .dl-settings input[type="range"]{flex:1 1 auto;min-width:0;-webkit-appearance:none;appearance:none;height:24px;background:none;outline:none;margin:0;touch-action:auto}
+.desk-lyric .dl-settings input[type="range"]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:rgba(255,255,255,.16)}
+.desk-lyric .dl-settings input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(236,65,65,.55);cursor:pointer}
+.desk-lyric.no-blur{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgb(var(--dl-bg-rgb,16,16,22))}
+
+/* ===== 桌面歌词悬浮窗 · 悬停展开播放工具条 ===== */
+.dl-tools{display:flex;align-items:center;gap:8px;max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:max-height .24s ease,opacity .22s ease,margin-top .24s ease}
+.desk-lyric:hover .dl-tools,.desk-lyric.tools-open .dl-tools{max-height:60px;opacity:1;margin-top:10px}
+.dl-tb{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#e9e9f1;background:rgba(255,255,255,.08);flex:0 0 auto;transition:.15s}
+.dl-tb:active,.dl-tb:hover{background:rgba(255,255,255,.18)}
+.dl-tb svg{width:15px;height:15px;fill:currentColor}
+.dl-play{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 16px -4px rgba(236,65,65,.85)}
+.dl-play .i-pause{display:none}
+body.playing .dl-play .i-play{display:none}
+body.playing .dl-play .i-pause{display:block}
+.dl-t{font-size:11px;color:rgba(255,255,255,.55);flex:0 0 auto;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
+.dl-prog{position:relative;flex:1 1 auto;min-width:60px;height:22px;display:flex;align-items:center;touch-action:none;cursor:pointer}
+.dl-prog-bg{width:100%;height:4px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.dl-prog-fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .12s linear}
+.dl-prog-thumb{position:absolute;top:50%;left:0;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#fff;transform:translateY(-50%);box-shadow:0 0 6px rgba(236,65,65,.75);opacity:0;transition:opacity .15s}
+.dl-prog:hover .dl-prog-thumb,.dl-prog.dragging .dl-prog-thumb{opacity:1}
+
+/* ===== 调色盘（自定义取色，无预选色） ===== */
+.dl-colorpop{position:fixed;left:0;top:0;width:min(304px,calc(100vw - 24px));padding:12px;border-radius:16px;background:#15151d;border:1px solid rgba(255,255,255,.14);box-shadow:0 26px 60px -18px #000,0 0 0 1px rgba(236,65,65,.16);z-index:10030;display:flex;flex-direction:column;gap:10px;color:#d6d6e2;font-size:12px;user-select:none}
+.cp-head{display:flex;align-items:center;gap:8px}
+.cp-title{font-size:12px;font-weight:700;color:#e8e8f2;flex:0 0 auto}
+.cp-hex{flex:1;min-width:0;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaeaf4;font-size:12px;letter-spacing:.6px;padding:0 8px;font-family:ui-monospace,monospace}
+.cp-x{width:26px;height:26px;border-radius:8px;color:#9a9ab0;font-size:13px;background:rgba(255,255,255,.05)}
+.cp-sv{position:relative;height:150px;border-radius:12px;overflow:hidden;touch-action:none;cursor:crosshair;background:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,hsl(var(--cp-h,0),100%,50%))}
+.cp-hue{position:relative;height:24px;border-radius:12px;overflow:hidden;touch-action:none;cursor:pointer;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.cp-thumb{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);pointer-events:none;left:50%;top:50%}
+.cp-thumb-h{width:12px;height:22px;border-radius:6px}
+.cp-prev-row{display:flex;align-items:center;gap:8px}
+.cp-prev{width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.25);box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;flex:0 0 auto}
+.cp-tip{flex:1;color:#84849a;font-size:11px;line-height:1.35}
+.cp-ok{flex:0 0 auto;height:30px;padding:0 14px;border-radius:9px;background:var(--accent);color:#fff;font-size:12px;font-weight:700}
 </style>
 <style>@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }</style>
 <script>
@@ -1500,7 +1579,7 @@ const bigCover = $('#bigCover'), bigCoverImg = $('#bigCoverImg'), pbTitle = $('#
 const pbCur = $('#pbCur'), pbDur = $('#pbDur'), pbTrack = $('#pbTrack'), pbFill = $('#pbFill'), pbThumb = $('#pbThumb'), btnPlay = $('#btnPlay');
 const btnFav = $('#btnFav'), btnMode = $('#btnMode'), btnMV = $('#btnMV'), btnLz = $('#btnLz'), btnSpeed = $('#btnSpeed');
 const lyricsPane = $('#lyricsPane'), lyricsInner = $('#lyricsInner'), lyricEmpty = $('#lyricEmpty'), trackSwitch = $('#trackSwitch');
-const deskLyric = $('#deskLyric'), dlMain = $('#dlMain'), dlSub = $('#dlSub'), adminModal = $('#adminModal'), settingsModal = $('#settingsModal'), toolboxPanel = $('#toolboxPanel');
+const deskLyric = $('#deskLyric'), dlMain = $('#dlMain'), dlSub = $('#dlSub'), dlTools = $('#dlTools'), dlProg = $('#dlProg'), dlFill = $('#dlFill'), dlThumb = $('#dlThumb'), dlCurEl = $('#dlCur'), dlDurEl = $('#dlDur'), adminModal = $('#adminModal'), settingsModal = $('#settingsModal'), toolboxPanel = $('#toolboxPanel');
 
 const audio = new Audio();
 audio.preload = 'metadata'; audio.playbackRate = 1;
@@ -1757,8 +1836,9 @@ function applyLyricStyle(){
   deskLyric.style.setProperty('--dl-bg-rgb', `${rgb.r},${rgb.g},${rgb.b}`); deskLyric.style.setProperty('--dl-alpha', st.alpha); deskLyric.style.setProperty('--dl-text-color', st.textColor);
   const a = $('#dlAlpha'); if(a) a.value = Math.round(st.alpha*100);
   const av = $('#dlAlphaV'); if(av) av.textContent = Math.round(st.alpha*100) + '%';
-  const tc = $('#dlTextColor'); if(tc) tc.value = st.textColor;
-  const bc = $('#dlBgColor'); if(bc) bc.value = st.bgColor;
+  syncSwatch($('#dlTextColor'), st.textColor);
+  syncSwatch($('#dlBgColor'), st.bgColor);
+  const bm = $('#dlBgMode'); if(bm) bm.textContent = st.alpha >= 0.985 ? '不透明' : '半透明';
 }
 
 const CJK_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/;
@@ -2641,6 +2721,9 @@ pbTrack.addEventListener('pointercancel', ()=>{ state.seeking = false; pbTrack.c
 function updateProgressUI(){
   const d = audio.duration || 0; const c = audio.currentTime || 0; const p = d ? (c/d)*100 : 0;
   pbFill.style.width = p + '%'; pbThumb.style.left = p + '%'; pbCur.textContent = fmtTime(c); pbDur.textContent = fmtTime(d);
+  /* 悬浮歌词工具条的进度/时间同步 */
+  if(dlFill){ dlFill.style.width = p + '%'; dlThumb.style.left = p + '%'; }
+  if(dlCurEl){ dlCurEl.textContent = fmtTime(c); dlDurEl.textContent = fmtTime(d); }
 }
 function loop(ts){
   if(!audio.paused && !audio.ended && ts - state.lastTick > 50){
@@ -2897,6 +2980,7 @@ function bcPost(msg){ const ch = getLyricChannel(); if(!ch) return; try{ ch.post
 let lyricWinRef = null;
 // ★ 「桌面歌词」统一用页内浮层（浏览器/手机/平板一致）：独立窗口在 iOS/移动端会被系统冻结，歌词根本不会跟着走
 function useInlineDesk(){ return !IS_LYRIC_MODE; }
+const TOUCH_LIKE = (()=>{ try{ return window.matchMedia('(pointer:coarse)').matches; }catch(_){ return false; } })();
 function clampDeskLyric(){
   if(!deskLyric || deskLyric.hidden) return;
   if(!deskLyric.style.left) return;              /* 未拖动过：仍走默认底部居中 */
@@ -2976,37 +3060,201 @@ $('#btnDesk').addEventListener('click', ()=>{
   persistPref();
 });
 
-let dlDrag = null;
+let dlDrag = null, dlRaf = 0, dlPending = null, dlBox = null;
 if(!IS_LYRIC_MODE){
   deskLyric.addEventListener('pointerdown', e=>{
-    if(e.target.closest('.dl-btn') || state.dlLocked) return;
+    if(state.dlLocked) return;
+    /* ★ 面板、按钮、滑杆、色块都不参与拖动，否则会把「点颜色/拉滑块」吃掉（真机上表现为点了没反应、拉不动） */
+    if(e.target.closest('.dl-btn, .dl-settings, .dl-colorpop, .dl-tools, input, textarea, select, button')) return;
     const r = deskLyric.getBoundingClientRect(); deskLyric.style.transform = 'none';
     deskLyric.style.left = r.left + 'px'; deskLyric.style.top = r.top + 'px'; deskLyric.style.bottom = 'auto';
-    dlDrag = { dx:e.clientX - r.left, dy:e.clientY - r.top }; try{ deskLyric.setPointerCapture(e.pointerId); }catch(_){} e.preventDefault();
+    dlBox = { w:r.width, h:r.height };
+    dlDrag = { dx:e.clientX - r.left, dy:e.clientY - r.top, sx:e.clientX, sy:e.clientY, moved:false };
+    try{ deskLyric.setPointerCapture(e.pointerId); }catch(_){} e.preventDefault();
   });
   deskLyric.addEventListener('pointermove', e=>{
-    if(!dlDrag) return; const r = deskLyric.getBoundingClientRect();
-    let x = e.clientX - dlDrag.dx, y = e.clientY - dlDrag.dy;
-    x = Math.max(4, Math.min(window.innerWidth - r.width - 4, x)); y = Math.max(4, Math.min(window.innerHeight - r.height - 4, y));
-    deskLyric.style.left = x + 'px'; deskLyric.style.top = y + 'px';
+    if(!dlDrag) return;
+    if(!dlDrag.moved && (Math.abs(e.clientX - dlDrag.sx) > 8 || Math.abs(e.clientY - dlDrag.sy) > 8)) dlDrag.moved = true;
+    dlPending = { x:e.clientX - dlDrag.dx, y:e.clientY - dlDrag.dy };
+    if(dlRaf) return;
+    dlRaf = requestAnimationFrame(()=>{
+      dlRaf = 0; if(!dlDrag || !dlPending || !dlBox) return;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const x = Math.max(4, Math.min(vw - dlBox.w - 4, dlPending.x));
+      const y = Math.max(4, Math.min(vh - dlBox.h - 4, dlPending.y));
+      deskLyric.style.left = Math.round(x) + 'px'; deskLyric.style.top = Math.round(y) + 'px';
+    });
   });
-  function endDrag(e){ if(!dlDrag) return; dlDrag = null; try{ deskLyric.releasePointerCapture(e.pointerId); }catch(_){} persistPref(); }
+  function endDrag(e){
+    if(!dlDrag) return;
+    const noDrag = !dlDrag.moved;
+    dlDrag = null; dlPending = null; cancelAnimationFrame(dlRaf); dlRaf = 0;
+    try{ deskLyric.releasePointerCapture(e.pointerId); }catch(_){}
+    if(noDrag && TOUCH_LIKE && e.type === 'pointerup'){ deskLyric.classList.toggle('tools-open'); }
+    else if(noDrag) persistPref();
+    else persistPref();
+  }
   deskLyric.addEventListener('pointerup', endDrag); deskLyric.addEventListener('pointercancel', endDrag);
 }
 $('#dlClose').addEventListener('click', ()=>{
   state.deskOn = false; if($('#btnDesk')) $('#btnDesk').classList.remove('on');
   if(IS_LYRIC_MODE){ bcPost({ type:'closed' }); try{ window.close(); }catch(_){} } else{ if(useInlineDesk()) deskLyric.hidden = true; closeLyricWindow(); } persistPref();
 });
+/* ★ 悬浮歌词播放工具条：上一首/播放暂停/下一首 + 可拖进度 */
+$('#dlPrev').addEventListener('click', e=>{ e.stopPropagation(); playByOffset(-1); });
+$('#dlNext').addEventListener('click', e=>{ e.stopPropagation(); playByOffset(1); });
+$('#dlPlay').addEventListener('click', e=>{ e.stopPropagation(); btnPlay.click(); });
+function dlSeekFromEvent(e){
+  const r = dlProg.getBoundingClientRect();
+  const p = Math.max(0, Math.min(1, (e.clientX - r.left)/r.width));
+  if(audio.duration) audio.currentTime = p * audio.duration;
+  updateProgressUI();
+}
+dlProg.addEventListener('pointerdown', e=>{
+  if(!audio.src) return;
+  e.stopPropagation(); dlProg.classList.add('dragging');
+  try{ dlProg.setPointerCapture(e.pointerId); }catch(_){}
+  dlSeekFromEvent(e);
+});
+dlProg.addEventListener('pointermove', e=>{ if(dlProg.classList.contains('dragging')) dlSeekFromEvent(e); });
+['pointerup','pointercancel'].forEach(tp=>dlProg.addEventListener(tp, e=>{
+  if(!dlProg.classList.contains('dragging')) return;
+  dlProg.classList.remove('dragging');
+  try{ dlProg.releasePointerCapture(e.pointerId); }catch(_){}
+  if(state.lines.length) setActive(findIndex(audio.currentTime), true);
+}));
+
 $('#dlLock').addEventListener('click', ()=>{ state.dlLocked = !state.dlLocked; deskLyric.classList.toggle('locked', state.dlLocked); $('#dlLock').textContent = state.dlLocked ? '🔒' : '🔓'; persistPref(); });
 $('#dlMinus').addEventListener('click', ()=>{ state.dlFont = Math.max(16, state.dlFont - 2); applyDlFont(); bcPost({ type:'font', font: state.dlFont }); persistPref(); });
 $('#dlPlus').addEventListener('click', ()=>{ state.dlFont = Math.min(52, state.dlFont + 2); applyDlFont(); bcPost({ type:'font', font: state.dlFont }); persistPref(); });
 function applyDlFont(){ dlMain.style.fontSize = state.dlFont + 'px'; dlSub.style.fontSize = Math.max(11, Math.round(state.dlFont*0.52)) + 'px'; }
-$('#dlSettings').addEventListener('click', e=>{ e.stopPropagation(); const p = $('#dlSettingsPanel'); p.hidden = !p.hidden; if(!p.hidden) applyLyricStyle(); });
+function syncSwatch(el, hex){
+  if(!el || el.matches('input')) return;
+  const dot = el.querySelector('.dl-sw-dot'); if(dot) dot.style.background = hex;
+  const tx = el.querySelector('.dl-sw-hex'); if(tx) tx.textContent = String(hex).toLowerCase();
+}
+function placeDlSettings(){
+  const p = $('#dlSettingsPanel'); if(!p || p.hidden) return;
+  p.style.top = ''; p.style.bottom = '';
+  if(p.getBoundingClientRect().top < 6){ p.style.bottom = 'auto'; p.style.top = 'calc(100% + 10px)'; }
+}
+$('#dlSettings').addEventListener('click', e=>{ e.stopPropagation(); const p = $('#dlSettingsPanel'); p.hidden = !p.hidden; if(!p.hidden){ applyLyricStyle(); placeDlSettings(); } else { closeColorPop(); } });
 $('#dlSettingsPanel').addEventListener('click', e=>{ e.stopPropagation(); });
-$('#dlAlpha').addEventListener('input', e=>{ state.lyricStyle.alpha = Number(e.target.value)/100; applyLyricStyle(); saveLyricStyle(); });
-$('#dlTextColor').addEventListener('input', e=>{ state.lyricStyle.textColor = e.target.value; applyLyricStyle(); saveLyricStyle(); });
-$('#dlBgColor').addEventListener('input', e=>{ state.lyricStyle.bgColor = e.target.value; applyLyricStyle(); saveLyricStyle(); });
-$('#dlResetStyle').addEventListener('click', ()=>{ state.lyricStyle = { alpha:0.9, textColor:'#ffffff', bgColor:'#101014' }; applyLyricStyle(); saveLyricStyle(); });
+
+/* 透明度：拖动时只重绘样式，松手才写本地存储（原来每移动 1px 就写一次 localStorage，真机上会卡 */
+let alphaRaf = 0;
+$('#dlAlpha').addEventListener('input', e=>{
+  const v = Number(e.target.value)/100;
+  state.lyricStyle.alpha = v;
+  if(alphaRaf) return;
+  alphaRaf = requestAnimationFrame(()=>{ alphaRaf = 0; applyLyricStyle(); });
+});
+$('#dlAlpha').addEventListener('change', ()=>{ state.lyricStyle.alpha = Number($('#dlAlpha').value)/100; applyLyricStyle(); saveLyricStyle(); });
+
+/* ===== 调色盘：自定义取色 ===== */
+const cpPop = $('#dlColorPop'), cpSV = $('#cpSV'), cpHue = $('#cpHue');
+const CP = { h:0, s:1, v:1, target:'textColor' };
+function hsv2rgb(h,s,v){
+  h = ((h%360)+360)%360; const c = v*s, x = c*(1-Math.abs((h/60)%2-1)), m = v-c; let r=0,g=0,b=0;
+  if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;} else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+  return { r:Math.round((r+m)*255), g:Math.round((g+m)*255), b:Math.round((b+m)*255) };
+}
+function rgb2hsv(r,g,b){
+  r/=255; g/=255; b/=255; const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx-mn; let h = 0;
+  if(d){ if(mx===r) h = 60*(((g-b)/d)%6); else if(mx===g) h = 60*((b-r)/d+2); else h = 60*((r-g)/d+4); }
+  if(h<0) h += 360;
+  return { h, s: mx ? d/mx : 0, v: mx };
+}
+function rgb2hex(c){ const t = n => Math.max(0, Math.min(255, n)).toString(16).padStart(2,'0'); return '#' + t(c.r)+t(c.g)+t(c.b); }
+function cpPaint(skipHex){
+  const c = hsv2rgb(CP.h, CP.s, CP.v), hex = rgb2hex(c);
+  cpSV.style.setProperty('--cp-h', CP.h);
+  $('#cpThumbSV').style.left = (CP.s*100)+'%';
+  $('#cpThumbSV').style.top = ((1-CP.v)*100)+'%';
+  $('#cpThumbH').style.left = (CP.h/360*100)+'%';
+  $('#cpPrev').style.background = hex;
+  if(!skipHex) $('#cpHex').value = hex;
+}
+let cpRaf = 0;
+function cpApply(){
+  if(cpRaf) return;
+  cpRaf = requestAnimationFrame(()=>{ cpRaf = 0; state.lyricStyle[CP.target] = rgb2hex(hsv2rgb(CP.h, CP.s, CP.v)); applyLyricStyle(); });
+}
+function cpPlace(){
+  const w = cpPop.offsetWidth || 300, h = cpPop.offsetHeight || 300;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = Math.round((vw - w)/2); left = Math.max(8, Math.min(vw - w - 8, left));
+  const sp = $('#dlSettingsPanel');
+  const usePanel = sp && !sp.hidden;
+  const anchorRect = usePanel ? sp.getBoundingClientRect() : deskLyric.getBoundingClientRect();
+  let top = Math.round(anchorRect.top - h - 12);
+  if(top < 8) top = Math.max(8, Math.min(vh - h - 8, Math.round(deskLyric.getBoundingClientRect().bottom + 12)));
+  cpPop.style.left = left + 'px'; cpPop.style.top = top + 'px';
+}
+let cpPrevPanel = false;
+function openColorPop(target){
+  CP.target = target;
+  const sp = $('#dlSettingsPanel');
+  cpPrevPanel = !!(sp && !sp.hidden);
+  if(cpPrevPanel) sp.hidden = true;
+  const hex = state.lyricStyle[target] || '#ffffff';
+  const rgb = hexToRgb(hex) || { r:255, g:255, b:255 };
+  const hsv = rgb2hsv(rgb.r, rgb.g, rgb.b);
+  CP.h = hsv.h; CP.s = hsv.s; CP.v = hsv.v;
+  $('#cpTitle').textContent = target === 'textColor' ? '文字色' : '面板色';
+  deskLyric.classList.add('no-blur');
+  cpPop.hidden = false;
+  cpPaint(); cpPlace();
+}
+function closeColorPop(){
+  if(!cpPop || cpPop.hidden) return;
+  cpPop.hidden = true; deskLyric.classList.remove('no-blur'); saveLyricStyle();
+  if(cpPrevPanel){ cpPrevPanel = false; const sp = $('#dlSettingsPanel'); if(sp){ sp.hidden = false; placeDlSettings(); } }
+}
+function cpDrag(e, kind){
+  if(kind === 'sv'){ const r = cpSV.getBoundingClientRect();
+    CP.s = Math.max(0, Math.min(1, (e.clientX - r.left)/r.width));
+    CP.v = Math.max(0, Math.min(1, 1 - (e.clientY - r.top)/r.height));
+  } else { const r = cpHue.getBoundingClientRect();
+    CP.h = Math.max(0, Math.min(359.9, (e.clientX - r.left)/r.width * 360));
+  }
+  cpPaint(); cpApply();
+}
+[['sv', cpSV], ['hue', cpHue]].forEach(([kind, el])=>{
+  let on = false;
+  el.addEventListener('pointerdown', e=>{ e.preventDefault(); on = true; try{ el.setPointerCapture(e.pointerId); }catch(_){}; cpDrag(e, kind); });
+  el.addEventListener('pointermove', e=>{ if(on) cpDrag(e, kind); });
+  const stop = e=>{ if(!on) return; on = false; try{ el.releasePointerCapture(e.pointerId); }catch(_){}; saveLyricStyle(); };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+});
+$('#cpHex').addEventListener('input', e=>{
+  const v = String(e.target.value || '').trim();
+  const m = /^#?([0-9a-fA-F]{6})$/.exec(v); if(!m) return;
+  const hex = '#' + m[1].toLowerCase(); const rgb = hexToRgb(hex); if(!rgb) return;
+  const hsv = rgb2hsv(rgb.r, rgb.g, rgb.b); CP.h = hsv.h; CP.s = hsv.s; CP.v = hsv.v;
+  state.lyricStyle[CP.target] = hex; applyLyricStyle();
+});
+$('#cpClose').addEventListener('click', closeColorPop);
+$('#cpOk').addEventListener('click', closeColorPop);
+document.addEventListener('pointerdown', e=>{
+  if(cpPop.hidden) return;
+  if(e.target.closest('#dlColorPop, #dlTextColor, #dlBgColor')) return;
+  closeColorPop();
+}, true);
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeColorPop(); });
+
+$('#dlTextColor').addEventListener('click', e=>{ e.stopPropagation(); openColorPop('textColor'); });
+$('#dlBgColor').addEventListener('click', e=>{ e.stopPropagation(); openColorPop('bgColor'); });
+$('#dlBgClear').addEventListener('click', e=>{
+  e.stopPropagation();
+  state.lyricStyle.alpha = state.lyricStyle.alpha >= 0.985 ? 0.9 : 1;
+  applyLyricStyle(); saveLyricStyle();
+});
+$('#dlResetStyle').addEventListener('click', ()=>{
+  closeColorPop();
+  state.lyricStyle = { alpha:0.9, textColor:'#ffffff', bgColor:'#101014', bgOpaque:false };
+  applyLyricStyle(); saveLyricStyle();
+});
 
 function openSettings(){
   $('#setMusicRoot').value = appConfig.manifestUrl || DEFAULT_MANIFEST_URL;
