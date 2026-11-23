@@ -489,6 +489,7 @@
     const MANIFEST_URL = _urlParams.get('manifestUrl') || 'https://satoko-ashe.github.io/music/song_manifest.json';
     const PLAYER_URL = _urlParams.get('playerUrl') || 'https://satoko-ashe.github.io/music/';
     const WAITING_FOR_RECORDING = _urlParams.get('waiting') === '1';
+    const AWAITING_HANDOFF = _urlParams.get('awaiting') === '1';   // 录完才打开本页，等待播放器把录音送来
     const INIT_SONG_ID = _urlParams.get('songId') || '';
     let _autoSelectDone = false;
 
@@ -595,10 +596,51 @@
     document.getElementById('vocalUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'vocal'));
     document.getElementById('instUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'inst'));
 
-    /* ★ 接收播放器回传的录音（带 session 校验，避免旧流程的录音串进新流程） */
-    window.addEventListener('message', (event) => {
-        const d = event.data;
+    /* ★ 统一处理来自播放器的消息（postMessage 与同源广播共用一套逻辑） */
+    let studioBus = null;
+    try { if (typeof BroadcastChannel !== 'undefined') studioBus = new BroadcastChannel('mp_record_bus'); } catch (_) { studioBus = null; }
+    let pendingAskReq = '';
+    let askClaimed = false;
+
+    let studioReadySent = false, studioReadyTries = 0;
+    function signalStudioReady() {
+        if (!AWAITING_HANDOFF || studioReadySent) return;
+        if (!appState.allSongs.length && studioReadyTries < 60) {   // 歌单没拉完就先别喊，免得播放器提前送录音
+            studioReadyTries++;
+            setTimeout(signalStudioReady, 150);
+            return;
+        }
+        studioReadySent = true;
+        try {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({ [STUDIO_FLAG]: true, type: 'STUDIO_READY', session: STUDIO_SESSION }, '*');
+            }
+        } catch (_) {}
+    }
+
+    function setBannerText(html) {
+        const b = document.getElementById('waitingBanner');
+        const txt = b ? b.querySelector('.wb-txt') : null;
+        if (txt) txt.innerHTML = html;
+    }
+
+    function handleStudioMessage(d, source) {
         if (!d) return;
+
+        if (d.type === 'RECORD_CLAIMED') {
+            if (pendingAskReq && d.reqId === pendingAskReq) {
+                askClaimed = true;
+                stopWaitWatch();
+                setBannerText('<b>已在你之前打开的播放器里开始录音</b><span>请切回那个播放器标签唱歌，录完会自动传回这里，不必再开新标签。</span>');
+                showWaitingBanner();
+                log(`ℹ️ 已让开着的播放器接手录音（歌曲：${(findSongById(d.songId) || {}).title || d.songId || '未知'}），不再新开页面。`);
+            }
+            return;
+        }
+        if (d.type === 'RECORD_DENIED') {
+            if (pendingAskReq && d.reqId === pendingAskReq) askClaimed = false;   // 没接住，稍后照常开新窗口
+            return;
+        }
 
         if (d.type === 'RECORD_CANCELLED') {
             if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) return;
@@ -609,6 +651,11 @@
         }
 
         if (d.type !== 'RETURN_RECORDING') return;
+        if (!appState.allSongs.length && d.songId && (d.__retry || 0) < 8) {
+            d.__retry = (d.__retry || 0) + 1;   // 歌单还没拉到，等它加载完再认领，避免误判成别的歌
+            setTimeout(() => handleStudioMessage(d, source), 400);
+            return;
+        }
         if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) {
             log('⚠️ 收到来自旧会话的录音，已忽略（防止串歌）。');
             return;
@@ -664,22 +711,44 @@
         updateUI();
 
         alert(`✅ 已接收到《${target ? target.title : '当前歌曲'}》在播放器录制的干声！请确认后点击「下一步」继续。`);
-    });
+    }
 
-    /* ★ 前往录音（带 songId / record=1 / session，回到播放器录制） */
+    window.addEventListener('message', (event) => handleStudioMessage(event.data, event.source));
+    if (studioBus) studioBus.onmessage = (event) => handleStudioMessage(event.data, null);
+
+    /* ★ 前往录音：先问一句“是不是已经有播放器开着”，有就让那个接手；没有才新开 */
     document.getElementById('goRecordBtn').addEventListener('click', () => {
         const songId = appState.selectedSong ? appState.selectedSong.id : '';
         if (!songId) { alert('⚠️ 请先在上面选择一首歌曲，再去录音。'); return; }
 
-        // 已经有一个录音窗口开着：让它直接切到当前歌曲，避免同时存在两个录音循环
+        // 已经有一个由本页打开的录音窗口：让它直接切到当前歌曲，避免同时存在两个录音循环
         if (recordWinRef && !recordWinRef.closed) {
             postToPlayer({ type: 'SET_RECORD_SONG', songId, session: STUDIO_SESSION });
             try { recordWinRef.focus(); } catch (_) {}
+            setBannerText('<b>播放器正在切换歌曲…</b><span>切好后就能开始录音，录完自动回传。</span>');
             showWaitingBanner();
             startWaitWatch();
             return;
         }
 
+        if (!studioBus) { openPlayerWindow(songId); return; }
+
+        const reqId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        pendingAskReq = reqId; askClaimed = false;
+        try { studioBus.postMessage({ type: 'ASK_RECORD', reqId, songId, session: STUDIO_SESSION }); } catch (_) {}
+        setBannerText('<b>正在找你已经开着的播放器…</b><span>找到就直接在那里录音，不用开新标签；找不到会自动打开播放器。</span>');
+        showWaitingBanner();
+        startWaitWatch();
+        setTimeout(() => {
+            if (pendingAskReq !== reqId) return;      // 期间又点了别的，或被别的消息接管
+            if (askClaimed) { pendingAskReq = ''; return; }
+            pendingAskReq = '';
+            hideWaitingBanner();
+            openPlayerWindow(appState.selectedSong ? appState.selectedSong.id : songId);
+        }, 900);
+    });
+
+    function openPlayerWindow(songId) {
         try {
             const u = new URL(PLAYER_URL, location.href);
             u.searchParams.set('record', '1');
@@ -691,12 +760,13 @@
                 return;
             }
             recordWinRef = win;
+            setBannerText('<b>播放器正在录音中…</b><span>唱完后录音会自动回传到此处，请勿关闭本窗口。</span>');
             showWaitingBanner();
             startWaitWatch();
         } catch (e) {
             alert('无法打开播放器：' + (e.message || e));
         }
-    });
+    }
 
     /* ★ 向播放器窗口发消息（只发给本页打开的录音窗口，不猜 window.opener） */
     function postToPlayer(payload) {
@@ -797,7 +867,9 @@
             hideWaitingBanner();
             if (wasWaiting) log('⚠️ 已改选歌曲，播放器那边的录音等待作废；返回主界面时会跟随这首新歌。');
             // 通知主页面：取消它正在等待的录音，避免它按老歌录完再回传造成串歌
-            notifyOpener({ type: 'CANCEL_RECORD_SESSION', songId: song.id, reason: 'song-changed' });
+            const cancelMsg = { type: 'CANCEL_RECORD_SESSION', songId: song.id, reason: 'song-changed' };
+            postToPlayer(cancelMsg);      // 本页开的录音窗口
+            notifyOpener(cancelMsg);      // 打开本页的播放器（先开修音那条路）
         }
     });
 
@@ -1022,17 +1094,31 @@
     }
 
     document.getElementById('restartBtn').addEventListener('click', resetApp);
-    /* ★ 返回主界面：把当前这首歌一起带回去，让播放器跟着修音这边走 */
+    /* ★ 返回主界面：复用名为 player_main 的主界面标签（没有才新开），随后关掉本修音页，
+       不再用 location.href 往旧标签里塞地址，避免浏览器拦跳转 */
     document.getElementById('backToMainBtn').addEventListener('click', () => {
+        let url = PLAYER_URL;
         try {
             const u = new URL(PLAYER_URL, location.href);
             if (appState.selectedSong && appState.selectedSong.id) u.searchParams.set('songId', appState.selectedSong.id);
             u.searchParams.set('from', 'studio');
             if (STUDIO_SESSION) u.searchParams.set('session', STUDIO_SESSION);
-            window.location.href = u.toString();
-        } catch (_) {
-            window.location.href = PLAYER_URL;
+            url = u.toString();
+        } catch (_) {}
+        let opened = null;
+        /* 优先：让打开本页的那个播放器标签就地跳到主界面（不新开、也不会被当成弹窗拦） */
+        try {
+            if (window.opener && !window.opener.closed) { window.opener.location.href = url; opened = window.opener; }
+        } catch (_) { opened = null; }
+        if (!opened) {
+            try { opened = window.open(url, 'player_main'); } catch (_) {}
+            try { if (opened) opened.focus(); } catch (_) {}
         }
+        setTimeout(() => {
+            let closed = false;
+            try { window.close(); closed = window.closed; } catch (_) {}
+            if (!closed) log('ℹ️ 主界面已打开新页面；这个修音页可以手动关掉了。');
+        }, 250);
     });
 
     /* ★ 解码上下文只建一个，反复 new AudioContext 在 iPad 上会把上下文额度耗光 */
@@ -2881,13 +2967,22 @@
     /* ★ 关闭/刷新页面时把大块音频与 blob 地址一起释放，避免浏览器缓存里堆垃圾 */
     window.addEventListener('pagehide', (e) => {
         if (e && e.persisted) return;   // 进 bfcache 还会回来，别把状态清掉
+        stopWaitWatch();
         try { releaseAudioCache(); } catch (_) {}
+        try { if (studioBus) studioBus.close(); } catch (_) {}
     });
 
     /* ★ 如果 URL 带 waiting=1，说明是播放器主动打开发起录音，显示等待横幅 */
     if (WAITING_FOR_RECORDING) {
         showWaitingBanner();
         startWaitWatch();
+    }
+
+    /* ★ 录完才打开本页：告诉播放器“我准备好了”，让它把录音送过来 */
+    if (AWAITING_HANDOFF) {
+        setBannerText('<b>正在接收刚才录好的干声…</b><span>录音会自动放进第 2 步，稍等一下。</span>');
+        showWaitingBanner();
+        signalStudioReady();
     }
 </script>
 </body>
