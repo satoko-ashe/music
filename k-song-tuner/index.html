@@ -492,9 +492,21 @@
     const INIT_SONG_ID = _urlParams.get('songId') || '';
     let _autoSelectDone = false;
 
+    /* ★ 会话：主页面打开本页时会给一个 session，用于区分“同一次录音流程”，防止串线 */
+    const STUDIO_SESSION = _urlParams.get('session') || '';
+    const STUDIO_FLAG = '__kSongStudio';
+    let pinnedSongId = '';        // 用户在修音里主动选定的歌（非空表示“修音这边说了算”）
+    let sessionSongId = INIT_SONG_ID || '';  // 这一趟流程当前对应的歌
+    let recordWinRef = null;      // 本页打开的录音窗口
+    let waitWatchTimer = null;
+    let waitSince = 0;
+    let _programmaticSelect = false;
+
     let appState = {
         currentStep: 1,
         hasSynthesized: false,
+        allSongs: [],
+        vocalSongId: null,
         manifestSongs: [],
         selectedSong: null,
         localFiles: { midi: null, refVocal: null, vocal: null, inst: null },
@@ -573,6 +585,7 @@
             return;
         }
         appState.localFiles[stateKey] = file;
+        if (stateKey === 'vocal') appState.vocalSongId = appState.selectedSong ? appState.selectedSong.id : '';
         appState.hasSynthesized = false;
         updateUI();
     }
@@ -582,61 +595,144 @@
     document.getElementById('vocalUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'vocal'));
     document.getElementById('instUpload').addEventListener('change', (e) => handleFileUpload(e, 'audio', 'inst'));
 
-    /* ★ 接收播放器回传的录音 */
+    /* ★ 接收播放器回传的录音（带 session 校验，避免旧流程的录音串进新流程） */
     window.addEventListener('message', (event) => {
         const d = event.data;
-        if (!d || d.type !== 'RETURN_RECORDING') return;
+        if (!d) return;
+
+        if (d.type === 'RECORD_CANCELLED') {
+            if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) return;
+            stopWaitWatch();
+            hideWaitingBanner();
+            log('ℹ️ 播放器端已取消本次录音，等你重新点「前往录音」。');
+            return;
+        }
+
+        if (d.type !== 'RETURN_RECORDING') return;
+        if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) {
+            log('⚠️ 收到来自旧会话的录音，已忽略（防止串歌）。');
+            return;
+        }
         const blob = d.blob;
         if (!blob) return;
+
+        const recSongId = d.songId || '';
+        // 用户在修音里已经锁定了另一首歌，而这份录音是别的歌 → 直接拒绝，不覆盖
+        if (pinnedSongId && recSongId && pinnedSongId !== recSongId) {
+            const cur = findSongById(pinnedSongId);
+            const old = findSongById(recSongId);
+            stopWaitWatch();
+            hideWaitingBanner();
+            log(`⚠️ 这份录音属于《${old ? old.title : recSongId}》，与当前选中的《${cur ? cur.title : pinnedSongId}》不一致，已丢弃。请在当前歌曲上重新录音。`);
+            return;
+        }
 
         const fileName = d.name || 'my_recording.wav';
         const mimeType = blob.type || 'audio/wav';
         const file = new File([blob], fileName, { type: mimeType });
+
+        // 录音的 songId 是这一趟流程的准绳：先把本会话切到这首歌
+        const target = recSongId ? findSongById(recSongId) : null;
+        if (target) {
+            if (!appState.selectedSong || appState.selectedSong.id !== target.id) {
+                selectSongProgrammatically(target.id);
+            }
+            sessionSongId = target.id;
+            pinnedSongId = target.id;
+        } else if (recSongId) {
+            // 录音属于不在这份修音歌单里的歌（例如在线歌曲）：不保留任何旧曲目，避免拿别的 MIDI 硬配
+            appState.selectedSong = null;
+            const sel = document.getElementById('songSelect');
+            if (sel) { _programmaticSelect = true; sel.value = ''; _programmaticSelect = false; }
+            document.getElementById('songStatus').style.display = 'none';
+            log('ℹ️ 这首歌不在这份修音歌单里，已清空曲目选择；请手动上传它的 MIDI 或原唱干声。');
+        }
+
+        // 换歌后上一首的解码缓存/合成结果一律作废，避免 A 的干声配 B 的 MIDI
+        clearSessionMedia();
+
         appState.localFiles.vocal = file;
+        appState.vocalSongId = target ? target.id : (appState.selectedSong ? appState.selectedSong.id : null);
         appState.hasSynthesized = false;
         document.getElementById('vocalUpload').value = '';
 
-        // 如果传来的 songId 和当前选中不同，尝试自动选中
-        if (d.songId && (!appState.selectedSong || appState.selectedSong.id !== d.songId)) {
-            const match = appState.manifestSongs.find(s => s.id === d.songId);
-            if (match) {
-                appState.selectedSong = match;
-                const sel = document.getElementById('songSelect');
-                if (sel) {
-                    sel.value = match.id;
-                    sel.dispatchEvent(new Event('change'));
-                }
-            }
-        }
-
-        // 隐藏等待横幅
+        stopWaitWatch();
         hideWaitingBanner();
 
         // 自动跳到第 2 步让用户确认
         appState.currentStep = 2;
         updateUI();
 
-        alert('✅ 成功接收到你在播放器录制的干声！请确认后点击「下一步」继续。');
+        alert(`✅ 已接收到《${target ? target.title : '当前歌曲'}》在播放器录制的干声！请确认后点击「下一步」继续。`);
     });
 
-    /* ★ 前往录音（带 songId / record=1，回到播放器录制） */
+    /* ★ 前往录音（带 songId / record=1 / session，回到播放器录制） */
     document.getElementById('goRecordBtn').addEventListener('click', () => {
+        const songId = appState.selectedSong ? appState.selectedSong.id : '';
+        if (!songId) { alert('⚠️ 请先在上面选择一首歌曲，再去录音。'); return; }
+
+        // 已经有一个录音窗口开着：让它直接切到当前歌曲，避免同时存在两个录音循环
+        if (recordWinRef && !recordWinRef.closed) {
+            postToPlayer({ type: 'SET_RECORD_SONG', songId, session: STUDIO_SESSION });
+            try { recordWinRef.focus(); } catch (_) {}
+            showWaitingBanner();
+            startWaitWatch();
+            return;
+        }
+
         try {
             const u = new URL(PLAYER_URL, location.href);
             u.searchParams.set('record', '1');
-            if (appState.selectedSong && appState.selectedSong.id) {
-                u.searchParams.set('songId', appState.selectedSong.id);
-            }
+            u.searchParams.set('songId', songId);
+            if (STUDIO_SESSION) u.searchParams.set('session', STUDIO_SESSION);
             const win = window.open(u.toString(), 'player_recorder');
             if (!win) {
                 alert('⚠️ 播放器窗口被浏览器拦截了。\n请允许本站弹出窗口，或手动打开播放器使用「AI 修音 → 录制我的干声后去修音」。');
                 return;
             }
+            recordWinRef = win;
             showWaitingBanner();
+            startWaitWatch();
         } catch (e) {
             alert('无法打开播放器：' + (e.message || e));
         }
     });
+
+    /* ★ 向播放器窗口发消息（只发给本页打开的录音窗口，不猜 window.opener） */
+    function postToPlayer(payload) {
+        const win = recordWinRef;
+        if (!win || win.closed) return false;
+        try { win.postMessage(Object.assign({ [STUDIO_FLAG]: true }, payload), '*'); return true; }
+        catch (_) { return false; }
+    }
+
+    /* ★ 通知打开本页的主页面（仅“先开修音、再录音”这条路上存在 opener） */
+    function notifyOpener(payload) {
+        try {
+            const op = window.opener;
+            if (!op || op.closed) return false;
+            op.postMessage(Object.assign({ [STUDIO_FLAG]: true, session: STUDIO_SESSION }, payload), '*');
+            return true;
+        } catch (_) { return false; }
+    }
+
+    /* ★ 等待录音的看守：窗口被关、或长时间没回来，就收起横幅，别一直挂着 */
+    function startWaitWatch() {
+        stopWaitWatch();
+        waitSince = Date.now();
+        waitWatchTimer = setInterval(() => {
+            const closed = !!(recordWinRef && recordWinRef.closed);
+            const timeout = Date.now() - waitSince > 150000;
+            if (closed || timeout) {
+                stopWaitWatch();
+                hideWaitingBanner();
+                log(closed ? 'ℹ️ 录音窗口已关闭，需要录音请重新点「前往录音」。' : 'ℹ️ 等待录音超时，已收起等待提示。');
+            }
+        }, 2000);
+    }
+    function stopWaitWatch() {
+        if (waitWatchTimer) { clearInterval(waitWatchTimer); waitWatchTimer = null; }
+    }
 
     /* ★ 等待横幅显隐 */
     function showWaitingBanner() {
@@ -654,7 +750,8 @@
         try {
             const res = await fetch(MANIFEST_URL);
             const data = await res.json();
-            appState.manifestSongs = data.songs.filter(s => s.midi);
+            appState.allSongs = Array.isArray(data.songs) ? data.songs : [];
+            appState.manifestSongs = appState.allSongs.filter(s => s.midi);
             select.innerHTML = '<option value="">-- 请选择一首支持修音的歌曲 --</option>';
             if (appState.manifestSongs.length === 0) { select.innerHTML = '<option value="">歌单中没有带 MIDI 的歌曲</option>'; return; }
             appState.manifestSongs.forEach(song => {
@@ -678,24 +775,137 @@
     }
 
     document.getElementById('songSelect').addEventListener('change', (e) => {
+        if (_programmaticSelect) return;   // 程序回填（如接收录音后自动选中）不算用户改选
         const id = e.target.value;
         const statusBox = document.getElementById('songStatus');
-        if (!id) { appState.selectedSong = null; statusBox.style.display = 'none'; updateUI(); return; }
+        if (!id) {
+            appState.selectedSong = null; pinnedSongId = '';
+            statusBox.style.display = 'none'; updateUI(); return;
+        }
         const song = appState.manifestSongs.find(s => s.id === id);
+        if (!song) return;
+        const prevId = appState.selectedSong ? appState.selectedSong.id : '';
+
+        applySongSelection(song);
+
+        /* ★ 用户主动改选 = 放弃主页面推过来的那首歌：切断“主页面→修音”，改走“修音→主界面” */
+        if (prevId && prevId !== song.id) {
+            pinnedSongId = song.id;
+            sessionSongId = song.id;
+            const wasWaiting = document.getElementById('waitingBanner').style.display === 'block';
+            stopWaitWatch();
+            hideWaitingBanner();
+            if (wasWaiting) log('⚠️ 已改选歌曲，播放器那边的录音等待作废；返回主界面时会跟随这首新歌。');
+            // 通知主页面：取消它正在等待的录音，避免它按老歌录完再回传造成串歌
+            notifyOpener({ type: 'CANCEL_RECORD_SESSION', songId: song.id, reason: 'song-changed' });
+        }
+    });
+
+    /* ★ 把一首歌设为当前选择（含状态刷新、旧缓存清理、URL 同步） */
+    function applySongSelection(song) {
+        const prevId = appState.selectedSong ? appState.selectedSong.id : '';
         appState.selectedSong = song;
         appState.hasSynthesized = false;
+        if (prevId !== song.id) {
+            dropVocalFromOtherSong(song.id);
+            releaseAudioCache();
+        }
+        updateSongStatus(song);
+        syncStudioUrl(song.id);
+        updateUI();
+    }
 
+    /* ★ 程序化选中（不触发“用户改选”标记） */
+    function selectSongProgrammatically(id) {
+        const song = findSongById(id);
+        if (!song) return false;
+        const sel = document.getElementById('songSelect');
+        _programmaticSelect = true;
+        try {
+            if (song.midi) {
+                Array.from(sel.options).forEach(o => { if (o.dataset && o.dataset.temp === '1') o.remove(); });
+                sel.value = song.id;
+            } else {
+                let opt = Array.from(sel.options).find(o => o.dataset && o.dataset.temp === '1');
+                if (!opt) { opt = document.createElement('option'); opt.dataset.temp = '1'; sel.appendChild(opt); }
+                opt.value = song.id;
+                opt.textContent = `${song.title} - ${song.coverArtist || ''}（无 MIDI）`;
+                sel.value = song.id;
+            }
+        } finally {
+            _programmaticSelect = false;
+        }
+        applySongSelection(song);
+        return true;
+    }
+
+    function findSongById(id) {
+        return appState.allSongs.find(s => s.id === id)
+            || appState.manifestSongs.find(s => s.id === id) || null;
+    }
+
+    /* ★ 换歌时丢掉“属于上一首”的录音，防止 A 的干声配 B 的 MIDI */
+    function dropVocalFromOtherSong(newId) {
+        if (appState.localFiles.vocal && appState.vocalSongId && appState.vocalSongId !== newId) {
+            appState.localFiles.vocal = null;
+            appState.vocalSongId = null;
+            const vu = document.getElementById('vocalUpload');
+            if (vu) vu.value = '';
+            log('⚠️ 已切换歌曲，上一首的录音已清除；需要的话请重新录制或上传。');
+        }
+    }
+
+    /* ★ 清空属于旧歌的解码/合成缓存（音频大对象，最容易吃内存的一层） */
+    function releaseAudioCache() {
+        try { stopPlayback(); } catch (_) {}
+        try { if (preciseState.active) closePrecise(); } catch (_) {}
+        try { preciseState.previewPlayer.stop(); } catch (_) {}
+        disposePlayerBuffer(preciseState.mainPlayer);
+        disposePlayerBuffer(preciseState.previewPlayer);
+        appState.audioBuffers = { vocal: null, inst: null, ref: null };
+        appState.midiData = null;
+        appState.synthesizedBuffer = null;
+        appState.hasSynthesized = false;
+        preciseState.curves = { midi: [], ref: [], user: [] };
+        preciseState.segments = [];
+        preciseState.duration = 0;
+        preciseState.playheadTime = 0;
+        preciseState.bgSig = null;
+        setPlayerBlob(null);
+    }
+    function clearSessionMedia() { releaseAudioCache(); }
+
+    function disposePlayerBuffer(player) {
+        try { player.stop(); } catch (_) {}
+        try { const b = player.buffer; if (b && b.dispose) b.dispose(); } catch (_) {}
+        try { player.buffer = null; } catch (_) {}
+    }
+
+    /* ★ 歌曲状态徽章 */
+    function updateSongStatus(song) {
+        const statusBox = document.getElementById('songStatus');
+        if (!song) { statusBox.style.display = 'none'; return; }
         let tags = [];
         if (song.vocal) tags.push('<span class="status-badge ok">✅ 有纯干声</span>');
         else if (song.audio) tags.push('<span class="status-badge missing" title="建议在JSON中配置vocal字段">⚠️ 无纯干声(将用混音版)</span>');
         else tags.push('<span class="status-badge missing">❌ 缺干声</span>');
         if (song.instrumental) tags.push('<span class="status-badge ok">✅ 有伴奏</span>');
         else tags.push('<span class="status-badge missing">❌ 缺伴奏</span>');
-        tags.push('<span class="status-badge ok">✅ 有 MIDI</span>');
+        if (song.midi) tags.push('<span class="status-badge ok">✅ 有 MIDI</span>');
+        else tags.push('<span class="status-badge missing">⚠️ 无 MIDI（靠原唱干声修音）</span>');
         statusBox.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px;">${tags.join('')}</div>`;
         statusBox.style.display = 'block';
-        updateUI();
-    });
+    }
+
+    /* ★ 地址栏同步当前歌曲，刷新/返回不丢上下文 */
+    function syncStudioUrl(songId) {
+        try {
+            const u = new URL(location.href);
+            if (songId) u.searchParams.set('songId', songId); else u.searchParams.delete('songId');
+            if (STUDIO_SESSION) u.searchParams.set('session', STUDIO_SESSION);
+            history.replaceState(null, '', u.toString());
+        } catch (_) {}
+    }
 
     function updateUI() {
         panels.forEach((panel, index) => panel.classList.toggle('active', index + 1 === appState.currentStep));
@@ -770,7 +980,10 @@
         appState.currentStep = 1;
         appState.hasSynthesized = false;
         appState.manifestSongs = [];
+        appState.allSongs = [];
         appState.selectedSong = null;
+        appState.vocalSongId = null;
+        pinnedSongId = ''; sessionSongId = '';
         appState.localFiles = { midi: null, refVocal: null, vocal: null, inst: null };
         appState.audioBuffers = { vocal: null, inst: null, ref: null };
         appState.midiData = null;
@@ -785,7 +998,7 @@
         document.getElementById('autoVocalInfo').style.display = 'none';
         document.getElementById('autoInstInfo').style.display = 'none';
         
-        document.getElementById('player').src = '';
+        setPlayerBlob(null);
         logBox.innerHTML = '';
         document.getElementById('progressContainer').style.display = 'none';
         document.getElementById('progressBar').style.width = '0%';
@@ -794,12 +1007,11 @@
         document.getElementById('smartFixCard').style.pointerEvents = 'auto';
         
         if (preciseState.active) closePrecise();
+        stopWaitWatch();
+        releaseAudioCache();
         preciseState.segments = [];
         preciseState.selectedStart = -1;
         preciseState.selectedEnd = -1;
-        preciseState.curves = { midi: [], ref: [], user: [] };
-        preciseState.duration = 0;
-        preciseState.playheadTime = 0;
         preciseState.isPlaying = false;
 
         // ★ 隐藏等待横幅
@@ -810,9 +1022,27 @@
     }
 
     document.getElementById('restartBtn').addEventListener('click', resetApp);
+    /* ★ 返回主界面：把当前这首歌一起带回去，让播放器跟着修音这边走 */
     document.getElementById('backToMainBtn').addEventListener('click', () => {
-        window.location.href = PLAYER_URL;
+        try {
+            const u = new URL(PLAYER_URL, location.href);
+            if (appState.selectedSong && appState.selectedSong.id) u.searchParams.set('songId', appState.selectedSong.id);
+            u.searchParams.set('from', 'studio');
+            if (STUDIO_SESSION) u.searchParams.set('session', STUDIO_SESSION);
+            window.location.href = u.toString();
+        } catch (_) {
+            window.location.href = PLAYER_URL;
+        }
     });
+
+    /* ★ 解码上下文只建一个，反复 new AudioContext 在 iPad 上会把上下文额度耗光 */
+    let _decodeCtx = null;
+    function getDecodeCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) throw new Error('当前浏览器不支持 Web Audio');
+        if (!_decodeCtx || _decodeCtx.state === 'closed') _decodeCtx = new AC();
+        return _decodeCtx;
+    }
 
     async function loadAudioBuffer(source, typeName) {
         log(`正在解码 ${typeName}...`);
@@ -822,13 +1052,30 @@
             const res = await fetch(source);
             arrayBuffer = await res.arrayBuffer();
         }
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioCtx = getDecodeCtx();
+        try { if (audioCtx.state === 'suspended') await audioCtx.resume(); } catch (_) {}
         return new Promise((resolve, reject) => {
             audioCtx.decodeAudioData(arrayBuffer,
                 (buffer) => { log(`✅ ${typeName} 解码完成 (${buffer.duration.toFixed(2)}s)`); resolve(buffer); },
                 (err) => { log(`❌ ${typeName} 解码失败`); reject(err); }
             );
         });
+    }
+
+    /* ★ 试听用 blob 地址统一管理，换歌/重置时 revoke，避免一堆没用的 objectURL 挂着 */
+    let _playerObjUrl = null;
+    function setPlayerBlob(blob) {
+        const el = document.getElementById('player');
+        if (_playerObjUrl) { try { URL.revokeObjectURL(_playerObjUrl); } catch (_) {} _playerObjUrl = null; }
+        if (!el) return;
+        if (!blob) {
+            try { el.pause(); } catch (_) {}
+            el.removeAttribute('src');
+            try { el.load(); } catch (_) {}
+            return;
+        }
+        _playerObjUrl = URL.createObjectURL(blob);
+        el.src = _playerObjUrl;
     }
 
     async function loadMidiData(source) {
@@ -959,20 +1206,31 @@
         const frameSize = 2048;
         const ch0 = audioBuffer.getChannelData(0);
         const ch1 = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : null;
-        const mix = new Float32Array(ch0.length);
-        for (let i = 0; i < ch0.length; i++) mix[i] = ch1 ? (ch0[i] + ch1[i]) * 0.5 : ch0[i];
+        const len = ch0.length;
+        const frame = new Float32Array(frameSize);   // 复用一帧，不再每帧 slice 出一个新数组
         const sampleRate = audioBuffer.sampleRate;
         const pointsPerSec = 15;
         const interval = Math.max(frameSize, Math.floor(sampleRate / pointsPerSec));
-        
+
         let i = 0;
         let count = 0;
         let validCount = 0;
-        while (i < mix.length - frameSize) {
-            const samples = mix.slice(i, i + frameSize);
-            const [pitch, clarity] = detector.findPitch(samples, sampleRate);
+        while (i < len - frameSize) {
+            // 先把这一帧混成单声道，并顺手算能量：静音/底噪帧直接跳过检测，省掉大部分无意义的自相关计算
+            let energy = 0;
+            for (let k = 0; k < frameSize; k++) {
+                const s = ch1 ? (ch0[i + k] + ch1[i + k]) * 0.5 : ch0[i + k];
+                frame[k] = s;
+                energy += s * s;
+            }
             const time = i / sampleRate;
-            
+            if (energy / frameSize < 1e-6) {
+                points.push({ time, midi: null, clarity: 0 });
+                i += interval; count++;
+                if (count % 200 === 0) await new Promise(r => setTimeout(r, 0));
+                continue;
+            }
+            const [pitch, clarity] = detector.findPitch(frame, sampleRate);
             if (clarity > 0.15 && pitch > 50 && pitch < 1500) {
                 const midi = 69 + 12 * Math.log2(pitch / 440);
                 if (midi > 36 && midi < 84) {
@@ -1044,6 +1302,8 @@
                         preciseState.curves.midi.push({ time: note.time, end: note.time + note.duration, midi: note.midi });
                     });
                 });
+                // 多轨拼起来后按时间排序，绘制时才能按可见区间提前结束
+                preciseState.curves.midi.sort((a, b) => a.time - b.time);
             }
             return true;
         } catch (e) {
@@ -1080,7 +1340,7 @@
             document.getElementById('exportVocalPitchVal').textContent = `0 半音（快修已偏移 ${shift.toFixed(1)}）`;
 
             const wavBlob = audioBufferToWav(appState.synthesizedBuffer);
-            document.getElementById('player').src = URL.createObjectURL(wavBlob);
+            setPlayerBlob(wavBlob);
 
             await new Promise(r => setTimeout(r, 800));
             
@@ -1176,7 +1436,7 @@
             document.getElementById('exportVocalPitchVal').textContent = '0 半音（已用区域智能精修）';
 
             const wavBlob = audioBufferToWav(appState.synthesizedBuffer);
-            document.getElementById('player').src = URL.createObjectURL(wavBlob);
+            setPlayerBlob(wavBlob);
 
             await new Promise(r => setTimeout(r, 800));
             
@@ -1213,7 +1473,7 @@
             
             appState.synthesizedBuffer = await renderSegmentAudio(merged, iPitch, iVol, vPitch);
             const wavBlob = audioBufferToWav(appState.synthesizedBuffer);
-            document.getElementById('player').src = URL.createObjectURL(wavBlob);
+            setPlayerBlob(wavBlob);
             btn.textContent = '✅ 渲染完成';
             setTimeout(() => { btn.textContent = '🔄 应用设置并重新合成'; }, 1500);
         } catch (err) {
@@ -1251,6 +1511,9 @@
         isPlaying: false,
         playheadTime: 0,
         rafId: null,
+        lastPaintAt: 0,
+        bgCanvas: null,
+        bgSig: null,
         startTime: 0,
         mainPlayer: new Tone.Player().toDestination(),
         previewPlayer: new Tone.Player().toDestination()
@@ -1293,6 +1556,7 @@
                     preciseState.curves.midi.push({ time: note.time, end: note.time + note.duration, midi: note.midi });
                 });
             });
+            preciseState.curves.midi.sort((a, b) => a.time - b.time);
         }
         
         if (preciseState.segments.length === 0) {
@@ -1334,6 +1598,7 @@
         status.textContent = `当前已切分为 ${preciseState.segments.length} 段。使用剪刀切分。`;
         document.getElementById('applyPreciseBtn').disabled = false;
 
+        disposePlayerBuffer(preciseState.mainPlayer);
         preciseState.mainPlayer.buffer = new Tone.ToneAudioBuffer(appState.audioBuffers.vocal);
     }
 
@@ -1524,13 +1789,41 @@
         canvas.height = Math.max(Math.floor(rect.height), 220);
     }
 
+    /* ★ 静态层（网格/曲线/选区）缓存到离屏 canvas；播放时每帧只贴图 + 画游标，CPU 从满屏重绘降到一次 drawImage */
+    function makePreciseSig(w, h) {
+        const s = preciseState;
+        const last = s.drawnLinePoints.length ? s.drawnLinePoints[s.drawnLinePoints.length - 1] : null;
+        return [w, h, s.midiRange[0], s.midiRange[1], s.viewStart, s.viewEnd,
+            s.visible.midi ? 1 : 0, s.visible.ref ? 1 : 0, s.visible.user ? 1 : 0, s.visible.adj ? 1 : 0,
+            s.segments.length, s.selectedStart, s.selectedEnd,
+            s.curves.midi.length, s.curves.ref.length, s.curves.user.length,
+            s.toolMode, s.drawnLinePoints.length, last ? (last.time + ':' + last.midi) : ''].join('|');
+    }
+
     function drawPreciseCanvas() {
         const canvas = document.getElementById('preciseCanvas');
-        if (!canvas.width) return;
+        if (!canvas || !canvas.width) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
+        if (!preciseState.duration) { ctx.clearRect(0, 0, w, h); return; }
 
+        if (!preciseState.bgCanvas) preciseState.bgCanvas = document.createElement('canvas');
+        const bg = preciseState.bgCanvas;
+        if (bg.width !== w || bg.height !== h) { bg.width = w; bg.height = h; preciseState.bgSig = null; }
+
+        const sig = makePreciseSig(w, h);
+        if (sig !== preciseState.bgSig) {
+            const bctx = bg.getContext('2d');
+            bctx.clearRect(0, 0, w, h);
+            renderPreciseStatic(bctx, w, h);
+            preciseState.bgSig = sig;
+        }
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(bg, 0, 0);
+        drawPrecisePlayhead(ctx, w, h);
+    }
+
+    function renderPreciseStatic(ctx, w, h) {
         const duration = preciseState.duration;
         if (!duration) return;
 
@@ -1630,13 +1923,16 @@
 
         if (preciseState.visible.midi && preciseState.curves.midi.length > 0) {
             ctx.fillStyle = 'rgba(59, 130, 246, 0.28)';
-            preciseState.curves.midi.forEach(note => {
+            for (let ni = 0; ni < preciseState.curves.midi.length; ni++) {
+                const note = preciseState.curves.midi[ni];
+                if (note.time > preciseState.viewEnd) break;
+                if (note.end < preciseState.viewStart) continue;
                 const x1 = timeToX(note.time);
                 const x2 = timeToX(note.end);
-                if (x2 < padding.left || x1 > padding.left + plotW) return;
+                if (x2 < padding.left || x1 > padding.left + plotW) continue;
                 const y = midiToY(note.midi);
                 ctx.fillRect(Math.max(padding.left, x1), y - 2, Math.min(padding.left + plotW, x2) - Math.max(padding.left, x1), 4);
-            });
+            }
         }
         if (preciseState.visible.ref) drawCurve(ctx, preciseState.curves.ref, timeToX, midiToY, '#10b981', 2);
         if (preciseState.visible.user) {
@@ -1683,23 +1979,39 @@
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
         ctx.strokeRect(padding.left, padding.top, plotW, plotH);
+    }
 
-        if (preciseState.playheadTime >= preciseState.viewStart && preciseState.playheadTime <= preciseState.viewEnd) {
-            const playX = timeToX(preciseState.playheadTime);
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(playX, 0);
-            ctx.lineTo(playX, padding.top + plotH);
-            ctx.stroke();
-            
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath();
-            ctx.moveTo(playX - 6, 4);
-            ctx.lineTo(playX + 6, 4);
-            ctx.lineTo(playX, 16);
-            ctx.fill();
+    function drawPrecisePlayhead(ctx, w, h) {
+        const padding = { left: 44, right: 20, top: 20, bottom: 30 };
+        const plotW = w - padding.left - padding.right;
+        const plotH = h - padding.top - padding.bottom;
+        if (plotW <= 0 || plotH <= 0) return;
+        if (preciseState.viewEnd === preciseState.viewStart) return;
+        if (preciseState.playheadTime < preciseState.viewStart || preciseState.playheadTime > preciseState.viewEnd) return;
+        const playX = padding.left + (preciseState.playheadTime - preciseState.viewStart) / (preciseState.viewEnd - preciseState.viewStart) * plotW;
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(playX, 0);
+        ctx.lineTo(playX, padding.top + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(playX - 6, 4);
+        ctx.lineTo(playX + 6, 4);
+        ctx.lineTo(playX, 16);
+        ctx.fill();
+    }
+
+    /* ★ 曲线点按时间升序，先二分找到可见区间起点，再画到区间末端就停，避免每帧扫完整首歌 */
+    function firstIndexAtOrAfter(points, t) {
+        let lo = 0, hi = points.length - 1, ans = points.length;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            if (points[mid].time >= t) { ans = mid; hi = mid - 1; } else { lo = mid + 1; }
         }
+        return ans;
     }
 
     function drawCurve(ctx, points, timeToX, midiToY, color, lineWidth) {
@@ -1708,15 +2020,17 @@
         let started = false;
         let lastMidi = null;
         ctx.beginPath();
-        points.forEach(p => {
-            if (p.time < preciseState.viewStart || p.time > preciseState.viewEnd) return;
-            if (p.midi === null) { started = false; lastMidi = null; return; }
+        const start = firstIndexAtOrAfter(points, preciseState.viewStart);
+        for (let idx = start; idx < points.length; idx++) {
+            const p = points[idx];
+            if (p.time > preciseState.viewEnd) break;
+            if (p.midi === null) { started = false; lastMidi = null; continue; }
             const x = timeToX(p.time); const y = midiToY(p.midi);
-            if (isNaN(x) || isNaN(y)) return;
+            if (isNaN(x) || isNaN(y)) continue;
             if (lastMidi !== null && Math.abs(p.midi - lastMidi) > 3) { started = false; }
             if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
             lastMidi = p.midi;
-        });
+        }
         ctx.stroke();
     }
 
@@ -1727,20 +2041,22 @@
         let segIdx = 0, started = false;
         let lastMidi = null;
 
-        state.curves.user.forEach(p => {
-            if (p.time < preciseState.viewStart || p.time > preciseState.viewEnd) return;
-            if (p.midi === null) { started = false; lastMidi = null; return; }
+        const start = firstIndexAtOrAfter(state.curves.user, preciseState.viewStart);
+        for (let idx = start; idx < state.curves.user.length; idx++) {
+            const p = state.curves.user[idx];
+            if (p.time > preciseState.viewEnd) break;
+            if (p.midi === null) { started = false; lastMidi = null; continue; }
             while (segIdx < state.segments.length - 1 && p.time >= state.segments[segIdx].end) segIdx++;
             const seg = state.segments[segIdx];
-            if (!seg) return;
+            if (!seg) continue;
             const adjustedMidi = p.midi + ((seg && p.time >= seg.start) ? seg.offset : 0);
             const x = timeToX(p.time); const y = midiToY(adjustedMidi);
-            if (isNaN(x) || isNaN(y)) return;
+            if (isNaN(x) || isNaN(y)) continue;
 
             if (lastMidi !== null && Math.abs(adjustedMidi - lastMidi) > 3) { started = false; }
             if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
             lastMidi = adjustedMidi;
-        });
+        }
         ctx.stroke();
     }
 
@@ -1937,20 +2253,26 @@
             stopPlayback();
         }
         preciseState.playheadTime = current;
-        updatePlaybackTime();
 
-        if (preciseState.isPlaying) {
-            if (preciseState.playheadTime > preciseState.viewEnd - 1 || preciseState.playheadTime < preciseState.viewStart) {
-                const visibleDuration = preciseState.duration / preciseState.zoom;
-                let targetStart = preciseState.playheadTime - visibleDuration / 2;
-                targetStart = Math.max(0, Math.min(preciseState.duration - visibleDuration, targetStart));
-                const panPercent = (targetStart / (preciseState.duration - visibleDuration)) * 100;
-                document.getElementById('precisePanSlider').value = panPercent;
-                updateViewRange(panPercent);
+        // 画布与时间文本按 30fps 刷新就够了，音频时钟仍然每帧校准，省一半以上重绘
+        const nowMs = performance.now();
+        if (!preciseState.lastPaintAt || nowMs - preciseState.lastPaintAt >= 33) {
+            preciseState.lastPaintAt = nowMs;
+            updatePlaybackTime();
+
+            if (preciseState.isPlaying) {
+                if (preciseState.playheadTime > preciseState.viewEnd - 1 || preciseState.playheadTime < preciseState.viewStart) {
+                    const visibleDuration = preciseState.duration / preciseState.zoom;
+                    let targetStart = preciseState.playheadTime - visibleDuration / 2;
+                    targetStart = Math.max(0, Math.min(preciseState.duration - visibleDuration, targetStart));
+                    const panPercent = (targetStart / (preciseState.duration - visibleDuration)) * 100;
+                    document.getElementById('precisePanSlider').value = panPercent;
+                    updateViewRange(panPercent);
+                }
             }
+            drawPreciseCanvas();
         }
         
-        drawPreciseCanvas();
         preciseState.rafId = requestAnimationFrame(loopPlayback);
     }
 
@@ -2392,6 +2714,7 @@
             }, duration);
 
             if (renderedBuffer) {
+                disposePlayerBuffer(preciseState.previewPlayer);
                 preciseState.previewPlayer.buffer = new Tone.ToneAudioBuffer(renderedBuffer);
                 preciseState.previewPlayer.start();
             }
@@ -2430,7 +2753,7 @@
 
             appState.synthesizedBuffer = rendered;
             const wavBlob = audioBufferToWav(rendered);
-            document.getElementById('player').src = URL.createObjectURL(wavBlob);
+            setPlayerBlob(wavBlob);
 
             document.getElementById('exportVocalPitch').value = 0;
             document.getElementById('exportVocalPitchVal').textContent = '0 半音（已用精准校音）';
@@ -2555,9 +2878,16 @@
     fetchManifest();
     updateUI();
 
+    /* ★ 关闭/刷新页面时把大块音频与 blob 地址一起释放，避免浏览器缓存里堆垃圾 */
+    window.addEventListener('pagehide', (e) => {
+        if (e && e.persisted) return;   // 进 bfcache 还会回来，别把状态清掉
+        try { releaseAudioCache(); } catch (_) {}
+    });
+
     /* ★ 如果 URL 带 waiting=1，说明是播放器主动打开发起录音，显示等待横幅 */
     if (WAITING_FOR_RECORDING) {
         showWaitingBanner();
+        startWaitWatch();
     }
 </script>
 </body>
