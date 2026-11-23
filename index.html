@@ -81,9 +81,9 @@ body[data-view="player"] .pane-player{display:flex}
 .select-bar .info b{color:#fff}
 .select-bar .ghost.sm,.select-bar .primary{height:32px;padding:0 14px;font-size:12px}
 .grid-wrap{flex:1 1 auto;min-height:0;overflow-y:auto;padding:22px 24px 30px}
-.section{max-width:1600px;margin:0 0 34px}
+.section{margin:0 0 34px}
 .section:last-child{margin-bottom:0}
-.grid{display:grid;grid-template-columns:repeat(auto-fill, clamp(160px, 16vw, 240px));gap:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(170px,11vw,220px),1fr));gap:18px}
 .card{position:relative;background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s;border:1px solid var(--line)}
 .card:hover{transform:translateY(-4px);box-shadow:0 14px 40px -12px rgba(0,0,0,.75);background:#1f1f29}
 .card.playing{border-color:rgba(236,65,65,.5);box-shadow:0 0 0 1px rgba(236,65,65,.3),0 12px 36px -14px rgba(236,65,65,.4)}
@@ -539,7 +539,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .lib-tab .cnt{font-size:8.5px;padding:1px 5px}
   .select-bar{padding:8px 14px;gap:6px}
   .grid-wrap{padding:14px 14px 26px}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+  .grid{gap:12px}
   .card-info{padding:10px 11px 11px}
   .card-title{font-size:12.5px}
   .card-sub{font-size:11px}
@@ -612,7 +612,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   .lib-tab{padding:7px 13px;font-size:12px}
   .select-bar{padding:9px 18px}
   .grid-wrap{padding:16px 18px 26px}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px}
+  .grid{gap:14px}
   .card-info{padding:10px 11px 11px}
 
   /* 播放页：两栏 */
@@ -732,7 +732,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 }
 
 @media(max-width:430px){
-  .grid{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:10px}
+  .grid{gap:10px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
   .pb-cover{width:34px;height:34px}
   .play-btn{width:40px;height:40px}
   .ctrl{width:30px;height:30px}
@@ -1593,16 +1593,26 @@ let activeBlobUrls = [];
 function revokeActiveBlobUrls(){ activeBlobUrls.forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(_){} }); activeBlobUrls = []; }
 function trackBlobUrl(u){ if(u && u.startsWith('blob:')) activeBlobUrls.push(u); return u; }
 
+/* 只切换「播放中/暂停」相关的类，不重建整个列表（重建是卡顿主因） */
+function syncPlayStateUI(){
+  const playing = !!audio.src && !audio.paused;
+  document.body.classList.toggle('playing', playing);
+  $$('.card.playing, .card.paused').forEach(c=>{
+    c.classList.toggle('playing-now', playing);
+    c.classList.toggle('paused', !playing);
+  });
+}
 audio.addEventListener('play',()=>{
-  document.body.classList.add('playing'); renderAll(); renderSide();
+  syncPlayStateUI();
   if(audioInst.src && audioInst.paused){ try{ audioInst.currentTime = audio.currentTime; }catch(_){} audioInst.play().catch(()=>{}); }
 });
 audio.addEventListener('pause',()=>{
-  document.body.classList.remove('playing'); renderAll(); renderSide();
+  syncPlayStateUI();
   if(audioInst.src && !audioInst.paused){ try{ audioInst.pause(); }catch(_){} }
 });
 audio.addEventListener('ended',()=>{
   document.body.classList.remove('playing');
+  $$('.card.playing, .card.paused').forEach(c=>{ c.classList.remove('playing-now'); c.classList.add('paused'); });
   if(audioInst.src && !audioInst.paused){ try{ audioInst.pause(); }catch(_){} }
   handleEnded();
 });
@@ -1654,14 +1664,21 @@ async function doOnlineSearch() {
     onlineSongs = list.map(item => {
       let cover = ''; if (item.pic) cover = item.pic; else if (item.pic_id) cover = `https://p1.music.126.net/${item.pic_id}.jpg`; else if (item.al && item.al.picUrl) cover = item.al.picUrl;
       if (!cover) cover = ''; 
-      return { id: 'nt_' + item.id, title: item.name || '未知歌曲', coverArtist: item.artist ? item.artist.join(' / ') : '未知歌手', cover: cover, duration: 0, tags: ['网易云'], source: 'online', _raw: item };
+      return { id: 'nt_' + item.id, title: item.name || '未知歌曲', coverArtist: item.artist ? item.artist.join(' / ') : '未知歌手', cover: cover, duration: 0, tags: ['网易云'], source: 'online', _raw: slimRaw(item) };
     });
-    try { localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: onlineSongs })); } catch(e) {}
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: onlineSongs.map(x=>({ id:x.id, title:x.title, coverArtist:x.coverArtist, cover:x.cover, duration:x.duration, tags:x.tags, source:x.source, _raw: slimRaw(x._raw) })) }));
+    } catch(e) { try{ localStorage.removeItem(cacheKey); }catch(_){} }
   } catch (e) {
     console.warn('[online] search failed', e); onlineError = '搜索失败：' + (e.message || e) + '。接口可能已失效。';
   } finally { onlineLoading = false; renderAll(); }
 }
 
+/* 在线条目只留取地址/取歌词必需的字段，避免缓存把 localStorage 撑爆 */
+function slimRaw(item){
+  if(!item || typeof item !== 'object') return {};
+  return { id: item.id, name: item.name, artist: item.artist, album: item.album, pic_id: item.pic_id, lyric_id: item.lyric_id, source: item.source };
+}
 async function resolveOnlineAudioUrl(song) {
   if (!song || !song._raw) throw new Error('歌曲元数据丢失');
   const songId = song._raw.id; if (!songId) throw new Error('缺少歌曲 ID');
@@ -1787,7 +1804,7 @@ async function persistUser(){
   // 修改这一行，加入 pendingQueue
   const data = { fav:[...favSet], history:historyList.slice(0,200), pinned:[...pinnedSet], order:{}, onlineCache:{}, pendingQueue: pendingQueue };
   orderMap.forEach((v,k)=>data.order[k]=v);
-  onlineSongs.forEach(s => { if(favSet.has(s.id) || historyList.some(h => h.id === s.id)){ data.onlineCache[s.id] = { id: s.id, title: s.title, coverArtist: s.coverArtist, cover: s.cover, duration: s.duration, tags: s.tags, source: s.source, _raw: s._raw }; } });
+  onlineSongs.forEach(s => { if(favSet.has(s.id) || historyList.some(h => h.id === s.id)){ data.onlineCache[s.id] = { id: s.id, title: s.title, coverArtist: s.coverArtist, cover: s.cover, duration: s.duration, tags: s.tags, source: s.source, _raw: slimRaw(s._raw) }; } });
   try{ await idbPut('kv', 'user', data); }catch(_){}
 }
 async function loadUser(){
@@ -2753,7 +2770,13 @@ $$('.lib-tab').forEach(b=>{ b.addEventListener('click', ()=>{ state.activeLib = 
 pbSong.addEventListener('click', ()=>{ if(!audio.src) return; setPlayerView('player'); });
 $('#btnBackToList').addEventListener('click', ()=>{ setPlayerView('list'); });
 $('#brandHome').addEventListener('click', ()=>{ setPlayerView('list'); });
-searchInput.addEventListener('input', e=>{ state.search = e.target.value.trim(); renderAll(); });
+let searchTimer = 0;
+searchInput.addEventListener('input', e=>{
+  state.search = e.target.value.trim();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>{ searchTimer = 0; renderAll(); }, 160);
+});
+searchInput.addEventListener('compositionend', ()=>{ clearTimeout(searchTimer); searchTimer = 0; renderAll(); });
 $('#btnLocalSelect').addEventListener('click', ()=>enterSelectMode());
 $('#btnCancelSel').addEventListener('click', ()=>exitSelectMode());
 $('#chkSelectAll').addEventListener('change', e=>{ if(e.target.checked){ localSongs.forEach(s=>state.selectedIds.add(s.id)); }else{ state.selectedIds.clear(); } renderAll(); });
@@ -3522,8 +3545,10 @@ $('#btnAdmin').addEventListener('click', async ()=>{
 document.addEventListener('click', e=>{ const id = e.target.dataset && e.target.dataset.close; if(id){ const m = document.getElementById(id); if(m) m.hidden = true; } });
 
 let fixWindowRef = null;
+let fixSession = null;
+function newFixSession(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 if (location.search.includes('record=1')) { window.name = 'player_recorder'; }
-const recordState = { stream: null, recorder: null, chunks: [], startTime: 0, timerId: null, companionAudio: null, blob: null, song: null, autoSend: false, waitTimeoutId: null, silenceCheckTimer: null, audioCtx: null, analyser: null };
+const recordState = { stream: null, recorder: null, chunks: [], startTime: 0, timerId: null, companionAudio: null, blob: null, song: null, autoSend: false, sent: false, waitTimeoutId: null, silenceCheckTimer: null, audioCtx: null, analyser: null };
 
 $('#btnAiFix').addEventListener('click', ()=>{
   const song = getCurrent(); if(!song){ showToast('请先播放一首歌曲'); return; }
@@ -3533,8 +3558,10 @@ $('#btnAiFix').addEventListener('click', ()=>{
 $('#btnFixDirect').addEventListener('click', ()=>{
   const song = getCurrent(); $('#aiFixModal').hidden = true; if(!song) return;
   try{
+    fixSession = newFixSession();
     const u = new URL(appConfig.studioUrl); u.searchParams.set('songId', song.id);
     u.searchParams.set('manifestUrl', appConfig.manifestUrl || DEFAULT_MANIFEST_URL); u.searchParams.set('playerUrl', location.origin + location.pathname);
+    u.searchParams.set('session', fixSession);
     window.open(u.toString(), '_blank', 'noopener,noreferrer');
   }catch(e){ showToast('修音工坊地址无效，请到设置里修改'); }
 });
@@ -3542,7 +3569,9 @@ $('#btnFixRecord').addEventListener('click', async ()=>{
   const song = getCurrent(); $('#aiFixModal').hidden = true; if(!song) return;
   let opened = false;
   try{
+    fixSession = newFixSession();
     const u = new URL(appConfig.studioUrl); u.searchParams.set('songId', song.id); u.searchParams.set('waiting', '1'); u.searchParams.set('playerUrl', location.origin + location.pathname);
+    u.searchParams.set('session', fixSession);
     fixWindowRef = window.open(u.toString(), 'k_song_tuner'); opened = !!fixWindowRef;
   }catch(_){ fixWindowRef = null; opened = false; }
   await openRecordModal(song, opened);
@@ -3551,7 +3580,7 @@ $('#btnFixRecord').addEventListener('click', async ()=>{
 
 async function openRecordModal(song, autoSend){
   cleanupRecord();
-  recordState.song = song; recordState.autoSend = !!autoSend; recordState.blob = null; recordState.chunks = [];
+  recordState.song = song; recordState.autoSend = !!autoSend; recordState.blob = null; recordState.sent = false; recordState.chunks = [];
   const hasInst = !!song.instrumental;
   $('#recordSongInfo').innerHTML = `当前歌曲：<b style="color:#fff">${esc(song.title||'未命名')}</b>` + (hasInst ? '' : ' <span style="color:#ff9aa9">（无伴奏文件，将用原声引导）</span>');
   $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音'; $('#recordTimer').textContent = '00:00';
@@ -3701,9 +3730,9 @@ function sendRecordingBack(){
   if(target){
     let ok = false;
     try{
-      target.postMessage({ type: 'RETURN_RECORDING', blob: recordState.blob, name: fileName, songId: song ? song.id : '', manifestUrl: appConfig.manifestUrl || DEFAULT_MANIFEST_URL, playerUrl: location.origin + location.pathname }, '*'); ok = true;
+      target.postMessage({ type: 'RETURN_RECORDING', blob: recordState.blob, name: fileName, songId: song ? song.id : '', session: fixSession || '', manifestUrl: appConfig.manifestUrl || DEFAULT_MANIFEST_URL, playerUrl: location.origin + location.pathname }, '*'); ok = true;
     }catch(e){ console.warn('[record] postMessage failed', e); }
-    if(ok){ try{ target.focus(); }catch(_){} $('#recordStatus').textContent = '✅ 录音已发送，请回到修音工坊查看'; showToast('已发送到修音工坊'); return; }
+    if(ok){ recordState.sent = true; try{ target.focus(); }catch(_){} $('#recordStatus').textContent = '✅ 录音已发送，请回到修音工坊查看'; showToast('已发送到修音工坊'); return; }
   }
   downloadRecordingFallback();
 }
@@ -3716,7 +3745,68 @@ function downloadRecordingFallback(){
     $('#recordStatus').textContent = '📥 已下载录音，请到修音工坊「上传你的录音」处选择'; showToast('录音已下载，请手动上传到修音工坊');
   }catch(e){ showToast('下载失败：' + (e && e.message ? e.message : e)); }
 }
-$$('#recordModal [data-close="recordModal"]').forEach(el=>{ el.addEventListener('click', ()=>cleanupRecord()); });
+/* ★ 修音工坊 → 播放器：改歌就取消本轮录音；点「前往录音」就切到指定歌曲再开录音 */
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || d.__kSongStudio !== true) return;
+  if (d.session && fixSession && d.session !== fixSession) return;   // 旧会话的消息，忽略
+  const modal = document.getElementById('recordModal');
+  const mini = document.getElementById('recordMini');
+  if (d.type === 'CANCEL_RECORD_SESSION') {
+    const open = (modal && !modal.hidden) || (mini && !mini.hidden);
+    if (open) {
+      const cur = recordState.song ? recordState.song.id : '';
+      if (!cur || cur !== d.songId) {
+        cleanupRecord();
+        if (modal) modal.hidden = true;
+        if (mini) mini.hidden = true;
+        showToast('修音工坊已改选歌曲，本轮录音已取消');
+      }
+    }
+    return;
+  }
+  if (d.type === 'SET_RECORD_SONG') {
+    const song = d.songId ? getSongById(d.songId) : null;
+    if (!song) { showToast('修音工坊指定的歌曲不在当前歌单'); return; }
+    cleanupRecord();
+    if (modal) modal.hidden = true;
+    if (mini) mini.hidden = true;
+    const start = () => { openRecordModal(song, true); showToast(`已切到《${song.title || ''}》，可以开始录音`); };
+    if (currentId !== song.id) { try { playSong(song.id).then(start); } catch (_) { start(); } }
+    else { start(); }
+  }
+});
+
+$$('#recordModal [data-close="recordModal"]').forEach(el=>{ el.addEventListener('click', ()=>{
+  const cur = recordState.song ? recordState.song.id : '';
+  const alreadySent = recordState.sent;
+  cleanupRecord();
+  if (!alreadySent) { try{ if (fixWindowRef && !fixWindowRef.closed) fixWindowRef.postMessage({ __kSongStudio:true, type:'RECORD_CANCELLED', session: fixSession || '', songId: cur }, '*'); }catch(_){} }
+}); });
+
+/* ★ 修音工坊 → 主界面：回来时跟随修音那边选定的歌，不猜、不落回上一首 */
+(function adoptStudioSongIfRequested(){
+  const p = new URLSearchParams(location.search);
+  if (p.get('from') !== 'studio') return;
+  const wantId = p.get('songId') || '';
+  if (p.get('session')) fixSession = p.get('session');
+  const cleanUrl = new URL(location.href);
+  ['from','songId','session'].forEach(k => cleanUrl.searchParams.delete(k));
+  history.replaceState(null, '', cleanUrl.toString());
+  if (!wantId) return;
+  let tries = 0;
+  const iv = setInterval(async () => {
+    tries++;
+    const song = getSongById(wantId);
+    if (!song) { if (tries > 40) { clearInterval(iv); showToast('返回主界面时没找到修音所选歌曲'); } return; }
+    clearInterval(iv);
+    if (currentId !== song.id) {
+      try { await playSong(song.id); } catch (_) {}
+      try { audio.pause(); } catch (_) {}
+    }
+    showToast(`已跟随修音工坊切到《${song.title || ''}》`);
+  }, 400);
+})();
 
 async function init(){
   try{ const v = parseFloat(localStorage.getItem(LS_VOL)); applyVolume(isNaN(v) ? 1 : v); }catch(_){ applyVolume(1); }
@@ -3774,12 +3864,19 @@ window.addEventListener('resize', ()=>{ setTimeout(clampDeskLyric, 160); });
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') autoSync(); });
   (function autoOpenRecordIfRequested(){
     const p = new URLSearchParams(location.search); if(p.get('record') !== '1') return;
-    const cleanUrl = new URL(location.href); cleanUrl.searchParams.delete('record'); cleanUrl.searchParams.delete('songId');
+    fixSession = p.get('session') || fixSession;
+    const cleanUrl = new URL(location.href); cleanUrl.searchParams.delete('record'); cleanUrl.searchParams.delete('songId'); cleanUrl.searchParams.delete('session');
     history.replaceState(null, '', cleanUrl.toString());
     const wantId = p.get('songId') || ''; let tries = 0;
     const iv = setInterval(async ()=>{
-      tries++; let song = wantId ? getSongById(wantId) : null;
-      if(!song) song = getCurrent() || remoteSongs[0] || localSongs[0] || allSongs[0];
+      tries++;
+      const found = wantId ? getSongById(wantId) : null;
+      // 修音工坊点名要录哪首：只认这首，找不到就明说，绝不偷偷换成别的歌
+      if (wantId && !found) {
+        if (tries > 40) { clearInterval(iv); showToast('修音工坊指定的歌曲不在当前歌单，录音已取消'); }
+        return;
+      }
+      const song = found || getCurrent() || remoteSongs[0] || localSongs[0] || allSongs[0];
       if(song){
         clearInterval(iv); if(currentId !== song.id){ try{ await playSong(song.id); }catch(_){} }
         setTimeout(()=>openRecordModal(song, !!window.opener), 500);
