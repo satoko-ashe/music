@@ -1167,7 +1167,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
       <span><span class="cache-dot" id="syncDot"></span>清单版本：<span id="setManifestVer">—</span></span>
       <span>上次同步：<span id="setLastSync">—</span></span>
     </div>
+    <div id="cacheHint" hidden style="font-size:11.5px;color:#ffb86b;line-height:1.7;margin:-6px 0 10px">
+      ⚠️ 还是看不到新歌 / 新歌词？浏览器会留旧清单。点「清缓存并重载」即可，不用手动去清浏览器缓存。
+    </div>
     <div class="row" style="justify-content:flex-end">
+      <button class="ghost" id="btnPurgeCache" title="清掉旧清单/旧歌词缓存并重新加载">🧹 清缓存并重载</button>
       <button class="ghost danger" id="btnResetData" title="清空本地数据并刷新">重置数据</button>
       <button class="ghost" id="btnDownloadDesktop" title="下载 Windows 桌面版（提取码 2026）">💻 桌面版</button>
       <button class="ghost" id="btnSyncNow">立即同步</button>
@@ -1974,7 +1978,7 @@ async function webSync(force){
   const url = appConfig.manifestUrl || DEFAULT_MANIFEST_URL;
   const reqUrl = force ? (url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now()) : url;
   try{
-    const res = await fetch(reqUrl, force ? {cache:'no-store'} : {cache:'default'}); if(!res.ok) throw new Error('HTTP ' + res.status);
+    const res = await fetch(reqUrl, {cache:'no-store'}); if(!res.ok) throw new Error('HTTP ' + res.status);   // ★ 永远绕过浏览器缓存，避免拉到的还是旧清单
     const data = await res.json(); const base = data.baseUrl || url.replace(/[^/]*$/, '');
     const prev = new Map(remoteSongs.map(s=>[s.id, s]));
     remoteSongs = (data.songs || []).map(s=>{
@@ -3399,24 +3403,50 @@ $('#btnDownloadDesktop').addEventListener('click', async ()=>{
   m.querySelector('[data-go]').onclick = ()=>{ openExternal(url); close(); };
 });
 
+/* ★ 彻底清掉本站缓存（含 IDB 里的旧清单、歌词/封面内存缓存、CacheStorage），再重载 */
+async function purgeCacheAndReload(silent){
+  try{ coverUrlCache.clear(); lyricTextCache.clear(); }catch(_){}
+  try{ await idbDelete('kv', 'remoteCache'); }catch(_){}
+  try{ if(window.caches){ const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } }catch(_){}
+  try{ appConfig.manifestVersion = ''; appConfig.lastSync = ''; await saveConfig(); }catch(_){}
+  try{ remoteSongs = []; }catch(_){}
+  if(!silent) showToast('已清理缓存，正在重新加载…');
+  setTimeout(()=>{ try{ location.reload(); }catch(_){} }, 350);
+}
+
 $('#btnResetData').addEventListener('click', async ()=>{
-  if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、本地曲库、设置等\n重置后页面会自动刷新')) return;
+  if(!confirm('确定要重置所有本地数据吗？\n\n将清空：收藏、播放历史、本地曲库、设置等\n并会一并清理浏览器缓存（旧清单/旧歌词）\n重置后页面会自动刷新')) return;
   try{ localStorage.clear(); }catch(_){}
   try{ await idbClear('songs'); await idbClear('files'); await idbClear('kv'); }catch(_){}
+  try{ coverUrlCache.clear(); lyricTextCache.clear(); }catch(_){}
+  try{ if(window.caches){ const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } }catch(_){}
   setTimeout(()=>location.reload(), 200);
 });
 
 function afterSyncUI(stat){
   $('#setManifestVer').textContent = appConfig.manifestVersion || '—';
   $('#setLastSync').textContent = appConfig.lastSync ? appConfig.lastSync.replace('T',' ').slice(0,19) : '—';
-  $('#syncDot').classList.toggle('off', !appConfig.manifestVersion); showToast(stat && stat.skipped ? '远程清单已是最新' : `同步完成 · ${stat ? stat.message : ''}`);
+  $('#syncDot').classList.toggle('off', !appConfig.manifestVersion);
+  if(stat && stat.skipped) showToast('远程清单已是最新');
+  else if(stat && stat.usedCache) showToast('网络没通，用的是旧缓存 · 建议点「清缓存并重载」');
+  else if(stat && stat.unchanged) showToast('清单没变化 · 若页面还是旧歌/旧歌词，点「清缓存并重载」');
+  else showToast(`同步完成 · ${stat ? stat.message : ''}`);
+  if(stat && (stat.unchanged || stat.usedCache)){ const h = $('#cacheHint'); if(h) h.hidden = false; }
 }
 async function doSync(force){
   const btn = $('#btnSync'); btn.classList.add('spin');
-  try{ const stat = await webSync(!!force); await loadLocalSongs(); mergeAll(); cleanupOrphans(); renderTagbar(); renderAll(); renderSide(); return stat; }
+  const before = { ver: appConfig.manifestVersion, n: remoteSongs.length, ids: remoteSongs.map(x=>x.id).join(',') };
+  try{
+    const stat = await webSync(!!force); await loadLocalSongs(); mergeAll(); cleanupOrphans(); renderTagbar(); renderAll(); renderSide();
+    const after = { ver: appConfig.manifestVersion, n: remoteSongs.length, ids: remoteSongs.map(x=>x.id).join(',') };
+    stat.unchanged = (before.ver === after.ver && before.n === after.n && before.ids === after.ids);
+    stat.usedCache = !!(stat && stat.message && stat.message.indexOf('离线缓存') === 0);
+    return stat;
+  }
   finally{ btn.classList.remove('spin'); }
 }
 $('#btnSyncNow').addEventListener('click', async ()=>{ try{ afterSyncUI(await doSync(true)); }catch(e){ alert('同步失败：' + e); } });
+$('#btnPurgeCache').addEventListener('click', ()=>{ purgeCacheAndReload(false); });
 $('#btnSync').addEventListener('click', async ()=>{ try{ afterSyncUI(await doSync(true)); }catch(e){ alert('同步失败：' + e); } });
 
 let autoSyncTimer = null, lastAutoSyncAt = 0;
