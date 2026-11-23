@@ -247,6 +247,9 @@
             <h2>确认你的干声</h2>
             <div class="card">
                 <div id="autoVocalInfo" style="display: none; margin-bottom: 20px; padding: 15px; border-radius: 10px;"></div>
+                <div id="needVocalHint" style="display:none; margin-bottom: 16px; padding: 12px 14px; border-radius: 10px; background: rgba(239,68,68,.10); border: 1px solid rgba(239,68,68,.35); color:#ff9aa9; font-size: 13px; line-height:1.7;">
+                    ⚠️ 还没有你的干声。请点「前往录音」重新录，或在上方手动上传你的录音文件。
+                </div>
                 <div class="form-group">
                     <label>上传你自己的录音（若上传，将覆盖歌单自动获取的干声）：</label>
                     <input type="file" id="vocalUpload" accept="audio/*">
@@ -646,6 +649,7 @@
             if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) return;
             stopWaitWatch();
             hideWaitingBanner();
+            markNoVocal('播放器端取消了这次录音（可能录得太短被判不合格，或你中途退出了），没有回传。请重新录音，或手动上传你的录音文件。');
             log('ℹ️ 播放器端已取消本次录音，等你重新点「前往录音」。');
             return;
         }
@@ -796,6 +800,7 @@
             if (closed || timeout) {
                 stopWaitWatch();
                 hideWaitingBanner();
+                markNoVocal(closed ? '录音窗口被关掉了，没有收到录音。需要录音请重新点「前往录音」，或手动上传你的录音文件。' : '等待录音超时（可能录得太短或取消）。请重新录音，或手动上传你的录音文件。');
                 log(closed ? 'ℹ️ 录音窗口已关闭，需要录音请重新点「前往录音」。' : 'ℹ️ 等待录音超时，已收起等待提示。');
             }
         }, 2000);
@@ -1007,6 +1012,7 @@
         }
 
         if (appState.currentStep === 2) {
+            refreshVocalGate();
             const infoBox = document.getElementById('autoVocalInfo');
             if (appState.localFiles.vocal) {
                 infoBox.style.display = 'block'; infoBox.style.background = 'rgba(16, 185, 129, 0.1)'; infoBox.style.border = '1px solid rgba(16, 185, 129, 0.2)';
@@ -1016,7 +1022,8 @@
                 const url = appState.selectedSong.vocal || appState.selectedSong.audio;
                 if (url) {
                     infoBox.style.display = 'block'; infoBox.style.background = isPure ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'; infoBox.style.border = `1px solid ${isPure ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`;
-                    infoBox.innerHTML = `<p style="font-size:14px; color:${isPure ? 'var(--success)' : '#f59e0b'}; font-weight: 600; margin-bottom:4px;">${isPure ? '✅ 已自动拉取播放器纯干声' : '⚠️ 未找到纯干声，将自动使用混音版'}</p>`;
+                    infoBox.innerHTML = `<p style="font-size:14px; color:${isPure ? 'var(--success)' : '#f59e0b'}; font-weight: 600; margin-bottom:4px;">${isPure ? '✅ 已自动拉取播放器纯干声（仅供参考，不算你的干声）' : '⚠️ 未找到纯干声，歌单只有混音版'}</p>
+                    <p style="font-size:12.5px; color:var(--dim); line-height:1.6; margin:0;">要修你自己的声音，请重新录音或手动上传你的录音文件。</p>`;
                 } else { infoBox.style.display = 'none'; }
             } else { infoBox.style.display = 'none'; }
         }
@@ -1033,6 +1040,27 @@
         }
     }
 
+    /* ★ 只认“你自己的干声”：录音回传或手动上传，二者有其一才允许进入第 3 步 */
+    function hasMyVocal() {
+        const v = appState.localFiles.vocal;
+        if (!v) return false;
+        if (appState.vocalSongId && appState.selectedSong && appState.vocalSongId !== appState.selectedSong.id) return false;
+        return true;
+    }
+    function refreshVocalGate() {
+        const ok = hasMyVocal();
+        const hint = document.getElementById('needVocalHint');
+        if (hint) hint.style.display = ok ? 'none' : 'block';
+        nextBtn.disabled = !ok;
+        nextBtn.style.opacity = ok ? '' : '.45';
+        nextBtn.title = ok ? '' : '还没有你自己的干声，不能进入下一步';
+    }
+    function markNoVocal(reason) {
+        const hint = document.getElementById('needVocalHint');
+        if (hint && reason) hint.innerHTML = '⚠️ ' + reason;
+        if (appState.currentStep === 2) refreshVocalGate();
+    }
+
     nextBtn.addEventListener('click', () => {
         if (appState.currentStep === 1) {
             if (!appState.selectedSong && !appState.localFiles.midi && !appState.localFiles.refVocal) {
@@ -1040,8 +1068,10 @@
                 return;
             }
         } else if (appState.currentStep === 2) {
-            const hasVocal = appState.localFiles.vocal || appState.selectedSong?.vocal || appState.selectedSong?.audio;
-            if (!hasVocal) { alert('⚠️ 缺少干声！请上传你的录音，或返回上一步选择包含干声的歌单。'); return; }
+            if (!hasMyVocal()) {
+                alert('⚠️ 还没有「我的干声」，不能进入下一步。\n\n· 录音太短或中途取消，都不会自动回传；\n· 请点「前往录音」重新录制，或在上方「上传你自己的录音」里选文件。');
+                return;
+            }
         }
         if (appState.currentStep < 4) { appState.currentStep++; updateUI(); }
     });
@@ -1105,20 +1135,25 @@
             if (STUDIO_SESSION) u.searchParams.set('session', STUDIO_SESSION);
             url = u.toString();
         } catch (_) {}
-        let opened = null;
-        /* 优先：让打开本页的那个播放器标签就地跳到主界面（不新开、也不会被当成弹窗拦） */
+        let handed = false;
+        /* 1) 打开本页的播放器标签还活着：让它就地跳到主界面（不新开、不会被弹窗拦） */
         try {
-            if (window.opener && !window.opener.closed) { window.opener.location.href = url; opened = window.opener; }
-        } catch (_) { opened = null; }
-        if (!opened) {
-            try { opened = window.open(url, 'player_main'); } catch (_) {}
-            try { if (opened) opened.focus(); } catch (_) {}
+            if (window.opener && !window.opener.closed) { window.opener.location.href = url; handed = true; }
+        } catch (_) { handed = false; }
+        /* 2) 没有 opener（单独打开的修音页）：干脆本页直接跳，保证一定能回到主界面 */
+        if (!handed) {
+            try { location.replace(url); } catch (_) { location.href = url; }
+            return;
         }
+        /* 3) 旧标签已经接手，再把本修音页关掉；关不掉就在本页兜底跳过去 */
         setTimeout(() => {
-            let closed = false;
-            try { window.close(); closed = window.closed; } catch (_) {}
-            if (!closed) log('ℹ️ 主界面已打开新页面；这个修音页可以手动关掉了。');
-        }, 250);
+            if (window.closed) return;
+            try { window.close(); } catch (_) {}
+            setTimeout(() => {
+                if (window.closed) return;
+                try { location.replace(url); } catch (_) { location.href = url; }
+            }, 220);
+        }, 200);
     });
 
     /* ★ 解码上下文只建一个，反复 new AudioContext 在 iPad 上会把上下文额度耗光 */
