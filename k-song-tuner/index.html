@@ -629,6 +629,13 @@
         if (txt) txt.innerHTML = html;
     }
 
+    function postBackPlayers(payload, source) {
+        const msg = Object.assign({ [STUDIO_FLAG]: true, session: STUDIO_SESSION }, payload);
+        try { if (source && source !== window && source.postMessage) source.postMessage(msg, '*'); } catch (_) {}
+        try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); } catch (_) {}
+        try { if (studioBus) studioBus.postMessage(msg); } catch (_) {}
+    }
+
     function handleStudioMessage(d, source) {
         if (!d) return;
 
@@ -673,10 +680,16 @@
         }
         if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) {
             log('⚠️ 收到来自旧会话的录音，已忽略（防止串歌）。');
+            postBackPlayers({ type: 'HANDOFF_REJECTED', reason: 'stale-session', songId: d.songId || '', recId: d.recId || '' }, source);
             return;
         }
         const blob = d.blob;
         if (!blob) return;
+        /* ★ 同一份录音可能既走消息又走缓存，按 recId 只认第一次 */
+        if (d.recId) {
+            if (_appliedRecIds.has(d.recId)) { log('ℹ️ 这份录音已经收过，忽略重复投递。'); return; }
+            _appliedRecIds.add(d.recId);
+        }
 
         const recSongId = d.songId || '';
         // 用户在修音里已经锁定了另一首歌，而这份录音是别的歌 → 直接拒绝，不覆盖
@@ -687,6 +700,8 @@
             stopWaitWatch();
             hideWaitingBanner();
             log(`⚠️ 这份录音属于《${old ? old.title : recSongId}》，与当前选中的《${cur ? cur.title : pinnedSongId}》不一致，已丢弃。请在当前歌曲上重新录音。`);
+            postBackPlayers({ type: 'HANDOFF_REJECTED', reason: 'song-mismatch',
+                songId: recSongId, recTitle: d.songTitle || '', pinnedSongId, recId: d.recId || '' }, source);
             return;
         }
 
@@ -727,6 +742,13 @@
         appState.currentStep = 2;
         updateUI();
 
+        /* ★ 回执：告诉播放器“我收到了”，它就不再重复投递 */
+        const _ack = { [STUDIO_FLAG]: true, type: 'RECORDING_RECEIVED', recId: d.recId || '',
+            songId: recSongId || (target ? target.id : ''), session: d.session || STUDIO_SESSION };
+        try { if (source && source !== window && source.postMessage) source.postMessage(_ack, '*'); } catch (_) {}
+        try { if (window.opener && !window.opener.closed) window.opener.postMessage(_ack, '*'); } catch (_) {}
+        try { if (studioBus) studioBus.postMessage(_ack); } catch (_) {}
+
         alert(`✅ 已接收到《${target ? target.title : '当前歌曲'}》在播放器录制的干声！请确认后点击「下一步」继续。`);
     }
 
@@ -755,29 +777,52 @@
         } catch (e) { return null; }
     }
     let _cachePickupBusy = false;
-    async function pickupCachedRecording(key, songId, songTitle){
-        if (!key || _cachePickupBusy) return;
+    const _appliedRecIds = new Set();          /* 已经接收过的录音号，防重复 */
+    function readHandoffPointer(){
+        try {
+            const raw = localStorage.getItem('mp_record_handoff');
+            if (!raw) return null;
+            const p = JSON.parse(raw);
+            if (!p || !p.key) return null;
+            if (Date.now() - (Number(p.ts) || 0) > 6 * 3600 * 1000) return null;   // 只认最近 6 小时
+            return p;
+        } catch (_) { return null; }
+    }
+    async function pickupCachedRecording(key, songId, songTitle, recId){
+        if (_cachePickupBusy) return;
         _cachePickupBusy = true;
         try {
+            /* 没给 key 就自己找指针：播放器写库时会同步落一条 localStorage 指针 */
+            if (!key) {
+                const p = readHandoffPointer();
+                const wantId = songId || INIT_SONG_ID, wantTitle = songTitle || INIT_SONG_TITLE;
+                const songOk = p && (!wantId || !p.songId || p.songId === wantId || normTitle(p.songTitle) === normTitle(wantTitle));
+                const sessOk = p && (!p.session || !STUDIO_SESSION || p.session === STUDIO_SESSION);
+                if (p && songOk && sessOk) { key = p.key; songId = songId || p.songId; songTitle = songTitle || p.songTitle; recId = recId || p.recId; }
+            }
+            if (!key) {
+                log('⚠️ 没有可用的录音缓存指针（播放器可能还没开始写库）。');
+                return;
+            }
             let rec = null;
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 30; i++) {          // 最多等 15s：大文件写库 + 歌单加载都够用
                 rec = await readCachedRecording(key);
                 if (rec && rec.blob) break;
                 await new Promise(r => setTimeout(r, 500));
             }
             if (!rec || !rec.blob) {
-                log('⚠️ 没有读到播放器缓存的干声（可能已过期），请在播放器点「⬇ 下载干声 WAV」后手动上传。');
-                markNoVocal('播放器说录音已缓存，但这里没读到。可回播放器点「⬇ 下载干声 WAV（备份）」，再到上面手动上传。');
+                log('⚠️ 没有读到播放器缓存的干声（键：' + key + '），请在播放器点「⬇ 下载干声 WAV」后手动上传。');
+                markNoVocal('播放器说录音已缓存，但这里没读到（键 ' + key + '）。可回播放器点「⬇ 下载干声 WAV（备份）」，再到上面手动上传。');
                 return;
             }
             /* 歌单可能还没拉到，等它 */
-            for (let i = 0; i < 10 && !appState.allSongs.length; i++) await new Promise(r => setTimeout(r, 400));
+            for (let i = 0; i < 25 && !appState.allSongs.length; i++) await new Promise(r => setTimeout(r, 400));
             const msg = {
                 type: 'RETURN_RECORDING', blob: rec.blob,
                 name: rec.name || 'recording-vocal.wav',
                 songId: rec.songId || songId || INIT_SONG_ID || '',
                 songTitle: rec.songTitle || songTitle || INIT_SONG_TITLE || '',
-                session: rec.session || STUDIO_SESSION || '', __fromCache: true
+                session: rec.session || STUDIO_SESSION || '', recId: rec.recId || recId || '', __fromCache: true
             };
             log('✅ 已从播放器缓存取到干声：' + (rec.name || 'recording') + '（' + Math.round((rec.blob.size || 0) / 1024) + ' KB）');
             hideWaitingBanner();
@@ -785,7 +830,8 @@
         } finally { _cachePickupBusy = false; }
     }
     /* ★ 打开本页时带 recKey：延迟一点，等播放器写库 + 歌单加载 */
-    if (INIT_REC_KEY) setTimeout(() => pickupCachedRecording(INIT_REC_KEY, INIT_SONG_ID, INIT_SONG_TITLE), 700);
+    if (INIT_REC_KEY) setTimeout(() => pickupCachedRecording(INIT_REC_KEY, INIT_SONG_ID, INIT_SONG_TITLE, _urlParams.get('recId') || ''), 600);
+    else if (_urlParams.get('awaiting') === '1') setTimeout(() => pickupCachedRecording('', INIT_SONG_ID, INIT_SONG_TITLE, _urlParams.get('recId') || ''), 900);
     if (studioBus) studioBus.onmessage = (event) => handleStudioMessage(event.data, null);
 
     /* ★ 前往录音：先问一句“是不是已经有播放器开着”，有就让那个接手；没有才新开 */
