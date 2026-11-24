@@ -290,6 +290,10 @@
                         <h3 style="color: var(--accent-1);">🔍 AI 智能精修</h3>
                         <p>全曲 5 秒粗切扫描。只对跑调严重的局部进行细切微调，大幅节省算力，不影响整体音色。</p>
                     </div>
+                    <div class="card fix-card" id="keyFixCard" onclick="doKeyFix()" style="grid-column: 1 / -1;">
+                        <h3 style="color: #a78bfa;">🎚️ 保调校音（跨性别/跨声区推荐）</h3>
+                        <p>不动你的音区和音色，只把唱偏的音按这首歌的调（音阶）拉回最近的正音，单段最多 ±2 半音；差得太多（唱成别的音/整句低一个八度）就不硬拉，留着你自己在精修面板处理。</p>
+                    </div>
                 </div>
             </div>
 
@@ -592,6 +596,7 @@
         }
         appState.localFiles[stateKey] = file;
         if (stateKey === 'vocal') appState.vocalSongId = appState.selectedSong ? appState.selectedSong.id : '';
+        if (stateKey === 'midi') { appState.midiData = null; appState.midiSongId = ''; ensureSongMidi(appState.selectedSong, file).catch(() => {}); }
         appState.hasSynthesized = false;
         updateUI();
     }
@@ -1002,10 +1007,14 @@
         if (prevId !== song.id) {
             dropVocalFromOtherSong(song.id);
             releaseAudioCache();
+            appState.midiData = null; appState.midiSongId = '';        /* 换歌就丢掉上一首的 MIDI，避免串歌 */
+            preciseState.curves.midi = [];
         }
         updateSongStatus(song);
         syncStudioUrl(song.id);
         updateUI();
+        /* ★ 选中就预载 MIDI：这样“✅ 有 MIDI”不是摆设，进精修面板立刻能看到蓝线 */
+        if (song.midi) ensureSongMidi(song).catch(() => {});
     }
 
     /* ★ 程序化选中（不触发“用户改选”标记） */
@@ -1327,30 +1336,78 @@
 
     async function loadMidiData(source) {
         if (typeof Midi === 'undefined') { log('❌ MIDI 解析失败：@tonejs/midi 库未加载'); return null; }
-        log('正在解析 MIDI...');
-        let arrayBuffer;
-        try {
-            if (source instanceof File) arrayBuffer = await source.arrayBuffer();
-            else if (typeof source === 'string') {
-                const res = await fetch(source);
-                arrayBuffer = await res.arrayBuffer();
-            }
-        } catch (e) { log(`❌ MIDI 读取失败：${e.message}`); return null; }
-
-        let midi;
-        try { midi = new Midi(arrayBuffer); } catch (e) { log(`❌ MIDI 解析异常：${e.message}`); return null; }
-
-        appState.midiData = midi;
-        const allNotes = [];
-        midi.tracks.forEach((track) => {
-            track.notes.forEach(note => { if (typeof note.midi === 'number' && note.midi > 0) allNotes.push(note.midi); });
-        });
-
-        if (allNotes.length === 0) { log('⚠️ MIDI 中没有任何有效音符。'); return null; }
+        const midi = await ensureSongMidi(appState.selectedSong, source);
+        if (!midi) return null;
+        const allNotes = preciseState.curves.midi.map(n => n.midi);
+        if (allNotes.length === 0) return null;
         allNotes.sort((a, b) => a - b);
-        const median = allNotes[Math.floor(allNotes.length / 2)];
-        log(`✅ MIDI 解析成功：共 ${allNotes.length} 个音符，中位音高 = ${median.toFixed(2)}`);
-        return median;
+        return allNotes[Math.floor(allNotes.length / 2)];
+    }
+
+    /* ★ 把歌单里的相对路径补成绝对地址（歌单在 /music/，本页在 /music/k-song-tuner/，不归一化就会变成 k-song-tuner/k-song-tuner/…） */
+    function assetUrl(src) {
+        if (!src) return '';
+        const s = String(src).trim();
+        if (/^(https?:|blob:|data:)/i.test(s)) return s;
+        try { return new URL(s, MANIFEST_URL).href; } catch (_) { return s; }
+    }
+    async function fetchMidiBuffer(src) {
+        const cands = [assetUrl(src)];
+        try { cands.push(new URL(src, location.href).href); } catch (_) {}
+        const bare = String(src).replace(/^\.?\//, '').replace(/^k-song-tuner\//i, '');
+        try { cands.push(new URL(bare, location.href).href); } catch (_) {}
+        const uniq = Array.from(new Set(cands.filter(Boolean)));
+        const errs = [];
+        for (const u of uniq) {
+            try {
+                const res = await fetch(u, { cache: 'no-cache' });
+                if (!res.ok) { errs.push(`${u} → HTTP ${res.status}`); continue; }
+                const buf = await res.arrayBuffer();
+                if (buf.byteLength < 8) { errs.push(`${u} → 文件内容异常（${buf.byteLength}B）`); continue; }
+                const head = new Uint8Array(buf, 0, Math.min(14, buf.byteLength));
+                if (head[0] === 0x3C) { errs.push(`${u} → 服务器返回的是 HTML 页面（多半是文件不存在，或文件名含非 ASCII 字符，取不到）；请把 MIDI 改成纯英文/数字文件名`); continue; }
+                if (!(head[0] === 0x4D && head[1] === 0x54 && head[2] === 0x68 && head[3] === 0x64)) { errs.push(`${u} → 文件头不是 MThd，可能不是标准 MIDI`); continue; }
+                log('📥 MIDI 下载成功：' + decodeURIComponent(u.split('/').pop() || u));
+                return buf;
+            } catch (e) { errs.push(`${u} → ${e.message}`); }
+        }
+        log('❌ MIDI 自动加载失败，试过的地址：' + errs.join(' ｜ '));
+        return null;
+    }
+    /* ★ 统一的 MIDI 就绪入口：选中歌曲 / 进精修面板 / 点修音 都走这里，避免重复下载 */
+    async function ensureSongMidi(song, explicitSrc) {
+        song = song || appState.selectedSong;
+        const src = explicitSrc || appState.localFiles.midi || (song && song.midi);
+        if (!src) { log('ℹ️ 这首歌没有 MIDI（歌单 midi 字段为空），MIDI 参考线会是空的。'); return null; }
+        if (appState.midiData && appState.midiSongId === (song && song.id) && !(src instanceof File)) return appState.midiData;
+        if (typeof Midi === 'undefined') { log('❌ MIDI 解析失败：@tonejs/midi 库未加载'); return null; }
+        let buf = null;
+        if (src instanceof File) { log('正在解析本地 MIDI：' + src.name); buf = await src.arrayBuffer(); }
+        else { log('正在读取歌单 MIDI：' + assetUrl(src)); buf = await fetchMidiBuffer(src); }
+        if (!buf) return null;
+        let midi;
+        try { midi = new Midi(buf); } catch (e) { log(`❌ MIDI 解析异常：${e && (e.message || e)}（文件可能不是标准 MIDI，或是纯文本/损坏）`); return null; }
+        appState.midiData = midi;
+        appState.midiSongId = (song && song.id) || '';
+        const notes = [];
+        midi.tracks.forEach(track => track.notes.forEach(note => {
+            if (typeof note.midi === 'number' && note.midi > 0) notes.push({ time: note.time, end: note.time + note.duration, midi: note.midi });
+        }));
+        notes.sort((a, b) => a.time - b.time);
+        preciseState.curves.midi = notes;
+        if (notes.length === 0) log('⚠️ 该歌曲的 MIDI 里没有任何有效音符（0 个）：MIDI 参考线自然是空的，这不是线被隐藏，也不是解析出错——需要在歌单里给它补一份带音符的 MIDI。');
+        else {
+            /* ★ 刚加载到 MIDI 时，如果这个图层上次被手动隐藏，自动打开一次，避免“明明有 MIDI 却看不到线” */
+            if (preciseState.visible && preciseState.visible.midi === false) {
+                preciseState.visible.midi = true;
+                try { localStorage.setItem(LAYER_KEY, JSON.stringify(preciseState.visible)); } catch (_) {}
+                try { paintLegendState(); } catch (_) {}
+                log('ℹ️ MIDI 图层上次是隐藏状态，已自动打开');
+            }
+            log(`✅ MIDI 已就绪：${notes.length} 个音符（${src instanceof File ? '手动上传' : '歌单自动加载'}）`);
+        }
+        try { drawPreciseCanvas(); } catch (_) {}
+        return midi;
     }
 
     function getPitchDetector(frameSize) {
@@ -1400,51 +1457,231 @@
         return newBuffer;
     }
 
-    function calcGlobalShift() {
-        const userMidiArr = preciseState.curves.user.filter(p => p.midi !== null).map(p => p.midi);
-        if (userMidiArr.length === 0) {
-            log('⚠️ 未能从你的干声中检测到有效音高（可能音量太小或底噪太大），将按 0 半音处理。请尝试使用「精准校音」手动调整。');
-            return 0;
-        }
-        userMidiArr.sort((a,b)=>a-b);
-        const userAvg = userMidiArr[Math.floor(userMidiArr.length / 2)];
-        
-        let refAvg = null;
-        let refSourceName = '无';
-        
-        if (appState.audioBuffers.ref) {
-            const refMidiArr = preciseState.curves.ref.filter(p => p.midi !== null).map(p => p.midi);
-            if (refMidiArr.length > 0) {
-                refMidiArr.sort((a,b)=>a-b);
-                refAvg = refMidiArr[Math.floor(refMidiArr.length / 2)];
-                refSourceName = '原唱干声';
+    /* ★ 逐帧配对：把“你的干声”和参考（原唱 / MIDI）按时间对齐，算稳健（中位）差值，限在 ±6 半音 */
+    function wrapSemis(d){ while(d > 6) d -= 12; while(d < -6) d += 12; return d; }
+    function medianOf(arr){ const s = arr.slice().sort((a,b)=>a-b); const n = s.length; return n ? (n % 2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2) : 0; }
+    function buildRefSeries(){
+        const refPts = preciseState.curves.ref.filter(p => p.midi !== null && isFinite(p.midi));
+        if (refPts.length >= 10) return { name:'原唱干声', type:'curve', list:refPts };
+        const notes = preciseState.curves.midi.filter(n => isFinite(n.midi) && isFinite(n.time));
+        if (notes.length) return { name:'MIDI 乐谱', type:'notes', list:notes.sort((a,b)=>a.time-b.time) };
+        return null;
+    }
+    function calcPairShift(){
+        const user = preciseState.curves.user.filter(p => p.midi !== null && isFinite(p.midi));
+        if (!user.length) { log('⚠️ 未能从你的干声中检测到有效音高（音量太小或底噪太大）；本次不做变调（0 半音）。'); return { shift:0, pairs:0, name:'无', raw:0, crossOctave:false }; }
+        const refS = buildRefSeries();
+        if (!refS) { log('⚠️ 没有可用参考（原唱 / MIDI 都缺）；本次不做整体音准微调（0 半音）。'); return { shift:0, pairs:0, name:'无', raw:0, crossOctave:false }; }
+
+        const diffs = [], rawDiffs = [];
+        if (refS.type === 'curve') {
+            const list = refS.list;
+            for (const u of user) {                          // 每帧二分找时间最近的参考帧，±150ms 内才算同一声
+                let lo = 0, hi = list.length - 1, best = -1, bestDt = 1e9;
+                while (lo <= hi) {
+                    const mid = (lo + hi) >> 1; const dt = Math.abs(list[mid].time - u.time);
+                    if (dt < bestDt) { bestDt = dt; best = mid; }
+                    if (list[mid].time < u.time) lo = mid + 1; else hi = mid - 1;
+                }
+                if (best >= 0 && bestDt <= 0.15) { rawDiffs.push(list[best].midi - u.midi); diffs.push(wrapSemis(list[best].midi - u.midi)); }
+            }
+        } else {
+            for (const u of user) {                          // MIDI：哪条音符覆盖这一帧就用它
+                const hit = refS.list.find(n => u.time >= n.time - 0.02 && u.time <= (n.end || n.time + 0.05) + 0.02);
+                if (hit) { rawDiffs.push(hit.midi - u.midi); diffs.push(wrapSemis(hit.midi - u.midi)); }
             }
         }
-        
-        if (refAvg === null && preciseState.curves.midi.length > 0) {
-            const allNotes = preciseState.curves.midi.map(n => n.midi);
-            allNotes.sort((a,b)=>a-b);
-            refAvg = allNotes[Math.floor(allNotes.length / 2)];
-            refSourceName = 'MIDI乐谱';
+
+        /* ★ 跨声区判定：逐帧“未折叠”差值的中位若接近 ±12，说明你和参考差了一个八度（女声唱男声的歌最常见） */
+        const rawMed = rawDiffs.length >= 8 ? medianOf(rawDiffs) : 0;
+        const crossOctave = rawDiffs.length >= 8 && Math.abs(rawMed) >= 7;
+
+        let shift = 0, robust = false;
+        if (diffs.length >= 8) {
+            const m1 = medianOf(diffs);
+            const inliers = diffs.filter(d => Math.abs(d - m1) <= 1.0);   // 剔掉明显跑调的帧再算中位
+            shift = inliers.length >= Math.ceil(diffs.length * 0.5) ? medianOf(inliers) : m1;
+            robust = true;
+        } else {
+            const uMed = medianOf(user.map(p => p.midi));
+            const rMed = medianOf(refS.list.map(n => n.midi));
+            shift = wrapSemis(rMed - uMed);
+            log(`ℹ️ 对齐帧太少（${diffs.length}），改用中位音高估计。`);
         }
-
-        if (refAvg === null) {
-            log('⚠️ 未能从参考源（原唱/MIDI）中获取有效音高，将按 0 半音处理。');
-            return 0;
-        }
-
-        let shift = refAvg - userAvg;
-        if (shift > 6) shift -= 12;
-        else if (shift < -6) shift += 12;
-        
-        const originalShift = shift;
-        shift = Math.max(-3, Math.min(3, shift));
-        
-        log(`🎯 音高分析：你的中位音高 = ${userAvg.toFixed(2)}，参考(${refSourceName}) = ${refAvg.toFixed(2)}`);
-        log(`🧠 原始音高差 = ${originalShift.toFixed(2)} 半音。经过八度与安全限制，实际设定变调 = ${shift.toFixed(2)} 半音。`);
-
-        return shift; 
+        shift = Math.max(-6, Math.min(6, shift));            // 折叠后的有效范围 ±6 半音
+        log(`🎯 ${robust ? '逐帧配对' : '中位估计'}：参考 ${refS.name}，对齐 ${diffs.length}/${user.length} 帧，折叠差值 = ${shift.toFixed(2)} 半音；未折叠中位 = ${rawMed.toFixed(2)}`);
+        return { shift, pairs:diffs.length, name:refS.name, robust, raw:rawMed, crossOctave };
     }
+
+    function calcGlobalShift() { return calcPairShift().shift; }
+
+    /* ================= 保调校音：只按音阶拉回跑掉的音，不动你的音区/音色 ================= */
+    const SCALE_MAJOR = [0, 2, 4, 5, 7, 9, 11];
+    const SCALE_MINOR = [0, 2, 3, 5, 7, 8, 10];          // 自然小调，够用且不会把民谣小调拉错
+    function buildPitchClassHist() {
+        const hist = new Array(12).fill(0); let total = 0;
+        const notes = preciseState.curves.midi;
+        if (notes && notes.length) {
+            notes.forEach(n => {
+                if (!isFinite(n.midi)) return;
+                const w = Math.max(0.05, (isFinite(n.end) ? n.end : n.time) - n.time);
+                hist[((Math.round(n.midi) % 12) + 12) % 12] += w; total += w;
+            });
+        }
+        if (total === 0) {                                 // 没 MIDI 就用原唱的音高分布
+            preciseState.curves.ref.forEach(p => {
+                if (p.midi === null || !isFinite(p.midi)) return;
+                hist[((Math.round(p.midi) % 12) + 12) % 12] += 1; total += 1;
+            });
+        }
+        if (total === 0) return null;
+        return { hist, total, from: (notes && notes.length) ? 'MIDI' : '原唱' };
+    }
+    function detectKey() {
+        const h = buildPitchClassHist(); if (!h) return null;
+        let best = null;
+        for (let t = 0; t < 12; t++) {
+            [[SCALE_MAJOR, '大调'], [SCALE_MINOR, '小调']].forEach(([sc, modeName]) => {
+                let inW = 0, outW = 0;
+                for (let pc = 0; pc < 12; pc++) { if (sc.includes(((pc - t) % 12 + 12) % 12)) inW += h.hist[pc]; else outW += h.hist[pc]; }
+                const score = (inW - outW * 0.4) / h.total;
+                if (!best || score > best.score) best = { score, tonic: t, mode: modeName, scale: sc.map(d => (t + d) % 12) };
+            });
+        }
+        if (!best) return null;
+        const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        best.name = NAMES[best.tonic] + ' ' + best.mode;
+        best.from = h.from;
+        return best;
+    }
+    function nearestScaleTarget(pitch, key) {
+        let best = null;
+        for (const pc of key.scale) {
+            let d = ((pc - Math.round(pitch)) % 12 + 12) % 12;   // 0..11
+            const cand = Math.round(pitch) + (d > 6 ? d - 12 : d);   // 取最近的那个等音（不跨选择八度）
+            const correction = cand - pitch;
+            if (!best || Math.abs(correction) < Math.abs(best.correction)) best = { target: cand, correction };
+        }
+        return best || { target: pitch, correction: 0 };
+    }
+    /* 把逐帧音高聚成“音符段”：连续、偏差 <0.55 半音、间隔 <0.18s 归为一个音符 */
+    function segmentUserNotes(maxCount) {
+        const pts = preciseState.curves.user.filter(p => p.midi !== null && isFinite(p.midi));
+        if (!pts.length) return [];
+        const segs = []; let cur = null;
+        for (const p of pts) {
+            if (cur && p.time - cur.last <= 0.18 && Math.abs(p.midi - cur.median) <= 0.55) {
+                cur.vals.push(p.midi); cur.last = p.time; cur.end = p.time;
+                cur.median = medianOf(cur.vals);
+            } else {
+                if (cur) segs.push(cur);
+                cur = { start: p.time, last: p.time, end: p.time, vals: [p.midi], median: p.midi };
+            }
+        }
+        if (cur) segs.push(cur);
+        let notes = segs.map(s => ({ start: s.start, end: s.end + 1 / 15, median: s.median }))
+                        .filter(s => s.end - s.start >= 0.10);          // 太短的音眨眼就过去，拉它反而抖
+        if (maxCount && notes.length > maxCount) {
+            notes.sort((a, b) => (b.end - b.start) - (a.end - a.start));   // 只保留最长的那些，避免段数爆炸拖垮渲染
+            notes = notes.slice(0, maxCount).sort((a, b) => a.start - b.start);
+        }
+        return notes;
+    }
+    /* 把“修正量”铺满整曲：修正段之间补 offsets=0 的段，交给现有渲染器 */
+    function buildCoveringSegments(adjusts, duration) {
+        const out = []; let t0 = 0;
+        adjusts.forEach(a => {
+            const st = Math.max(0, a.start), en = Math.min(duration, a.end);
+            if (en <= st) return;
+            if (st > t0 + 0.02) out.push({ start: t0, end: st, offset: 0, isExtended: false });
+            out.push({ start: st, end: en, offset: a.offset, isExtended: false });
+            t0 = en;
+        });
+        if (t0 < duration - 0.02) out.push({ start: t0, end: duration, offset: 0, isExtended: false });
+        return mergeAdjacentSegments(out);
+    }
+    async function applyKeyFixCore(reasonTag) {
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        progressText.textContent = '正在按曲子的调校音...'; progressBar.style.width = '78%';
+
+        const key = detectKey();
+        if (!key) { log('⚠️ 参考里没有足够的音高信息，判断不出调性；这次不做保调校音。'); progressText.textContent = '缺少调性信息'; return false; }
+        log(`🎼 调性分析（依据 ${key.from} 的音高分布）：判定为 ${key.name}，音阶 ${key.scale.join(',')}（0=C）`);
+
+        const notes = segmentUserNotes(70);                 // ★ 段数上限 70：再多人耳听不出，纯烧 CPU
+        if (!notes.length) { log('⚠️ 没能切出可修的音符段；请检查干声音量。'); return false; }
+
+        /* ★ 每个音的目标音：优先用“参考在那一拍唱的音”，但按八度折到你的音区（所以女声唱男声也只差 0~2 半音）；
+           没有参考才退回“按音阶找最近的正音”。 */
+        const refS = buildRefSeries();
+        const userMed = medianOf(notes.map(n => n.median));
+        const foldToUser = (m) => m + 12 * Math.round((userMed - m) / 12);
+        function refTargetAt(time) {
+            if (!refS) return null;
+            if (refS.type === 'notes') {
+                const hit = refS.list.find(n => time >= n.time - 0.05 && time <= (n.end || n.time + 0.05) + 0.05);
+                return hit ? foldToUser(hit.midi) : null;
+            }
+            const list = refS.list; let lo = 0, hi = list.length - 1, best = -1, bestDt = 1e9;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1; const dt = Math.abs(list[mid].time - time);
+                if (dt < bestDt) { bestDt = dt; best = mid; }
+                if (list[mid].time < time) lo = mid + 1; else hi = mid - 1;
+            }
+            return (best >= 0 && bestDt <= 0.15) ? foldToUser(list[best].midi) : null;
+        }
+
+        const adjusts = []; let fixed = 0, sumAbs = 0, maxAbs = 0, skipped = 0, fromRef = 0;
+        notes.forEach(n => {
+            let c = 0;
+            const tgt = refTargetAt((n.start + n.end) / 2);
+            if (tgt !== null) { c = tgt - n.median; fromRef++; }
+            else { c = nearestScaleTarget(n.median, key).correction; }
+            if (Math.abs(c) > 2) { skipped++; return; }      // 差超过 2 半音：唱成别的音/真跨八度，硬拉会出电音
+            if (Math.abs(c) < 0.15) return;
+            c = Math.round(c * 10) / 10;
+            fixed++; sumAbs += Math.abs(c); maxAbs = Math.max(maxAbs, Math.abs(c));
+            adjusts.push({ start: n.start, end: n.end, offset: c });
+        });
+        log(`🎯 目标音来源：${fromRef ? `参考（已按八度折到你的音区，共 ${fromRef} 段）` : '音阶正音（无可用参考）'}`);
+
+        if (!fixed) {
+            log('✅ 逐音比对后没有需要拉的音（音准都在调内），本次保持原样。');
+            progressBar.style.width = '100%'; progressText.textContent = '无需修正';
+        } else {
+            log(`🎚️ 保调校音：修正 ${fixed} 段音符（平均 ±${(sumAbs / fixed).toFixed(2)}、最大 ±${maxAbs.toFixed(1)} 半音）${skipped ? `，${skipped} 段偏差过大未硬拉` : ''}；音区/音色未改动`);
+        }
+
+        const segs = buildCoveringSegments(adjusts, preciseState.duration);
+        progressText.textContent = '正在渲染（分段数 ' + segs.length + '）...'; progressBar.style.width = '90%';
+        appState.synthesizedBuffer = await renderSegmentAudio(segs, 0, -3, 0);
+        preciseState.segments = segs;
+
+        document.getElementById('exportVocalPitch').value = 0;
+        document.getElementById('exportVocalPitchVal').textContent = `0 半音（保调校音：修正 ${fixed} 段，音区未变）`;
+        progressBar.style.width = '100%';
+        progressText.textContent = '保调校音完成！';
+        const wavBlob = audioBufferToWav(appState.synthesizedBuffer);
+        setPlayerBlob(wavBlob);
+        appState.hasSynthesized = true; appState.currentStep = 4;
+        updateUI();
+        return true;
+    }
+    window.doKeyFix = async function () {
+        if (!await prepareAudio()) return;
+        document.getElementById('quickFixCard').style.pointerEvents = 'none';
+        document.getElementById('smartFixCard').style.pointerEvents = 'none';
+        const card = document.getElementById('keyFixCard'); if (card) card.style.pointerEvents = 'none';
+        try { await applyKeyFixCore('manual'); }
+        catch (e) { log('❌ 保调校音失败: ' + (e.message || e)); }
+        finally {
+            document.getElementById('quickFixCard').style.pointerEvents = 'auto';
+            document.getElementById('smartFixCard').style.pointerEvents = 'auto';
+            if (card) card.style.pointerEvents = 'auto';
+        }
+    };
+
 
     async function extractPitchCurve(audioBuffer) {
         const detector = getPitchDetector(2048);
@@ -1499,6 +1736,18 @@
         return points;
     }
 
+    /* ★ 音高曲线缓存（只存曲线，不存音频缓冲，避免吃内存） */
+    const CURVE_CACHE = new Map();
+    function curveCacheKey(vocalSrc, refSrc, midiSrc) {
+        const lv = appState.localFiles.vocal, lr = appState.localFiles.refVocal, lm = appState.localFiles.midi;
+        return [
+            (appState.selectedSong && appState.selectedSong.id) || 'x',
+            lv ? ('v' + (lv.size || 0) + ':' + (lv.lastModified || 0)) : String(vocalSrc || ''),
+            lr ? ('r' + (lr.size || 0)) : String(refSrc || ''),
+            lm ? ('m' + (lm.size || 0)) : String((midiSrc && midiSrc.name) || midiSrc || '')
+        ].join('|');
+    }
+
     async function prepareAudio() {
         const hasInst = appState.localFiles.inst || appState.selectedSong?.instrumental;
         if (!hasInst) { alert('⚠️ 缺少伴奏！请手动上传伴奏文件。'); return false; }
@@ -1507,7 +1756,9 @@
 
         const instSrc = appState.localFiles.inst || appState.selectedSong?.instrumental;
         const midiSrc = appState.localFiles.midi || appState.selectedSong?.midi;
-        const refVocalSrc = appState.localFiles.refVocal;
+        /* ★ 原唱参考：优先手动上传；没传就自动用歌单里的 vocal，再退到 audio（混音）；和干声同源则不重复加载 */
+        const songRefSrc = appState.selectedSong?.vocal || appState.selectedSong?.audio || '';
+        const refVocalSrc = appState.localFiles.refVocal || (songRefSrc && songRefSrc !== vocalSrc ? songRefSrc : '');
 
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
@@ -1533,24 +1784,43 @@
                 appState.audioBuffers.vocal = rawVocal;
             }
 
-            if (refVocalSrc) appState.audioBuffers.ref = await loadAudioBuffer(refVocalSrc, '原唱干声');
+            if (refVocalSrc) {
+                progressText.textContent = '正在加载原唱参考...';
+                appState.audioBuffers.ref = await loadAudioBuffer(refVocalSrc, '原唱干声');
+                log(`🎧 原唱参考已就绪：${appState.localFiles.refVocal ? '手动上传的原唱' : '自动取歌单原唱/混音'}（逐帧配对会用这条）`);
+            } else {
+                appState.audioBuffers.ref = null;
+                log('ℹ️ 没有原唱参考（歌单这首歌没有独立 vocal，干声和它同源），将用 MIDI 做逐帧配对。');
+            }
 
             let midiAvgPitch = null;
             if (midiSrc) { progressText.textContent = '正在解析 MIDI...'; progressBar.style.width = '40%'; midiAvgPitch = await loadMidiData(midiSrc); }
 
             progressText.textContent = '正在提取音高曲线 (异步处理中)...'; progressBar.style.width = '60%';
             preciseState.duration = appState.audioBuffers.vocal.duration;
-            preciseState.curves.user = await extractPitchCurve(appState.audioBuffers.vocal);
-            preciseState.curves.ref = appState.audioBuffers.ref ? await extractPitchCurve(appState.audioBuffers.ref) : [];
-            preciseState.curves.midi = [];
-            if (appState.midiData) {
-                appState.midiData.tracks.forEach(track => {
-                    track.notes.forEach(note => {
-                        preciseState.curves.midi.push({ time: note.time, end: note.time + note.duration, midi: note.midi });
+            /* ★ 音高曲线缓存：同一份干声反复点“快修/保调/精修”不重复提取（缓存最多 2 份，防内存/CPU 堆积） */
+            const ck = curveCacheKey(vocalSrc, refVocalSrc, midiSrc);
+            let cached = CURVE_CACHE.get(ck);
+            if (cached && Math.abs(cached.duration - preciseState.duration) < 0.05) {
+                preciseState.curves.user = cached.user;
+                preciseState.curves.ref = cached.ref;
+                preciseState.curves.midi = cached.midi;
+                log(`⚡ 复用上次的音高分析（${cached.user.length} 帧），跳过重复提取，省 CPU`);
+            } else {
+                preciseState.curves.user = await extractPitchCurve(appState.audioBuffers.vocal);
+                preciseState.curves.ref = appState.audioBuffers.ref ? await extractPitchCurve(appState.audioBuffers.ref) : [];
+                preciseState.curves.midi = [];
+                if (appState.midiData) {
+                    appState.midiData.tracks.forEach(track => {
+                        track.notes.forEach(note => {
+                            preciseState.curves.midi.push({ time: note.time, end: note.time + note.duration, midi: note.midi });
+                        });
                     });
-                });
-                // 多轨拼起来后按时间排序，绘制时才能按可见区间提前结束
-                preciseState.curves.midi.sort((a, b) => a.time - b.time);
+                    // 多轨拼起来后按时间排序，绘制时才能按可见区间提前结束
+                    preciseState.curves.midi.sort((a, b) => a.time - b.time);
+                }
+                CURVE_CACHE.set(ck, { user: preciseState.curves.user, ref: preciseState.curves.ref, midi: preciseState.curves.midi, duration: preciseState.duration });
+                while (CURVE_CACHE.size > 2) CURVE_CACHE.delete(CURVE_CACHE.keys().next().value);
             }
             return true;
         } catch (e) {
@@ -1569,22 +1839,31 @@
         const progressText = document.getElementById('progressText');
 
         try {
-            progressText.textContent = '正在计算全局变调...'; progressBar.style.width = '75%';
-            
-            const shift = calcGlobalShift();
+            progressText.textContent = '正在计算逐帧音高差...'; progressBar.style.width = '75%';
+
+            const info = calcPairShift();
+            /* ★ 跨声区（女唱男 / 男唱女）：绝不整体移调，改走保调校音，保留你的音区和音色 */
+            if (info.crossOctave) {
+                log(`🎙 检测到你与参考差约 ${Math.round(Math.abs(info.raw))} 半音（≈ 一个八度）：这是跨声区（女声唱男声/男声唱女声）。整体移调会把音色压成“鸭子嗓”，因此跳过整体移调，改用保调校音。`);
+                await applyKeyFixCore('cross');
+                return;
+            }
+            const shift = Math.max(-2, Math.min(2, info.shift));   // 整体最多 ±2：再大就明显损音色
+            if (Math.abs(info.shift) > 2.05) log(`ℹ️ 全局差值 ${info.shift.toFixed(2)} 偏大，已限幅到 ±2 半音保护音色。若你和原唱整首差一个固定的调（不是跑调），更自然的做法是在导出面板把「伴奏变调」设成 ${info.shift > 0 ? '+' : ''}${info.shift.toFixed(1)} 半音去对齐你的人声，人声别动。`);
 
             progressText.textContent = '正在渲染（速度极快）...'; progressBar.style.width = '85%';
             await new Promise(r => setTimeout(r, 50));
 
+            /* 播放先按这个偏移渲染；段偏移留 0，把数值交给全局滑杆，避免导出时叠加两次 */
             const merged = [{ start: 0, end: preciseState.duration, offset: shift, isExtended: false }];
             appState.synthesizedBuffer = await renderSegmentAudio(merged, 0, -3, 0);
-            preciseState.segments = [{ start: 0, end: preciseState.duration, offset: shift, isExtended: false }];
+            preciseState.segments = [{ start: 0, end: preciseState.duration, offset: 0, isExtended: false }];
 
             progressBar.style.width = '100%';
             progressText.textContent = '快修完成！';
-            
-            document.getElementById('exportVocalPitch').value = 0;
-            document.getElementById('exportVocalPitchVal').textContent = `0 半音（快修已偏移 ${shift.toFixed(1)}）`;
+
+            document.getElementById('exportVocalPitch').value = shift.toFixed(1);
+            document.getElementById('exportVocalPitchVal').textContent = `${shift.toFixed(1)} 半音（快修）`;
 
             const wavBlob = audioBufferToWav(appState.synthesizedBuffer);
             setPlayerBlob(wavBlob);
@@ -1782,6 +2061,7 @@
         }
         document.getElementById('preciseModal').classList.add('show');
         preciseState.active = true;
+        restoreLayerVisibility();                 /* ★ 每次打开都恢复上次的 MIDI / 原唱 / 干声 / 修音线显示 */
         document.getElementById('preciseStatus').textContent = '正在生成校音视图...';
         document.getElementById('applyPreciseBtn').disabled = true;
         
@@ -1797,6 +2077,10 @@
         
         if (preciseState.curves.user.length === 0) preciseState.curves.user = await extractPitchCurve(appState.audioBuffers.vocal);
         if (appState.audioBuffers.ref && preciseState.curves.ref.length === 0) preciseState.curves.ref = await extractPitchCurve(appState.audioBuffers.ref);
+        /* ★ 没进过“快修”也会自动补一次 MIDI：精修面板不依赖前面的步骤 */
+        if (preciseState.curves.midi.length === 0 && appState.selectedSong) {
+            try { await ensureSongMidi(appState.selectedSong); } catch (_) {}
+        }
         if (appState.midiData && preciseState.curves.midi.length === 0) {
             appState.midiData.tracks.forEach(track => {
                 track.notes.forEach(note => {
@@ -2296,7 +2580,8 @@
             while (segIdx < state.segments.length - 1 && p.time >= state.segments[segIdx].end) segIdx++;
             const seg = state.segments[segIdx];
             if (!seg) continue;
-            const adjustedMidi = p.midi + ((seg && p.time >= seg.start) ? seg.offset : 0);
+            const gv = parseFloat((document.getElementById('exportVocalPitch') || {}).value) || 0;   // 全局滑杆（快修结果也在里面）
+            const adjustedMidi = p.midi + ((seg && p.time >= seg.start) ? seg.offset : 0) + gv;
             const x = timeToX(p.time); const y = midiToY(adjustedMidi);
             if (isNaN(x) || isNaN(y)) continue;
 
@@ -2307,14 +2592,39 @@
         ctx.stroke();
     }
 
+    const LAYER_KEY = 'ks_layer_visibility';
+    function saveLayerVisibility(){
+        try { localStorage.setItem(LAYER_KEY, JSON.stringify(preciseState.visible)); } catch (_) {}
+    }
+    function paintLegendState(){
+        const legendMap = { midi:'legend-midi', ref:'legend-ref', user:'legend-user', adj:'legend-adj' };
+        Object.keys(legendMap).forEach(k => {
+            const el = document.getElementById(legendMap[k]);
+            if (!el) return;
+            if (preciseState.visible[k]) el.classList.remove('hidden-line');
+            else el.classList.add('hidden-line');
+        });
+    }
+    function restoreLayerVisibility(){
+        try {
+            const raw = localStorage.getItem(LAYER_KEY);
+            if (raw) {
+                const saved = JSON.parse(raw) || {};
+                ['midi', 'ref', 'user', 'adj'].forEach(k => { if (typeof saved[k] === 'boolean') preciseState.visible[k] = saved[k]; });
+            }
+        } catch (_) {}
+        paintLegendState();
+        try { drawPreciseCanvas(); } catch (_) {}
+        log(`👁 图层显示已恢复：MIDI ${preciseState.visible.midi ? '开' : '关'} / 原唱 ${preciseState.visible.ref ? '开' : '关'} / 干声 ${preciseState.visible.user ? '开' : '关'} / 修音线 ${preciseState.visible.adj ? '开' : '关'}`);
+    }
+
     window.toggleLine = function(type) {
         preciseState.visible[type] = !preciseState.visible[type];
-        const legendMap = { midi: 'legend-midi', ref: 'legend-ref', user: 'legend-user', adj: 'legend-adj' };
-        const el = document.getElementById(legendMap[type]);
-        if (preciseState.visible[type]) el.classList.remove('hidden-line');
-        else el.classList.add('hidden-line');
+        paintLegendState();
+        saveLayerVisibility();
         drawPreciseCanvas();
     };
+    try { paintLegendState(); } catch (_) {}
 
     function updatePrecisePanel() {
         const sIdx = preciseState.selectedStart;
