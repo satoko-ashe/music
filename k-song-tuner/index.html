@@ -494,6 +494,8 @@
     const WAITING_FOR_RECORDING = _urlParams.get('waiting') === '1';
     const AWAITING_HANDOFF = _urlParams.get('awaiting') === '1';   // 录完才打开本页，等待播放器把录音送来
     const INIT_SONG_ID = _urlParams.get('songId') || '';
+    const INIT_SONG_TITLE = _urlParams.get('songTitle') || '';   // ★ 歌名兜底：ID 对不上时按歌名匹配
+    const INIT_REC_KEY = _urlParams.get('recKey') || '';         // ★ 播放器刚录的干声在 IndexedDB 里的键
     let _autoSelectDone = false;
 
     /* ★ 会话：主页面打开本页时会给一个 session，用于区分“同一次录音流程”，防止串线 */
@@ -640,6 +642,15 @@
             }
             return;
         }
+        if (d.type === 'RECORDING_CACHED') {
+            /* ★ 播放器说“干声已写进 IndexedDB”，直接去读，postMessage 传大 blob 失败也能接上 */
+            if (d.session && STUDIO_SESSION && d.session !== STUDIO_SESSION) return;
+            if (d.recKey) {
+                log('ℹ️ 播放器已缓存这段干声，正在读取…');
+                setTimeout(() => pickupCachedRecording(d.recKey, d.songId, d.songTitle), 200);
+            }
+            return;
+        }
         if (d.type === 'RECORD_DENIED') {
             if (pendingAskReq && d.reqId === pendingAskReq) askClaimed = false;   // 没接住，稍后照常开新窗口
             return;
@@ -669,7 +680,8 @@
 
         const recSongId = d.songId || '';
         // 用户在修音里已经锁定了另一首歌，而这份录音是别的歌 → 直接拒绝，不覆盖
-        if (pinnedSongId && recSongId && pinnedSongId !== recSongId) {
+        const sameTitle = !!(d.songTitle && pinnedSongId && (findSongByTitle(d.songTitle) || {}).id === pinnedSongId);
+        if (pinnedSongId && recSongId && pinnedSongId !== recSongId && !sameTitle) {
             const cur = findSongById(pinnedSongId);
             const old = findSongById(recSongId);
             stopWaitWatch();
@@ -683,7 +695,8 @@
         const file = new File([blob], fileName, { type: mimeType });
 
         // 录音的 songId 是这一趟流程的准绳：先把本会话切到这首歌
-        const target = recSongId ? findSongById(recSongId) : null;
+        let target = recSongId ? findSongById(recSongId) : null;
+        if (!target && (d.songTitle || INIT_SONG_TITLE)) target = findSongByTitle(d.songTitle || INIT_SONG_TITLE);
         if (target) {
             if (!appState.selectedSong || appState.selectedSong.id !== target.id) {
                 selectSongProgrammatically(target.id);
@@ -718,6 +731,61 @@
     }
 
     window.addEventListener('message', (event) => handleStudioMessage(event.data, event.source));
+
+    /* ★ 与播放器同源：直接读它写好的干声（IndexedDB: mp_web_v1 / files） */
+    function openRecDB(){
+        return new Promise((res, rej) => {
+            try {
+                const r = indexedDB.open('mp_web_v1');
+                r.onsuccess = () => res(r.result);
+                r.onerror = () => rej(r.error);
+            } catch (e) { rej(e); }
+        });
+    }
+    async function readCachedRecording(key){
+        try {
+            const db = await openRecDB();
+            if (!db.objectStoreNames.contains('files')) return null;
+            return await new Promise((res, rej) => {
+                const tx = db.transaction('files', 'readonly');
+                const q = tx.objectStore('files').get(key);
+                q.onsuccess = () => res(q.result || null);
+                q.onerror = () => rej(q.error);
+            });
+        } catch (e) { return null; }
+    }
+    let _cachePickupBusy = false;
+    async function pickupCachedRecording(key, songId, songTitle){
+        if (!key || _cachePickupBusy) return;
+        _cachePickupBusy = true;
+        try {
+            let rec = null;
+            for (let i = 0; i < 12; i++) {
+                rec = await readCachedRecording(key);
+                if (rec && rec.blob) break;
+                await new Promise(r => setTimeout(r, 500));
+            }
+            if (!rec || !rec.blob) {
+                log('⚠️ 没有读到播放器缓存的干声（可能已过期），请在播放器点「⬇ 下载干声 WAV」后手动上传。');
+                markNoVocal('播放器说录音已缓存，但这里没读到。可回播放器点「⬇ 下载干声 WAV（备份）」，再到上面手动上传。');
+                return;
+            }
+            /* 歌单可能还没拉到，等它 */
+            for (let i = 0; i < 10 && !appState.allSongs.length; i++) await new Promise(r => setTimeout(r, 400));
+            const msg = {
+                type: 'RETURN_RECORDING', blob: rec.blob,
+                name: rec.name || 'recording-vocal.wav',
+                songId: rec.songId || songId || INIT_SONG_ID || '',
+                songTitle: rec.songTitle || songTitle || INIT_SONG_TITLE || '',
+                session: rec.session || STUDIO_SESSION || '', __fromCache: true
+            };
+            log('✅ 已从播放器缓存取到干声：' + (rec.name || 'recording') + '（' + Math.round((rec.blob.size || 0) / 1024) + ' KB）');
+            hideWaitingBanner();
+            handleStudioMessage(msg, window);
+        } finally { _cachePickupBusy = false; }
+    }
+    /* ★ 打开本页时带 recKey：延迟一点，等播放器写库 + 歌单加载 */
+    if (INIT_REC_KEY) setTimeout(() => pickupCachedRecording(INIT_REC_KEY, INIT_SONG_ID, INIT_SONG_TITLE), 700);
     if (studioBus) studioBus.onmessage = (event) => handleStudioMessage(event.data, null);
 
     /* ★ 前往录音：先问一句“是不是已经有播放器开着”，有就让那个接手；没有才新开 */
@@ -840,10 +908,12 @@
             /* ★ 首次拉取完成后，按 URL 参数 songId 自动选中（只执行一次） */
             if (INIT_SONG_ID && !_autoSelectDone) {
                 _autoSelectDone = true;
-                const match = appState.manifestSongs.find(s => s.id === INIT_SONG_ID);
+                let match = INIT_SONG_ID ? appState.manifestSongs.find(s => s.id === INIT_SONG_ID) : null;
+                if (!match && INIT_SONG_TITLE) match = findSongByTitle(INIT_SONG_TITLE);
                 if (match) {
-                    select.value = INIT_SONG_ID;
+                    select.value = match.id;
                     select.dispatchEvent(new Event('change'));
+                    if (!INIT_SONG_ID || match.id !== INIT_SONG_ID) log('ℹ️ 按歌名匹配到《' + match.title + '》（ID 兜底）。');
                 }
             }
         } catch (err) { select.innerHTML = '<option value="">拉取失败，请检查网络</option>'; }
@@ -919,6 +989,16 @@
     function findSongById(id) {
         return appState.allSongs.find(s => s.id === id)
             || appState.manifestSongs.find(s => s.id === id) || null;
+    }
+    /* ★ 歌名兜底：忽略空格/《》/大小写，找不到 ID 时按标题配 */
+    function normTitle(t){
+        return String(t || '').replace(/[《》〈〉「」『』\s·•\-—_]/g, '').toLowerCase();
+    }
+    function findSongByTitle(title){
+        const q = normTitle(title); if(!q) return null;
+        const pool = appState.manifestSongs.length ? appState.manifestSongs : appState.allSongs;
+        return pool.find(s => normTitle(s.title) === q)
+            || pool.find(s => normTitle(s.title).includes(q) || q.includes(normTitle(s.title))) || null;
     }
 
     /* ★ 换歌时丢掉“属于上一首”的录音，防止 A 的干声配 B 的 MIDI */
