@@ -465,17 +465,27 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
 .ctrl.fix .lbl{color:#e879f9}
 .record-timer{font-variant-numeric:tabular-nums;letter-spacing:2px}
 
-/* ★ 录音悬浮胶囊 */
-#recordMini {position:fixed; bottom:120px; right:20px; z-index:2000;background:rgba(23, 23, 31, 0.95); border:1px solid rgba(236, 65, 65, 0.4);border-radius:12px; padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.6); backdrop-filter:blur(10px);display:flex; align-items:center; gap:12px;user-select:none; cursor:grab; animation:miniPop .3s cubic-bezier(.2,.9,.3,1.2);}
-#recordMini:active { cursor:grabbing; }
-@keyframes miniPop { from { opacity:0; transform:scale(.8) translateY(10px); } }
-.rec-dot {width:8px; height:8px; border-radius:50%; background:var(--accent);box-shadow:0 0 10px var(--accent); animation:pulse 1.5s infinite;}
-@keyframes pulse { 0% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.8); } 100% { opacity:1; transform:scale(1); } }
-#miniTimer { font-size:16px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums; letter-spacing:1px; }
-.btn-mini-stop {background:rgba(236,65,65,.15); color:var(--accent); border:1px solid rgba(236,65,65,.4);border-radius:6px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:.2s;}
-.btn-mini-stop:hover { background:var(--accent); color:#fff; }
-.btn-mini-expand {background:rgba(255,255,255,.08); color:var(--text); border:1px solid var(--line);border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; transition:.2s;}
-.btn-mini-expand:hover { background:rgba(255,255,255,.15); }
+/* ★ 录音小条：固定在顶栏「我的音乐 / 工具按钮」那一行的中间空位，不再拖动 */
+#recordMini{position:relative;bottom:auto;right:auto;margin-left:auto;margin-right:2px;z-index:5;background:rgba(23,23,31,.95);border:1px solid rgba(236,65,65,.4);border-radius:10px;padding:5px 9px;box-shadow:0 4px 14px rgba(0,0,0,.35);backdrop-filter:blur(10px);display:flex;align-items:center;gap:7px;user-select:none;flex:0 0 auto;max-width:min(52vw,560px);animation:miniPop .3s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes miniPop{from{opacity:0;transform:scale(.86) translateY(6px)}}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.5s infinite}
+@keyframes pulse{0%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+#miniTimer{font-size:14px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:1px}
+#miniVocalWrap{display:none;align-items:center;gap:4px}
+#miniVocalWrap span{font-size:10px;color:#ff9aa9;white-space:nowrap}
+#miniVocalVol{width:54px;margin:0;accent-color:#ec4141}
+.btn-mini-stop{background:rgba(236,65,65,.15);color:var(--accent);border:1px solid rgba(236,65,65,.4);border-radius:6px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-mini-stop:hover{background:var(--accent);color:#fff}
+.btn-mini-expand{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;transition:.2s}
+.btn-mini-expand:hover{background:rgba(255,255,255,.15)}
+.record-timer{font-variant-numeric:tabular-nums;letter-spacing:2px}
+/* ★ 圆形 3-2-1（固定居中，不遮歌词太久） */
+#recordCountdown{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:99999;width:126px;height:126px;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(60,24,30,.96),rgba(18,18,25,.96));border:2px solid rgba(236,65,65,.75);box-shadow:0 0 0 6px rgba(236,65,65,.10),0 0 34px rgba(236,65,65,.45);display:flex;align-items:center;justify-content:center;pointer-events:none}
+#recordCountdown[hidden]{display:none!important}
+#recordCountdown::before{content:"";position:absolute;inset:10px;border-radius:50%;border:2px dashed rgba(255,154,169,.55);animation:recordCountSpin 3s linear infinite}
+#recordCountdownNum{font-size:44px;font-weight:900;color:#fff;text-shadow:0 0 16px rgba(236,65,65,.85);font-variant-numeric:tabular-nums}
+@keyframes recordCountSpin{to{transform:rotate(360deg)}}
+@media(max-width:640px){#recordMini{max-width:72vw;gap:5px}#miniTimer{font-size:12.5px}#miniVocalVol{width:42px}#recordCountdown{width:104px;height:104px}#recordCountdownNum{font-size:36px}}
 
 @media(max-width:640px){
   .online-bar input{min-width:120px}
@@ -753,6 +763,17 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
       </div>
       <div class="search">
         <input type="text" id="searchInput" placeholder="搜索歌曲、歌手、原唱…" autocomplete="off">
+      </div>
+
+      <div id="recordMini" hidden>
+        <div class="rec-dot"></div>
+        <span id="miniTimer">00:00</span>
+        <div id="miniVocalWrap">
+          <span>原唱</span>
+          <input id="miniVocalVol" type="range" min="0" max="100" value="25" title="原唱音量">
+        </div>
+        <button id="btnMiniStop" class="btn-mini-stop" title="停止录音">■ 停止</button>
+        <button id="btnMiniExpand" class="btn-mini-expand" title="展开">↗</button>
       </div>
       <div class="top-actions">
         <button class="icon-btn" id="btnFullscreen" title="全屏">
@@ -1069,55 +1090,80 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;font-size:12px}
   </div>
 </div>
 
-<!-- ★ 新增：录音弹窗 -->
+<!-- ★ 录音弹窗：先选「人声 / 伴奏 / 唱K」，再点一次「确认并开始」 -->
 <div class="modal" id="recordModal" hidden>
   <div class="modal-bg" data-close="recordModal"></div>
   <div class="modal-card" style="width:min(540px,100%)">
     <h3 style="display:flex;justify-content:space-between;align-items:center;">
-      🎤 录制干声 
+      🎤 录制干声
       <div style="display:flex;gap:8px;align-items:center;">
         <button class="ghost sm" id="btnMinimizeRecord" style="padding:0 10px;height:28px;font-size:12px;">最小化</button>
         <button class="close-x" data-close="recordModal">✕</button>
       </div>
     </h3>
     <p style="font-size:13px;color:var(--dim);line-height:1.8;margin:4px 0 10px">
-      跟着伴奏清唱你的声部。<strong style="color:#fff">录音时仅捕获麦克风</strong>，不混入伴奏。<br>
+      先选人声 / 伴奏 / 唱K，再点确认；主界面会同步切到同一模式。<strong style="color:#fff">录音只捕获麦克风</strong>，不混入伴奏，也不录系统声音。<br>
       <span style="color:#ff9aa9">请戴耳机</span>，否则外放伴奏会被麦克风串入。
     </p>
-    <div id="recordSongInfo" style="font-size:12.5px;color:var(--dim);padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:14px"></div>
+    <div id="recordSongInfo" style="font-size:12.5px;color:var(--dim);padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:10px"></div>
+
+    <style>
+      .rec-mode-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px;flex-wrap:wrap}
+      .rec-mode-label{font-size:12px;color:var(--dim);flex:none}
+      .rec-mode-btns{display:flex;gap:6px;flex-wrap:wrap}
+      .rec-mode-btn{width:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--text);border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer;transition:.15s}
+      .rec-mode-btn.active{background:rgba(236,65,65,.18);border-color:rgba(236,65,65,.55);color:#fff;font-weight:700}
+      .rec-mode-btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.5)}
+      .rec-vocal-row{display:flex;align-items:center;gap:9px;margin:0 0 8px;flex-wrap:wrap}
+      .rec-vocal-row label{font-size:12px;color:var(--dim);min-width:78px;margin:0}
+      .rec-vocal-row input[type=range]{flex:1;min-width:120px;margin:0;accent-color:var(--accent)}
+      .rec-vocal-hint{font-size:11px;color:var(--dim);line-height:1.45}
+      .rec-mode-hint{font-size:11.5px;color:#ff9aa9;line-height:1.55;margin:0 0 6px}
+      @keyframes countPop{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8}100%{transform:scale(1);opacity:1}}
+      #btnSendToStudio:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
+    </style>
+    <div class="rec-mode-row">
+      <span class="rec-mode-label">录音模式</span>
+      <div class="rec-mode-btns">
+        <button type="button" class="rec-mode-btn" id="recModeVocal">🎙 人声</button>
+        <button type="button" class="rec-mode-btn" id="recModeInst">🎹 伴奏</button>
+        <button type="button" class="rec-mode-btn" id="recModeKaraoke">🎶 唱K</button>
+      </div>
+    </div>
+    <div class="rec-vocal-row" id="recVocalRow">
+      <label>原唱音量 <b id="recVocalPct" style="color:#fff">25%</b></label>
+      <input type="range" id="recVocalVol" min="0" max="100" value="25">
+      <span class="rec-vocal-hint">0% = 只听伴奏；调高才听得到原唱</span>
+    </div>
+    <div class="rec-mode-hint" id="recModeHint"></div>
 
     <div id="recordStatus" style="text-align:center;font-size:13px;color:var(--accent);font-weight:600;margin:10px 0">准备就绪</div>
-    <div id="recordLenHint" style="text-align:center;font-size:11.5px;color:var(--dim);line-height:1.6;margin:-4px 0 10px"></div>
-    
+
     <div style="position:relative;height:50px;display:flex;align-items:center;justify-content:center;margin:8px 0;">
-      <div id="recordTimer" class="record-timer" style="font-size:34px;font-weight:700;transition:opacity .2s">00:00</div>
-      <div id="countdownLayer" style="position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;background:rgba(23,23,31,.9);border-radius:10px;z-index:10;">
+      <div id="recordTimer" class="record-timer" style="font-size:34px;font-weight:700">00:00</div>
+      <div id="countdownLayer" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(23,23,31,.9);border-radius:10px;z-index:10;">
         <span id="countdownNum" style="font-size:40px;font-weight:900;color:var(--accent);text-shadow:0 0 20px rgba(236,65,65,.5);animation:countPop .8s ease infinite;">3</span>
       </div>
     </div>
-    <style>@keyframes countPop{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8}100%{transform:scale(1);opacity:1}}</style>
 
     <div style="display:flex;gap:10px;justify-content:center;margin:16px 0">
-      <button class="primary" id="btnStartRecord" style="padding:12px 26px">● 开始录音</button>
+      <button class="primary" id="btnStartRecord" style="padding:12px 26px">✅ 确认并开始（3-2-1）</button>
       <button class="ghost" id="btnStopRecord" hidden style="padding:12px 26px">■ 停止</button>
     </div>
 
     <div id="recordResult" hidden>
       <audio id="recordedAudio" controls style="width:100%;margin-bottom:12px"></audio>
-      <div style="display:flex;gap:8px">
+      <button class="ghost" id="btnDownloadRecording" style="width:100%;margin-bottom:8px">⬇ 下载干声 WAV（备份）</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="ghost" id="btnReRecord" style="flex:1">重新录制</button>
         <button class="primary" id="btnSendToStudio" style="flex:1">⬆ 上传到修音工程</button>
       </div>
     </div>
+    <div id="recordLenHint" style="font-size:11px;color:var(--dim);text-align:center;margin-top:6px"></div>
   </div>
 </div>
 
-<div id="recordMini" hidden>
-  <div class="rec-dot"></div>
-  <span id="miniTimer">00:00</span>
-  <button id="btnMiniStop" class="btn-mini-stop" title="停止录音">■ 停止</button>
-  <button id="btnMiniExpand" class="btn-mini-expand" title="展开">↗</button>
-</div>
+<div id="recordCountdown" hidden><span id="recordCountdownNum">3</span></div>
 
 <div class="modal" id="adminModal" hidden>
   <div class="modal-bg" data-close="adminModal"></div>
@@ -1798,6 +1844,7 @@ function showToast(msg){
     toastEl.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);padding:10px 18px;border-radius:10px;background:rgba(30,30,40,.95);color:#fff;font-size:13px;z-index:2000;box-shadow:0 12px 30px -8px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.1);transition:opacity .25s,transform .25s;pointer-events:none;max-width:80vw;text-align:center';
     document.body.appendChild(toastEl);
   }
+  toastEl.style.bottom = '96px';
   toastEl.textContent = msg; toastEl.style.opacity = '1'; toastEl.style.transform = 'translateX(-50%) translateY(0)';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>{ toastEl.style.opacity = '0'; toastEl.style.transform = 'translateX(-50%) translateY(8px)'; }, 2400);
@@ -2721,6 +2768,8 @@ function syncMobileModeUI(){
 }
 
 async function applyTrackMode(mode){
+  /* ★ 录音中锁住主界面模式，避免重载歌曲把录音进度打断 */
+  if(recordState.isRecording){ showToast('录音进行中，先停止录音再切模式'); return; }
   // ★ 核心修改：如果当前已经是唱K模式，点击按钮就是开关竖条！
   if(mode === 'karaoke' && vocalMode === 'karaoke'){
     const pop = $('#karaokePop');
@@ -3061,7 +3110,12 @@ document.addEventListener('click', e=>{ if(toolboxPanel.hidden) return; if(e.tar
 toolboxPanel.addEventListener('click', e=>{ const a = e.target.closest('a[data-ext]'); if(!a) return; e.preventDefault(); openExternal(a.getAttribute('href')); toolboxPanel.hidden = true; });
 
 let lastVolume = 1, userVolume = 1;
-function updateAudioVolumes(){ const isKaraoke = vocalMode === 'karaoke'; audio.volume = isKaraoke ? userVolume * karaokeVocalFactor : userVolume; audioInst.volume = userVolume; }
+function updateAudioVolumes(){
+  if(recordMainMuted){ audio.volume = 0; audioInst.volume = 0; return; }   /* 录音中主轨静音，只播导引轨 */
+  const isKaraoke = vocalMode === 'karaoke';
+  audio.volume = isKaraoke ? userVolume * karaokeVocalFactor : userVolume;
+  audioInst.volume = userVolume;
+}
 function applyMobileSliderLayout(){ const vol = $('#volSlider'); if(vol){ vol.style.transform = ''; vol.style.webkitTransform = ''; vol.style.margin = ''; vol.style.width = ''; } }
 
 function applyVolume(v){
@@ -3674,7 +3728,15 @@ let handoffTimer = null;
 const claimRegistry = Object.create(null);
 if (location.search.includes('record=1')) { window.name = 'player_recorder'; recordBusSession = ''; }   // 修音页直接开的录音窗口，不走广播回传
 else if (!/^k_song_tuner/.test(window.name)) { window.name = 'player_main'; }   // 主界面固定标签名：修音页回跳时直接复用这个标签
-const recordState = { stream: null, recorder: null, chunks: [], startTime: 0, timerId: null, companionAudio: null, blob: null, song: null, autoSend: false, sent: false, waitTimeoutId: null, silenceCheckTimer: null, audioCtx: null, analyser: null };
+/* ★ 录音中主播放器静音，但仍照常走进度/歌词（声音交给导引轨） */
+let recordMainMuted = false;
+const recordState = { stream:null, recorder:null, chunks:[], startTime:0, timerId:null, companionAudio:null, blob:null, song:null,
+  autoSend:false, sent:false, waitTimeoutId:null, silenceCheckTimer:null, audioCtx:null, analyser:null,
+  recordMode:'karaoke', vocalVolume:0.25, hasInst:false, hasGuide:true,
+  guideMode:'inst', guideInst:null, guideVocal:null, guideVocalFactor:0.25, guideSyncTimer:null,
+  isRecording:false, countdownStarted:false, countdownTimer:null, stopping:false, sessionActive:false,
+  preparedKey:'', instDuration:0, wavDuration:0, recordedDuration:0, minSec:0, fullSec:0, lyricLastStart:0,
+  recordingPath:'', recordingSavePromise:null, uploadBlocked:false, autoStopTimer:null, mainMuted:false, session:'', sent:false };
 
 $('#btnAiFix').addEventListener('click', ()=>{
   const song = getCurrent(); if(!song){ showToast('请先播放一首歌曲'); return; }
@@ -3701,13 +3763,13 @@ $('#btnFixRecord').addEventListener('click', async ()=>{
   await openRecordModal(song, false);
 });
 
-/* ★ 录音目标时长：全曲时长 + 歌词最后一句的截止时间 */
+/* ★ 录音目标时长：全曲时长 + 歌词最后一句的起点/终点 */
 async function measureRecordTargets(song){
   let full = Number(song && song.duration) || 0;
   if(!full && song && currentId === song.id){
     try{ if(isFinite(audio.duration) && audio.duration > 0) full = audio.duration; }catch(_){}
   }
-  let lyricEnd = 0;
+  let lyricEnd = 0, lyricLastStart = 0;
   try{
     let L = (song && currentId === song.id && state.lines && state.lines.length) ? state.lines : ((song && song.lyricLines) || []);
     if((!L || !L.length) && song && song.lyric){
@@ -3715,99 +3777,367 @@ async function measureRecordTargets(song){
     }
     if(L && L.length){
       const last = L[L.length - 1]; const t0 = Number(last.time) || 0; const t1 = Number(last.end) || 0;
-      lyricEnd = t1 > t0 ? t1 : t0;
+      lyricEnd = t1 > t0 ? t1 : t0; lyricLastStart = t0;
     }
   }catch(_){}
-  return { full, lyricEnd };
+  return { full, lyricEnd, lyricLastStart };
 }
 
-async function openRecordModal(song, autoSend){
+/* ===== 录音导引音：人声 / 伴奏 / 唱K（原唱音量可调）=====
+   导引音只用来监听（戴耳机跟唱），MediaRecorder 只吃麦克风流，系统音不会进录音 */
+const REC_GUIDE_GAIN = 0.75;
+function recGuideModeName(m){ return m === 'vocal' ? '人声' : (m === 'inst' ? '伴奏' : '唱K'); }
+function setRecGuideAvailability(hasInst){ recordState.hasInst = !!hasInst; }
+function updateRecGuideVolumes(){
+  const mode = recordState.guideMode || 'inst';
+  const f = Math.max(0, Math.min(1, Number(recordState.guideVocalFactor) || 0));
+  const inst = recordState.guideInst, voc = recordState.guideVocal;
+  if(inst) inst.volume = (mode === 'vocal') ? 0 : REC_GUIDE_GAIN;
+  if(voc)  voc.volume = (mode === 'inst') ? 0 : (mode === 'karaoke' ? REC_GUIDE_GAIN * f : REC_GUIDE_GAIN);
+}
+function setRecGuideMode(mode, opts){
+  if(mode !== 'vocal' && mode !== 'inst' && mode !== 'karaoke') mode = 'inst';
+  recordState.guideMode = mode;
+  updateRecGuideVolumes();
+  const silent = !!(opts && opts.silent);
+  if(!silent){
+    /* 录制中现场切模式：该发声却没在播的轨，从主轨当前位置接上 */
+    const master = recordState.guideInst || recordState.guideVocal;
+    const t = master ? (master.currentTime || 0) : 0;
+    const recording = recordState.recorder && recordState.recorder.state === 'recording';
+    [recordState.guideInst, recordState.guideVocal].forEach(a=>{
+      if(!a || !a.src) return;
+      if(a.volume > 0 && a.paused && recording){ try{ a.currentTime = t; a.play().catch(()=>{}); }catch(_){} }
+    });
+  }
+}
+function recGuideResync(strict){
+  const list = [recordState.guideInst, recordState.guideVocal].filter(a=>a && a.src);
+  if(list.length < 2) return;
+  const master = list[0];
+  list.forEach(a=>{
+    if(a === master) return;
+    const d = (a.currentTime || 0) - (master.currentTime || 0);
+    if(Math.abs(d) > (strict ? 0.02 : 0.18)){ try{ a.currentTime = master.currentTime; }catch(_){} }
+  });
+}
+function startRecGuides(){
+  updateRecGuideVolumes();
+  const list = [recordState.guideInst, recordState.guideVocal].filter(a=>a && a.src);
+  if(!list.length) return;
+  list.forEach(a=>{ try{ a.currentTime = 0; }catch(_){} });
+  list.forEach(a=>{ a.play().catch(()=>{}); });
+  recGuideResync(true);
+  if(recordState.guideSyncTimer) clearInterval(recordState.guideSyncTimer);
+  recordState.guideSyncTimer = setInterval(()=>{
+    if(!recordState.recorder || recordState.recorder.state !== 'recording') return;
+    recGuideResync(false);
+  }, 1000);
+}
+function stopRecGuides(){
+  if(recordState.guideSyncTimer){ clearInterval(recordState.guideSyncTimer); recordState.guideSyncTimer = null; }
+  [recordState.guideInst, recordState.guideVocal].forEach(a=>{
+    if(!a) return;
+    try{ a.pause(); a.removeAttribute('src'); a.load(); }catch(_){}
+  });
+  recordState.guideInst = null; recordState.guideVocal = null; recordState.companionAudio = null;
+}
+async function prepareRecGuideTracks(song){
+  stopRecGuides();
+  const hasInstFile = !!(song && song.instrumental);
+  const hasVocalFile = !!song.vocal || (!!song.audio && song.audio !== song.instrumental);
+  let mode = recordState.recordMode || 'karaoke';
+  if(!hasInstFile && mode !== 'vocal') mode = 'vocal';
+  if(!hasVocalFile && mode !== 'inst') mode = 'inst';
+  let instSrc = '', vocalSrc = '';
+  if(hasInstFile && (mode === 'inst' || mode === 'karaoke')){ try{ instSrc = await resolveAudioUrl(song, 'inst') || ''; }catch(_){} }
+  if(mode === 'vocal' || mode === 'karaoke'){ try{ vocalSrc = await resolveAudioUrl(song, 'vocal') || ''; }catch(_){} }
+  if(instSrc && vocalSrc && instSrc === vocalSrc) instSrc = '';       /* 同一音源，别叠两遍播 */
+  if(!instSrc && !vocalSrc){ try{ vocalSrc = await resolveAudioUrl(song, 'vocal') || ''; }catch(_){} }
+  if(mode === 'inst' && !instSrc) mode = vocalSrc ? 'vocal' : 'inst';
+  if(mode === 'karaoke' && !instSrc) mode = vocalSrc ? 'vocal' : 'inst';
+  if(mode === 'vocal' && !vocalSrc && instSrc) mode = 'inst';
+  recordState.recordMode = mode;
+  recordState.hasInst = !!instSrc;
+  recordState.hasGuide = !!vocalSrc;
+  recordState.guideInst = instSrc ? new Audio(instSrc) : null;
+  recordState.guideVocal = vocalSrc ? new Audio(vocalSrc) : null;
+  [recordState.guideInst, recordState.guideVocal].forEach(a=>{ if(a){ a.preload = 'auto'; try{ a.referrerPolicy = 'no-referrer'; }catch(_){} } });
+  recordState.companionAudio = recordState.guideInst || recordState.guideVocal;
+  setRecGuideMode(mode, {silent:true});
+  syncRecordModeUI();
+  return { instSrc, vocalSrc };
+}
+
+/* ★ 主界面播放模式跟随录音模式（不走 applyTrackMode，避免弹出唱K竖条） */
+function syncMainVocalMode(mode){
+  const target = (mode === 'inst' || mode === 'vocal') ? mode : 'karaoke';
+  const pop = $('#karaokePop'); if(pop) pop.hidden = true;
+  if(vocalMode === target){ updateAudioVolumes(); return Promise.resolve(); }
+  vocalMode = target;
+  try{ syncMobileModeUI(); }catch(_){}
+  updateAudioVolumes();
+  try{ persistPref(); }catch(_){}
+  if(currentId){
+    const id = currentId; currentId = null;
+    return Promise.resolve(playSong(id)).then(()=>{
+      try{ audio.pause(); audio.currentTime = 0; if(audioInst.src) audioInst.currentTime = 0; }catch(_){}
+      try{ updateProgressUI(); }catch(_){}
+    }).catch(()=>{});
+  }
+  return Promise.resolve();
+}
+
+async function preparePlayerForRecord(song, mode){
+  if(!song || !song.id) return;
+  const target = (mode === 'inst' || mode === 'vocal') ? mode : 'karaoke';
+  recordMainMuted = true; recordState.mainMuted = true;
+  const key = song.id + '|' + target;
+  if(currentId !== song.id || recordState.preparedKey !== key || vocalMode !== target){
+    await syncMainVocalMode(target);
+    if(currentId !== song.id){ try{ currentId = null; await playSong(song.id); }catch(e){ console.warn('[record] 预载歌曲失败', e); } }
+    recordState.preparedKey = key;
+  }
+  recordMainMuted = true; recordState.mainMuted = true;
+  updateAudioVolumes();
+  try{ audio.pause(); }catch(_){}
+  try{ audioInst.pause(); }catch(_){}
+  try{ audio.currentTime = 0; }catch(_){}
+  try{ if(audioInst.src) audioInst.currentTime = 0; }catch(_){}
+  state.lastPlayPos = 0;
+  try{ updateProgressUI(); }catch(_){}
+  try{ loadLyricsFromSong(song); setActive(0, true); }catch(_){}
+}
+function startMainForRecording(){
+  recordMainMuted = true; recordState.mainMuted = true;
+  audio.volume = 0; audioInst.volume = 0;
+  try{ audio.currentTime = 0; if(audioInst.src) audioInst.currentTime = 0; }catch(_){}
+  state.lastPlayPos = 0;
+  if(audio.src) audio.play().catch(()=>{});
+  if(audioInst.src){ try{ audioInst.currentTime = audio.currentTime; audioInst.play().catch(()=>{}); }catch(_){} }
+  try{ updateProgressUI(); }catch(_){}
+}
+function stopMainForRecording(){
+  try{ audio.pause(); }catch(_){}
+  try{ audioInst.pause(); }catch(_){}
+  recordMainMuted = false; recordState.mainMuted = false;
+  updateAudioVolumes();
+}
+
+function syncRecordModeUI(){
+  const mode = (recordState.recordMode === 'inst' || recordState.recordMode === 'vocal') ? recordState.recordMode : 'karaoke';
+  const hasInst = !!recordState.hasInst, hasGuide = !!recordState.hasGuide;
+  const canKaraoke = hasInst && hasGuide;
+  const vBtn = $('#recModeVocal'), instBtn = $('#recModeInst'), kBtn = $('#recModeKaraoke');
+  if(vBtn){ vBtn.classList.toggle('active', mode === 'vocal'); vBtn.disabled = !hasGuide; }
+  if(instBtn){ instBtn.classList.toggle('active', mode === 'inst'); instBtn.disabled = !hasInst; }
+  if(kBtn){ kBtn.classList.toggle('active', mode === 'karaoke'); kBtn.disabled = !canKaraoke; }
+  const row = $('#recVocalRow'); if(row) row.style.display = (mode === 'karaoke' && canKaraoke) ? 'flex' : 'none';
+  const vol = Math.round((recordState.vocalVolume || 0) * 100);
+  const pct = $('#recVocalPct'); if(pct) pct.textContent = vol + '%';
+  const slider = $('#recVocalVol'); if(slider){ slider.value = vol; slider.disabled = !hasGuide; }
+  const mini = $('#miniVocalVol'); if(mini){ mini.value = vol; mini.disabled = !hasGuide; }
+  const miniWrap = $('#miniVocalWrap'); if(miniWrap) miniWrap.style.display = (mode === 'karaoke' && canKaraoke) ? 'flex' : 'none';
+  const hint = $('#recModeHint');
+  if(hint){
+    if(!hasInst && !hasGuide) hint.textContent = '这首歌没有可播放的人声或伴奏；录音仍然只录麦克风。';
+    else if(!hasInst) hint.textContent = '只有人声，无法伴奏/唱K；默认人声模式。';
+    else if(!hasGuide) hint.textContent = '只有伴奏，默认伴奏模式。';
+    else if(mode === 'vocal') hint.textContent = '当前只播人声，主界面也会切到「人声」。';
+    else if(mode === 'inst') hint.textContent = '当前只播伴奏，主界面也会切到「伴奏」。';
+    else hint.textContent = '唱K：伴奏 + 可调原唱；原唱 0% 等同单独伴奏。';
+  }
+}
+
+function applyVocalVolume(vol){
+  recordState.vocalVolume = Math.max(0, Math.min(1, Number(vol) / 100));
+  recordState.guideVocalFactor = recordState.vocalVolume;
+  karaokeVocalFactor = recordState.vocalVolume;
+  const pct = Math.round(recordState.vocalVolume * 100);
+  const pv = $('#recVocalPct'); if(pv) pv.textContent = pct + '%';
+  const rv = $('#recVocalVol'); if(rv) rv.value = pct;
+  const mv = $('#miniVocalVol'); if(mv) mv.value = pct;
+  try{ updateKaraokeUI(); }catch(_){}
+  updateAudioVolumes();
+  updateRecGuideVolumes();
+}
+
+function setRecordMode(mode){
+  if(mode !== 'vocal' && mode !== 'inst' && mode !== 'karaoke') return;
+  const hasInst = !!recordState.hasInst, hasGuide = !!recordState.hasGuide;
+  if(mode === 'vocal' && !hasGuide) return;
+  if(mode === 'inst' && !hasInst) return;
+  if(mode === 'karaoke' && !(hasInst && hasGuide)) return;
+  recordState.recordMode = mode;
+  syncRecordModeUI();
+  setRecGuideMode(mode, {silent: !recordState.isRecording});
+  if(!recordState.isRecording) syncMainVocalMode(mode);
+}
+
+/* ★ 面板 ↔ 顶栏小条 */
+function showRecordPanel(){ $('#recordMini').hidden = true; $('#recordModal').hidden = false; }
+function collapseRecordToMini(){ if($('#recordModal').hidden) return; $('#recordModal').hidden = true; $('#recordMini').hidden = false; }
+
+function clearRecordCountdown(){
+  if(recordState.countdownTimer){ clearInterval(recordState.countdownTimer); recordState.countdownTimer = null; }
+  recordState.countdownStarted = false;
+  const el = $('#recordCountdown'); if(el) el.hidden = true;
+  const layer = $('#countdownLayer'); if(layer) layer.style.display = 'none';
+}
+function startRecordCountdown(onDone){
+  if(recordState.countdownStarted) return;
+  recordState.countdownStarted = true;
+  const el = $('#recordCountdown'), num = $('#recordCountdownNum');
+  if(!el || !num){ onDone(); return; }
+  el.hidden = false;
+  let n = 3; num.textContent = '3';
+  if(recordState.countdownTimer) clearInterval(recordState.countdownTimer);
+  recordState.countdownTimer = setInterval(()=>{
+    n--;
+    if(n > 0){
+      num.textContent = String(n);
+      try{ num.animate([{transform:'scale(1.45)',opacity:.6},{transform:'scale(1)',opacity:1}], {duration:280,easing:'ease-out'}); }catch(_){}
+    }else{
+      clearRecordCountdown();
+      onDone();
+    }
+  }, 1000);
+}
+
+async function openRecordModal(song, autoSend, opts){
   cleanupRecord();
   recordState.song = song; recordState.autoSend = !!autoSend; recordState.blob = null; recordState.sent = false; recordState.chunks = [];
-  recordState.minSec = 0; recordState.fullSec = 0; recordState.lastLen = 0;
+  recordState.minSec = 0; recordState.fullSec = 0; recordState.lyricLastStart = 0; recordState.lastLen = 0;
+  recordState.uploadBlocked = false; recordState.wavDuration = 0; recordState.instDuration = 0;
+  recordState.recordingPath = ''; recordState.recordingSavePromise = null; recordState.recordedDuration = 0;
+  recordState.session = (opts && opts.session) || fixSession || recordBusSession || '';
+  const hasInst = !!song.instrumental;
+  /* 有原唱轨（或原唱混音不等于伴奏）才算 hasGuide；只有伴奏的歌不能唱K */
+  const hasGuide = !!song.vocal || (!!song.audio && song.audio !== song.instrumental);
+  recordState.hasInst = hasInst; recordState.hasGuide = hasGuide;
+  /* 默认模式：双轨→唱K；仅人声→人声（唱K禁用）；仅伴奏→伴奏 */
+  recordState.recordMode = (hasInst && hasGuide) ? 'karaoke' : (hasInst ? 'inst' : 'vocal');
+  recordState.vocalVolume = (typeof karaokeVocalFactor === 'number') ? karaokeVocalFactor : 0.25;
+  recordState.guideVocalFactor = recordState.vocalVolume;
+  recordState.preparedKey = '';
+  syncRecordModeUI();
   measureRecordTargets(song).then(t=>{
     if(recordState.song !== song) return;
     recordState.fullSec = t.full; recordState.minSec = t.lyricEnd || (t.full ? t.full * 0.9 : 0);
+    recordState.lyricLastStart = t.lyricLastStart || 0;
     const hint = document.getElementById('recordLenHint');
     if(hint){
       const mmss = (v)=>`${Math.floor(v/60)}:${String(Math.round(v%60)).padStart(2,'0')}`;
       hint.textContent = (t.full ? `建议录完整首（约 ${mmss(t.full)}）` : '建议录完整首')
-        + (t.lyricEnd ? `；至少要唱到最后一首歌词（${mmss(t.lyricEnd)}），尾部伴奏由修音页补齐` : '；录到伴奏结束会自动收尾');
+        + (t.lyricLastStart ? ` · 至少唱到 ${mmss(t.lyricLastStart)}（最后一句）` : (t.full ? ' · 唱到结尾自动收尾' : ''));
     }
   }).catch(_=>{});
-  const hasInst = !!song.instrumental;
-  const onlineNote = (song.source === 'online')
-    ? `<div style="margin-top:6px;color:#ff9aa9;line-height:1.5">在线歌曲没有单独干声/伴奏：录音时用这首歌的音乐（缓存音源）做引导，可能带人声。想修得更准，建议自备这首歌的干声与 MIDI，到修音页手动上传。</div>`
-    : '';
-  $('#recordSongInfo').innerHTML = `当前歌曲：<b style="color:#fff">${esc(song.title||'未命名')}</b>` + (hasInst ? '' : ' <span style="color:#ff9aa9">（无伴奏文件，将用原声引导）</span>') + onlineNote;
-  $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音'; $('#recordTimer').textContent = '00:00';
+  const onlineTip = song.source === 'online'
+    ? ' <span style="color:#ff9aa9">（在线歌曲：将用缓存混音做导引；建议自备干声或 MIDI，修音更准）</span>'
+    : (hasInst ? '' : ' <span style="color:#ff9aa9">· 无独立伴奏文件</span>');
+  $('#recordSongInfo').innerHTML = `当前歌曲：<b style="color:#fff">${esc(song.title||'未命名')}</b>` + onlineTip;
+  $('#recordStatus').textContent = '准备就绪 · 选好模式后点「确认并开始」'; $('#recordTimer').textContent = '00:00';
   $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true; $('#recordResult').hidden = true;
-  $('#btnSendToStudio').disabled = false; $('#btnSendToStudio').style.opacity = '';
-  $('#countdownLayer').style.display = 'none'; $('#recordModal').hidden = false; $('#recordMini').hidden = true;
-  $('#recordStatus').textContent = '🎯 点「开始录音」，唱完先试听，确认没问题再上传到修音工程';
+  $('#countdownLayer').style.display = 'none'; $('#recordCountdown').hidden = true;
+  $('#recordModal').hidden = false; $('#recordMini').hidden = true;
+  if($('#btnSendToStudio')){ $('#btnSendToStudio').disabled = false; $('#btnSendToStudio').textContent = '⬆ 上传到修音工程'; }
   recordState.waitTimeoutId = setTimeout(() => {
     if (!$('#recordModal').hidden && $('#recordResult').hidden) { cleanupRecord(); $('#recordModal').hidden = true; showToast('长时间未开始录音，已自动放弃'); }
   }, 90000);
+  /* ★ 先把主播放器切到这首歌和对应模式，并停在 0 秒；确认后才真正开唱 */
+  try{ await preparePlayerForRecord(song, recordState.recordMode); }catch(_){}
 }
 
 $('#btnStartRecord').addEventListener('click', startRecording);
+$('#recModeVocal').addEventListener('click', ()=>setRecordMode('vocal'));
+$('#recModeInst').addEventListener('click', ()=>setRecordMode('inst'));
+$('#recModeKaraoke').addEventListener('click', ()=>setRecordMode('karaoke'));
+$('#recVocalVol').addEventListener('input', (e)=>applyVocalVolume(e.target.value));
+$('#miniVocalVol').addEventListener('input', (e)=>applyVocalVolume(e.target.value));
 $('#btnStopRecord').addEventListener('click', stopRecording);
-$('#btnReRecord').addEventListener('click', ()=>{ recordState.blob = null; $('#recordResult').hidden = true; $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true; $('#btnSendToStudio').disabled = false; $('#btnSendToStudio').style.opacity = ''; $('#recordTimer').textContent = '00:00'; $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音'; $('#countdownLayer').style.display = 'none'; });
+$('#btnReRecord').addEventListener('click', ()=>{
+  recordState.blob = null; recordState.uploadBlocked = false; recordState.wavDuration = 0;
+  recordState.recordingPath = ''; recordState.recordingSavePromise = null; recordState.recordedDuration = 0;
+  $('#recordResult').hidden = true; $('#btnStartRecord').hidden = false;
+  $('#btnSendToStudio').disabled = false; $('#btnSendToStudio').textContent = '⬆ 上传到修音工程';
+  $('#recordTimer').textContent = '00:00'; $('#recordStatus').textContent = '准备就绪 · 请戴耳机避免串音';
+  $('#countdownLayer').style.display = 'none';
+});
 $('#btnSendToStudio').addEventListener('click', sendRecordingBack);
+$('#btnDownloadRecording').addEventListener('click', downloadRecording);
 $('#btnMinimizeRecord').addEventListener('click', () => { $('#recordModal').hidden = true; $('#recordMini').hidden = false; });
 $('#btnMiniExpand').addEventListener('click', () => { $('#recordMini').hidden = true; $('#recordModal').hidden = false; });
 $('#btnMiniStop').addEventListener('click', () => { $('#recordMini').hidden = true; $('#recordModal').hidden = false; stopRecording(); });
-
-const recordMiniEl = document.getElementById('recordMini'); let miniDrag = { active: false, x: 0, y: 0 };
-recordMiniEl.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('button')) return; miniDrag.active = true;
-  recordMiniEl.style.bottom = 'auto'; recordMiniEl.style.right = 'auto';
-  const r = recordMiniEl.getBoundingClientRect(); recordMiniEl.style.left = r.left + 'px'; recordMiniEl.style.top = r.top + 'px';
-  miniDrag.x = e.clientX - r.left; miniDrag.y = e.clientY - r.top;
-  try { recordMiniEl.setPointerCapture(e.pointerId); } catch(_) {} e.preventDefault();
+document.addEventListener('click', (e)=>{
+  const c = e.target.closest && e.target.closest('[data-close="recordModal"]'); if(!c) return;
+  const wasRecording = recordState.isRecording;
+  cleanupRecord();
+  $('#recordModal').hidden = true; $('#recordMini').hidden = true;
+  if(wasRecording) showToast('已放弃本次录音');
 });
-recordMiniEl.addEventListener('pointermove', (e) => {
-  if (!miniDrag.active) return; let x = e.clientX - miniDrag.x; let y = e.clientY - miniDrag.y;
-  const r = recordMiniEl.getBoundingClientRect();
-  x = Math.max(4, Math.min(window.innerWidth - r.width - 4, x)); y = Math.max(4, Math.min(window.innerHeight - r.height - 4, y));
-  recordMiniEl.style.left = x + 'px'; recordMiniEl.style.top = y + 'px';
-});
-recordMiniEl.addEventListener('pointerup', (e) => { miniDrag.active = false; try { recordMiniEl.releasePointerCapture(e.pointerId); } catch(_) {} });
+/* ★ 录音小条固定在顶栏那一行的空位，不再允许拖动 */
 
 async function startRecording(){
   const song = recordState.song; if(!song){ showToast('未选择歌曲'); return; }
+  if(recordState.isRecording || recordState.countdownStarted) return;
   clearTimeout(recordState.waitTimeoutId);
-  try{ audio.pause(); audio.currentTime = 0; }catch(_){}
-  try{ audioInst.pause(); audioInst.currentTime = 0; }catch(_){}
-  if (recordState.companionAudio) { try { recordState.companionAudio.pause(); recordState.companionAudio.currentTime = 0; } catch(_) {} recordState.companionAudio = null; }
-  $('#recordStatus').textContent = '正在准备录音环境…'; $('#btnStartRecord').hidden = true; $('#btnStopRecord').hidden = false;
-  try{ recordState.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } }); }
-  catch(e){ $('#recordStatus').textContent = '❌ 无法访问麦克风：' + (e && e.message ? e.message : e); $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true; return; }
-  let instSrc = '';
-  try{ instSrc = song.instrumental ? await resolveAudioUrl(song, 'inst') : ''; if(!instSrc) instSrc = await resolveAudioUrl(song, 'vocal'); }catch(_){}
-  const beginRecord = () => {
-    if (recordState.recorder && recordState.recorder.state === 'recording') return;
+  clearRecordCountdown();
+  recordState.stopping = false; recordState.isRecording = false;
+  recordState.chunks = []; recordState.blob = null;
+  recordState.uploadBlocked = false; recordState.wavDuration = 0; recordState.instDuration = 0;
+  stopRecGuides();
+  $('#recordResult').hidden = true; $('#btnStartRecord').hidden = true; $('#btnStopRecord').hidden = false;
+  $('#recordStatus').textContent = '正在准备录音环境…';
+  try{
+    recordState.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1 } });
+  }catch(e){
+    $('#recordStatus').textContent = '❌ 无法访问麦克风：' + (e && e.message ? e.message : e);
+    $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true;
+    return;
+  }
+  $('#recordStatus').textContent = '正在准备导引音…';
+  try{ await prepareRecGuideTracks(song); }catch(e){ console.warn('[record] 导引音准备失败', e); }
+  try{ await preparePlayerForRecord(song, recordState.recordMode); }catch(e){ console.warn('[record] 预载播放器失败', e); }
+
+  /* ★ 确认后先缩面板（只留顶栏小条），再出现圆形 3-2-1；不用再点录音 */
+  collapseRecordToMini();
+  $('#recordStatus').textContent = '准备开唱…';
+
+  function beginRecord(){
+    if(!recordState.stream || recordState.isRecording) return;
     recordState.chunks = [];
     const mime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) ? 'audio/webm;codecs=opus' : 'audio/webm';
     recordState.recorder = new MediaRecorder(recordState.stream, { mimeType:mime });
     recordState.recorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordState.chunks.push(e.data); };
-    recordState.recorder.onstop = finalizeRecording; recordState.recorder.start();
+    recordState.recorder.onstop = finalizeRecording;
+    recordState.recorder.start();
+    recordState.isRecording = true; recordState.sessionActive = true;
     recordState.startTime = Date.now();
     recordState.timerId = setInterval(()=>{
       const el = Math.floor((Date.now()-recordState.startTime)/1000); const m = Math.floor(el/60), s = el%60;
       const tStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
       $('#recordTimer').textContent = tStr; if($('#miniTimer')) $('#miniTimer').textContent = tStr;
     }, 200);
-    $('#btnStopRecord').hidden = false; $('#recordStatus').textContent = '🎙️ 录音中…（跟着伴奏唱，唱到结尾会自动收尾）';
-    if (!recordState.fullSec && recordState.companionAudio && isFinite(recordState.companionAudio.duration) && recordState.companionAudio.duration > 0) {
-      recordState.fullSec = recordState.companionAudio.duration;
-      if (!recordState.minSec) recordState.minSec = recordState.fullSec * 0.9;
+    const mode = recordState.recordMode;
+    $('#recordStatus').textContent = mode === 'vocal' ? '🎙️ 录音中…（人声）' : (mode === 'inst' ? '🎙️ 录音中…（伴奏）' : '🎙️ 录音中…（唱K）');
+    startRecGuides();          /* 导引发声（人声 / 伴奏 / 唱K 混合） */
+    startMainForRecording();   /* 主轨静音跟走：进度条、歌词正常前进 */
+    const master = recordState.companionAudio;
+    if(!recordState.fullSec && master && isFinite(master.duration) && master.duration > 0){
+      recordState.fullSec = master.duration;
+      if(!recordState.minSec) recordState.minSec = recordState.fullSec * 0.9;
     }
-    if (recordState.companionAudio) {
-      recordState.companionAudio.currentTime = 0; recordState.companionAudio.play().catch(()=>{});
-      recordState.companionAudio.onended = ()=>{
-        if (recordState.recorder && recordState.recorder.state === 'recording') { showToast('伴奏已播完，自动结束录音'); stopRecording(); }
-      };
+    if(master){
+      master.addEventListener('ended', ()=>{
+        if(recordState.isRecording){ showToast('导引音已播完，自动收尾'); stopRecording(); }
+      }, { once:true });
+    }
+    /* ★ 歌曲播放结束自动收尾（兜底按总时长） */
+    const full = Number(song && song.duration) || Number(recordState.instDuration) || Number(recordState.fullSec) || 0;
+    if(full > 0){
+      recordState.autoStopTimer = setTimeout(()=>{
+        if(recordState.isRecording){ showToast('歌曲播放结束，自动收尾'); stopRecording(); }
+      }, Math.ceil(full * 1000) + 400);
     }
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext; recordState.audioCtx = new AudioContext();
@@ -3815,86 +4145,145 @@ async function startRecording(){
       recordState.analyser.fftSize = 512; source.connect(recordState.analyser);
       const dataArray = new Uint8Array(recordState.analyser.frequencyBinCount); let silenceSec = 0;
       recordState.silenceCheckTimer = setInterval(() => {
-        if (!recordState.recorder || recordState.recorder.state !== 'recording') return;
+        if (!recordState.isRecording || !recordState.recorder || recordState.recorder.state !== 'recording') return;
         recordState.analyser.getByteTimeDomainData(dataArray); let sum = 0;
         for (let i = 0; i < dataArray.length; i++) { const x = (dataArray[i] - 128) / 128; sum += x * x; }
         const rms = Math.sqrt(sum / dataArray.length); const db = 20 * Math.log10(rms || 0.0001);
         if (db < -45) silenceSec += 1; else silenceSec = 0;
         const recordedSec = (Date.now() - recordState.startTime) / 1000;
-        if (silenceSec >= 60 && recordedSec > 60) { showToast('检测到长时间没有声音输入，已自动停止录音'); stopRecording(); return; }
-        if (recordState.fullSec && recordedSec >= recordState.fullSec + 1) { showToast('已到全曲长度，自动收尾'); stopRecording(); }
+        if (silenceSec >= 60 && recordedSec > 60) { showToast('检测到长时间没有声音输入，已自动停止录音'); stopRecording(); }
       }, 1000);
     } catch (err) { console.warn('静音检测初始化失败:', err); }
-  };
-  const triggerCountdown = () => {
-    $('#recordStatus').textContent = '准备开唱…'; $('#countdownLayer').style.display = 'flex';
-    let count = 3; $('#countdownNum').textContent = count;
-    const timer = setInterval(() => {
-      count--;
-      if (count > 0) { $('#countdownNum').textContent = count; }
-      else { clearInterval(timer); $('#countdownLayer').style.display = 'none'; beginRecord(); }
-    }, 1000);
-  };
-  if (instSrc) {
-    recordState.companionAudio = new Audio(instSrc); recordState.companionAudio.volume = 0.5;
-    let isTriggered = false; const trigger = () => { if (isTriggered) return; isTriggered = true; triggerCountdown(); };
-    recordState.companionAudio.oncanplay = trigger;
-    recordState.companionAudio.onerror = () => { showToast('伴奏加载失败，将清唱录音'); trigger(); };
-    setTimeout(trigger, 1500); recordState.companionAudio.load();
-  } else { triggerCountdown(); }
+  }
+
+  let triggered = false;
+  const trigger = () => { if(triggered || recordState.stopping) return; triggered = true; startRecordCountdown(beginRecord); };
+  const tracks = [recordState.guideInst, recordState.guideVocal].filter(a=>a && a.src);
+  if(tracks.length){
+    let ready = 0;
+    tracks.forEach(a=>{
+      const done = ()=>{ ready++; if(ready >= tracks.length) trigger(); };
+      a.addEventListener('canplay', done, { once:true });
+      a.addEventListener('error', done, { once:true });
+      try{ a.load(); }catch(_){}
+    });
+    setTimeout(()=>{ if(!triggered){ showToast('导引音加载慢，先开唱'); trigger(); } }, 1800);
+  } else trigger();
 }
 
 function stopRecording(){
+  if(recordState.stopping) return;
+  /* 3-2-1 期间按停止：只取消，不生成录音 */
+  if(!recordState.isRecording && recordState.countdownStarted){
+    recordState.stopping = true;
+    clearRecordCountdown();
+    if(recordState.stream){ try{ recordState.stream.getTracks().forEach(t=>t.stop()); }catch(_){} recordState.stream = null; }
+    stopRecGuides(); stopMainForRecording();
+    recordState.stopping = false;
+    showRecordPanel();
+    $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true;
+    $('#recordStatus').textContent = '已取消，请重新选择模式后开始';
+    return;
+  }
+  if(!recordState.isRecording && (!recordState.recorder || recordState.recorder.state === 'inactive')) return;
+  recordState.stopping = true;
+  recordState.isRecording = false;
+  clearRecordCountdown();
+  if(recordState.autoStopTimer){ clearTimeout(recordState.autoStopTimer); recordState.autoStopTimer = null; }
   if(recordState.recorder && recordState.recorder.state !== 'inactive'){ try{ recordState.recorder.stop(); }catch(_){} }
   if(recordState.stream){ try{ recordState.stream.getTracks().forEach(t=>t.stop()); }catch(_){} recordState.stream = null; }
-  if(recordState.companionAudio){ try{ recordState.companionAudio.pause(); }catch(_){} recordState.companionAudio = null; }
+  stopRecGuides();
+  stopMainForRecording();
   if(recordState.timerId){ clearInterval(recordState.timerId); recordState.timerId = null; }
   if(recordState.silenceCheckTimer){ clearInterval(recordState.silenceCheckTimer); recordState.silenceCheckTimer = null; }
   if(recordState.audioCtx){ try{ recordState.audioCtx.close(); }catch(_){} recordState.audioCtx = null; }
-  $('#btnStopRecord').hidden = true; $('#recordStatus').textContent = '正在处理录音…'; if($('#recordMini')) $('#recordMini').hidden = true; $('#countdownLayer').style.display = 'none';
+  showRecordPanel();
+  $('#btnStopRecord').hidden = true; $('#recordStatus').textContent = '正在处理录音…';
+  $('#countdownLayer').style.display = 'none';
 }
 
 function cleanupRecord(){
+  clearRecordCountdown();
+  recordState.isRecording = false; recordState.stopping = false; recordState.sessionActive = false;
+  if(recordState.autoStopTimer){ clearTimeout(recordState.autoStopTimer); recordState.autoStopTimer = null; }
   if(recordState.recorder && recordState.recorder.state !== 'inactive'){ try{ recordState.recorder.stop(); }catch(_){} }
   if(recordState.stream){ try{ recordState.stream.getTracks().forEach(t=>t.stop()); }catch(_){} recordState.stream = null; }
-  if(recordState.companionAudio){ try{ recordState.companionAudio.pause(); }catch(_){} recordState.companionAudio = null; }
+  stopRecGuides();
   if(recordState.timerId){ clearInterval(recordState.timerId); recordState.timerId = null; }
   if(recordState.silenceCheckTimer){ clearInterval(recordState.silenceCheckTimer); recordState.silenceCheckTimer = null; }
   if(recordState.audioCtx){ try{ recordState.audioCtx.close(); }catch(_){} recordState.audioCtx = null; }
   if(recordState.waitTimeoutId){ clearTimeout(recordState.waitTimeoutId); recordState.waitTimeoutId = null; }
-  if($('#recordMini')) $('#recordMini').hidden = true; $('#countdownLayer').style.display = 'none';
+  try{ audio.pause(); }catch(_){}
+  try{ audioInst.pause(); }catch(_){}
+  recordMainMuted = false; recordState.mainMuted = false;
+  recordState.preparedKey = '';
+  updateAudioVolumes();
+  if($('#recordMini')) $('#recordMini').hidden = true;
+  if($('#countdownLayer')) $('#countdownLayer').style.display = 'none';
+}
+
+/* ★ 合格判定：有歌词 = 必须唱到最后一句歌词的时间；没歌词 = 必须等整首播完 */
+function evaluateRecording(song, dur){
+  const lastStart = Number(recordState.lyricLastStart) || 0;
+  if(lastStart > 0){
+    if(dur < lastStart - 0.15) return { status:'fail', need:lastStart, reason:'lyrics' };
+    return { status:'ok' };
+  }
+  const full = Number(song && song.duration) || Number(recordState.instDuration) || Number(recordState.fullSec) || 0;
+  if(full > 0 && dur < full - 0.3) return { status:'fail', need:full, reason:'nolyrics' };
+  return { status:'ok' };
 }
 
 async function finalizeRecording(){
-  if(!recordState.chunks.length){ $('#recordStatus').textContent = '⚠️ 录音为空，请重试'; return; }
+  recordState.sessionActive = false;
+  showRecordPanel();
+  if(!recordState.chunks.length){
+    recordState.stopping = false;
+    $('#recordStatus').textContent = '⚠️ 录音为空，请重试';
+    $('#btnStartRecord').hidden = false; $('#btnStopRecord').hidden = true;
+    return;
+  }
   const webmBlob = new Blob(recordState.chunks, { type:'audio/webm' }); recordState.chunks = [];
   const roughLen = Math.max(0, (Date.now() - (recordState.startTime || Date.now())) / 1000);
-  const fullForPad = Number(recordState.fullSec) || 0;
-  const padSec = fullForPad > roughLen + 0.3 ? Math.min(30, fullForPad - roughLen) : 0;
-  let wavBlob = webmBlob; try{ wavBlob = await blobToWav(webmBlob, padSec); }catch(e){ console.warn('[record] wav 转换失败，使用 webm', e); }
-  recordState.blob = wavBlob; $('#recordedAudio').src = URL.createObjectURL(wavBlob);
-  const len = roughLen;   // 校验用“真实唱到多久”，不用补静音后的长度
-  recordState.lastLen = Math.round(len * 10) / 10;
-  const mmss = v=>`${Math.floor(v/60)}:${String(Math.round(v%60)).padStart(2,'0')}`;
-  const min = Number(recordState.minSec) || 0; const full = Number(recordState.fullSec) || 0;
-  const tooShort = min > 0 && len < min - 0.5;
+  let wavBlob = webmBlob;
+  try{ wavBlob = await blobToWav(webmBlob); }catch(e){ console.warn('[record] wav 转换失败，使用 webm', e); }
+  recordState.blob = wavBlob;
+  recordState.recordingPath = ''; recordState.recordingSavePromise = null;
+  const recDur = Number(recordState.wavDuration) || roughLen;
+  recordState.recordedDuration = recDur;
+  recordState.lastLen = Math.round(recDur * 10) / 10;
+  $('#recordedAudio').src = URL.createObjectURL(wavBlob);
   $('#recordResult').hidden = false;
-  const sendBtn = $('#btnSendToStudio');
-  if(sendBtn){ sendBtn.disabled = tooShort; sendBtn.style.opacity = tooShort ? '.45' : ''; }
-  if(tooShort){
-    $('#recordStatus').innerHTML = `⚠️ 只录到 <b>${mmss(len)}</b>，短于最后一句（${mmss(min)}），不合格请重录`;
-    showToast('录音太短，请重录到歌词最后一句之后');
-  } else if(full > 0 && len < full - 2){
-    $('#recordStatus').innerHTML = `✅ 录制完成 <b>${mmss(len)}</b> / 全曲 ${mmss(full)}；尾部伴奏由修音页补齐，请先试听`;
-  } else {
-    $('#recordStatus').textContent = '✅ 录制完成，请先试听；确认没问题再上传到修音工程（不自动跳转）';
+  $('#btnSendToStudio').disabled = false; $('#btnSendToStudio').textContent = '⬆ 上传到修音工程';
+  recordState.uploadBlocked = false;
+  const mmss = v=>`${Math.floor(v/60)}:${String(Math.round(v%60)).padStart(2,'0')}`;
+  const check = evaluateRecording(recordState.song, recDur);
+  if(check.status === 'fail'){
+    recordState.stopping = false;
+    recordState.uploadBlocked = true;
+    $('#btnSendToStudio').disabled = true;
+    const what = check.reason === 'nolyrics' ? '整首歌播完' : '最后一句歌词的时间';
+    $('#recordStatus').innerHTML = `❌ 录音只有 ${mmss(recDur)}，时长不足：至少要唱到 ${mmss(check.need)}（${what}），请重新录制`;
+    showToast('录音太短，请重录');
+    return;
   }
+  recordState.stopping = false;
+  const full = Number(recordState.song && recordState.song.duration) || Number(recordState.fullSec) || 0;
+  $('#recordStatus').textContent = (full > 0 && recDur < full - 2)
+    ? `✅ ${mmss(recDur)} / 全曲 ${mmss(full)}，尾部由修音页补齐；可试听或下载备份`
+    : '✅ 录制完成，可试听/下载备份，再点「⬆ 上传到修音工程」';
+  /* ★ 顺手落缓存：下载备份和发送修音都复用这一份，不重复转码 */
+  cacheRecording().catch(()=>{});
 }
+
 async function blobToWav(blob, padSec){
   const arr = await blob.arrayBuffer(); const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const audioBuf = await ctx.decodeAudioData(arr);
+  recordState.wavDuration = audioBuf.duration;
   const pad = Math.max(0, Math.round((Number(padSec) || 0) * audioBuf.sampleRate));
-  return encodeWavBlob(audioBuf, pad);
+  const out = encodeWavBlob(audioBuf, pad);
+  try{ ctx.close(); }catch(_){}
+  return out;
 }
 function encodeWavBlob(buffer, extraFrames){
   const ch = buffer.numberOfChannels; const sr = buffer.sampleRate; const bd = 16; const bps = bd / 8; const align = ch * bps; let samples;
@@ -3911,47 +4300,85 @@ function encodeWavBlob(buffer, extraFrames){
 }
 function safeFileName(name){ return String(name || 'recording').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80); }
 
+/* ★ 干声缓存：存在本机 IndexedDB，修音页同源可直接取，下载/发送都复用这一份 */
+function recCacheKey(){
+  const s = recordState.song; const sid = (s && s.id) ? String(s.id) : 'x';
+  const sess = recordState.session || 'solo';
+  return 'rec:' + sess + ':' + sid;
+}
+async function cacheRecording(){
+  if(!recordState.blob) return '';
+  const key = recCacheKey();
+  if(recordState.recordingPath === key) return key;
+  const song = recordState.song;
+  const name = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
+  const rec = { blob: recordState.blob, name, songId: song ? song.id : '', songTitle: song ? (song.title || '') : '',
+    session: recordState.session || '', mode: recordState.recordMode, duration: recordState.recordedDuration || 0, ts: Date.now() };
+  await idbPut('files', key, rec);
+  try{ await idbPut('kv', 'lastRecording', { key, songId: rec.songId, songTitle: rec.songTitle, session: rec.session, name, mode: rec.mode, duration: rec.duration, ts: rec.ts }); }catch(_){}
+  recordState.recordingPath = key;
+  notifyStudioCached(key, rec);
+  return key;
+}
+function ensureRecordingFile(){ 
+  if(!recordState.blob) return Promise.resolve('');
+  if(recordState.recordingPath) return Promise.resolve(recordState.recordingPath);
+  if(recordState.recordingSavePromise) return recordState.recordingSavePromise;
+  recordState.recordingSavePromise = cacheRecording().catch(()=>'').finally(()=>{ recordState.recordingSavePromise = null; });
+  return recordState.recordingSavePromise;
+}
+function notifyStudioCached(key, rec){
+  const msg = { type:'RECORDING_CACHED', recKey:key, songId:rec.songId, songTitle:rec.songTitle, session:rec.session, name:rec.name, duration:rec.duration };
+  try{ if(fixWindowRef && !fixWindowRef.closed) fixWindowRef.postMessage(msg, '*'); }catch(_){}
+  try{ if(window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); }catch(_){}
+  try{ if(recordBus) recordBus.postMessage(msg); }catch(_){}
+}
+
 function postRecordingTo(win, payload){
   if(!win) return false;
   try{ win.postMessage(payload, '*'); return true; }
   catch(e){ console.warn('[record] postMessage failed', e); return false; }
 }
 
-function sendRecordingBack(){
+async function sendRecordingBack(){
   if(!recordState.blob){ showToast('还没有录音'); return; }
+  if(recordState.uploadBlocked){ showToast('录音未通过时长检查，请点「重新录制」'); return; }
   const song = recordState.song;
   const fileName = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
   const payload = {
     type: 'RETURN_RECORDING', blob: recordState.blob, name: fileName,
-    songId: song ? song.id : '', session: fixSession || recordBusSession || '',
+    songId: song ? song.id : '', songTitle: song ? (song.title || '') : '',
+    session: fixSession || recordBusSession || '',
+    recKey: recCacheKey(),
     manifestUrl: appConfig.manifestUrl || DEFAULT_MANIFEST_URL, playerUrl: location.origin + location.pathname
   };
-
-  // 1) 修音页已经开着：直接发过去
+  /* 1) 修音页已经开着：直接发过去（同一份 blob，不重新编码） */
   if(!recordBusSession && fixWindowRef && !fixWindowRef.closed && postRecordingTo(fixWindowRef, payload)){
     recordState.sent = true;
     try{ fixWindowRef.focus(); }catch(_){}
+    cacheRecording().catch(()=>{});
     $('#recordStatus').textContent = '✅ 录音已发送，请回到修音工坊查看';
     showToast('已发送到修音工坊'); return;
   }
-  // 1b) 本页就是修音页打开的录音窗口：回给打开者
+  /* 1b) 本页就是修音页打开的录音窗口：回给打开者 */
   if(window.opener && !window.opener.closed && postRecordingTo(window.opener, payload)){
     recordState.sent = true;
     try{ window.opener.focus(); }catch(_){}
+    cacheRecording().catch(()=>{});
     $('#recordStatus').textContent = '✅ 录音已发送，请回到修音工坊查看';
     showToast('已发送到修音工坊'); return;
   }
-  // 2) 这次录音是由修音页广播认领的（播放器是老标签）：走广播回传，避免开新页
+  /* 2) 这次录音是由修音页广播认领的（播放器是老标签）：走广播回传 */
   if(recordBus && recordBusSession){
     try{
       recordBus.postMessage(payload);
       recordState.sent = true;
+      cacheRecording().catch(()=>{});
       $('#recordStatus').textContent = '✅ 录音已回传到修音工坊';
-      showToast('已回传到修音工坊，切回那个标签页即可');
-      return;
+      showToast('已回传到修音工坊，切回那个标签页即可'); return;
     }catch(_){}
   }
-  // 3) 还没开修音页（先录后跳）：现在打开，等它就绪再把录音送过去
+  /* 3) 还没开修音页（先录后跳）：现在先打开窗口，再把录音送过去；缓存失败也要打开 */
   openStudioForHandoff(song, payload);
 }
 
@@ -3960,19 +4387,26 @@ function openStudioForHandoff(song, payload){
   try{
     const u = new URL(appConfig.studioUrl);
     if(song && song.id) u.searchParams.set('songId', song.id);
+    if(song && song.title) u.searchParams.set('songTitle', song.title);
     u.searchParams.set('awaiting', '1');
     u.searchParams.set('manifestUrl', appConfig.manifestUrl || DEFAULT_MANIFEST_URL);
     u.searchParams.set('playerUrl', location.origin + location.pathname);
-    if(fixSession) u.searchParams.set('session', fixSession);
+    if(payload && payload.session) u.searchParams.set('session', payload.session);
+    if(payload && payload.recKey) u.searchParams.set('recKey', payload.recKey);
     pendingHandoff = payload;
     fixWindowRef = window.open(u.toString(), 'k_song_tuner');
     if(!fixWindowRef){ pendingHandoff = null; downloadRecordingFallback(); return; }
     $('#recordStatus').textContent = '正在打开修音工坊并传送录音…';
+    /* ★ 缓存失败也继续：窗口已经打开，修音页会提示手动上传/下载 */
+    ensureRecordingFile().then(key=>{
+      if(!key){ $('#recordStatus').textContent = '⚠️ 修音页已打开，但干声缓存失败；可点「⬇ 下载干声 WAV」手动上传'; showToast('修音页已打开；干声缓存失败，请下载后手动上传'); }
+      else { $('#recordStatus').textContent = '✅ 录音已缓存并发送，修音页会自动接收'; }
+    }).catch(()=>{});
     clearTimeout(handoffTimer);
     handoffTimer = setTimeout(()=>{
       if(!pendingHandoff) return;
       const p = pendingHandoff; pendingHandoff = null;
-      if(!(fixWindowRef && !fixWindowRef.closed && postRecordingTo(fixWindowRef, p))) downloadRecordingFallback();
+      if(!(fixWindowRef && !fixWindowRef.closed && postRecordingTo(fixWindowRef, p))){ showToast('已打开修音页，录音可手动上传或下载备份'); }
       else showToast('已发送到修音工坊');
     }, 8000);
   }catch(e){ pendingHandoff = null; downloadRecordingFallback(); }
@@ -3988,15 +4422,29 @@ function finishHandoff(source){
     showToast('已发送到修音工坊');
   } else downloadRecordingFallback();
 }
-function downloadRecordingFallback(){
+
+function downloadRecordingFallback(forBackup){
+  if(!recordState.blob){ showToast('还没有录音'); return; }
   const song = recordState.song; const fileName = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
   try{
     const url = URL.createObjectURL(recordState.blob); const a = document.createElement('a');
     a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 3000);
-    $('#recordStatus').textContent = '📥 已下载录音，请到修音工坊「上传你的录音」处选择'; showToast('录音已下载，请手动上传到修音工坊');
+    if(forBackup){
+      $('#recordStatus').textContent = '📥 干声 WAV 已下载，可自行备份';
+      showToast('干声已下载到本机');
+    } else {
+      $('#recordStatus').textContent = '📥 已下载录音，请到修音工坊「上传你的录音」处选择';
+      showToast('录音已下载，请手动上传到修音工坊');
+    }
   }catch(e){ showToast('下载失败：' + (e && e.message ? e.message : e)); }
 }
+async function downloadRecording(){
+  if(!recordState.blob){ showToast('还没有录音'); return; }
+  cacheRecording().catch(()=>{});
+  downloadRecordingFallback(true);
+}
+
 /* ★ 修音工坊 → 播放器：改歌就取消本轮录音；点「前往录音」就切到指定歌曲再开录音 */
 window.addEventListener('message', (ev) => {
   const d = ev.data;

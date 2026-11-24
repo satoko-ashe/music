@@ -1,13 +1,12 @@
 {
-  "version": "0.6.1",
-  "downloadUrl": "https://wwbpm.lanzoue.com/i3Zlm4h5pn6b",
+  "version": "0.7.0",
+  "downloadUrl": "https://wwbpm.lanzoue.com/iDo9d4h6db8f",
   "password": "2026",
   "releaseNotes": [
     "全面支持在线音乐（B站、洛雪、元力聚合）",
     "优化了搜索与播放的稳定性",
-    "修复了部分歌词解析错乱的问题",
     "增加唱K，修音强大功能，想唱就唱",
-    "新增自动检测更新功能",
-    "0.6.1全新版本修复了部分bug，优化了播放体验" 
+    "修复了部分bug，优化了播放体验",
+    "实现断网离线修音，优化内置修音功能"
   ]
 }
