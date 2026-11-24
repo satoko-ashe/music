@@ -4096,7 +4096,123 @@ $$('#recordModal [data-close="recordModal"]').forEach(el=>{ el.addEventListener(
   }, 400);
 })();
 
+/* ======================================================================
+   对外同步桥 ExtBridge
+   作用：当本页被 video-annotation.html 等页面用 <iframe> 内嵌时，
+        把「播放中/时间/总时长/歌名」持续回传，并接受对方的播放/跳转指令。
+   协议（与 label/video-annotation.html 里的处理一一对应）：
+   收 ← music-request-state / ctrl-toggle / ctrl-seek / ctrl-rate / ctrl-next / ctrl-prev
+   发 → music-ready / music-state
+   同源部署时两者可直接跨目录互访（同站 = 同 origin）。
+   ====================================================================== */
+const ExtBridge = (function(){
+  const IN  = { req:'music-request-state', toggle:'ctrl-toggle', seek:'ctrl-seek', rate:'ctrl-rate', next:'ctrl-next', prev:'ctrl-prev' };
+  const OUT = { ready:'music-ready', state:'music-state' };
+  const MIN_GAP = 100;                 // 两次推送的最小间隔（ms），约 10 次/秒
+  let lastPush = 0, inited = false;
+
+  function parentWin(){
+    try{ return (window.parent && window.parent !== window) ? window.parent : null; }catch(_){ return null; }
+  }
+  function targetOrigin(){
+    try{
+      const ao = location.ancestorOrigins;
+      if(ao && ao.length && ao[0] && ao[0] !== 'null') return ao[0];   // Chrome：父页面的 origin
+    }catch(_){}
+    try{
+      if(document.referrer){ const u = new URL(document.referrer); if(u.origin && u.origin !== 'null') return u.origin; }
+    }catch(_){}
+    return '*';
+  }
+  function snapshot(){
+    const song = (typeof getCurrent === 'function') ? getCurrent() : null;
+    const d = Number(audio.duration);
+    const t = Number(audio.currentTime);
+    return {
+      type: OUT.state,
+      playing: !!audio.src && !audio.paused && !audio.ended,
+      time: isFinite(t) && t >= 0 ? t : 0,
+      duration: isFinite(d) && d > 0 ? d : 0,
+      title:  song ? (song.title  || '') : '',
+      artist: song ? (song.artist || '') : '',
+      songId: song ? (song.id     || '') : '',
+      rate: Number(audio.playbackRate) || 1,
+      ended: !!audio.ended
+    };
+  }
+  function post(msg, force){
+    const win = parentWin(); if(!win) return;
+    const now = performance.now();
+    if(!force && now - lastPush < MIN_GAP) return;
+    lastPush = now;
+    try{ win.postMessage(msg, targetOrigin()); }catch(_){}
+  }
+  function push(force){ post(snapshot(), force); }
+  function announceReady(){
+    if(!parentWin()) return;
+    // ready 不吃节流
+    try{ parentWin().postMessage({ type: OUT.ready }, targetOrigin()); }catch(_){}
+  }
+
+  /* 真实音频状态变化 → 立刻推一次（force，不等节流） */
+  ['play','playing','pause','ended','seeked','loadedmetadata','durationchange','ratechange','emptied','volumechange']
+    .forEach(ev => audio.addEventListener(ev, () => push(true)));
+
+  /* 播放中按约 10Hz 持续推送时间轴；暂停时不推，避免空转 */
+  setInterval(() => { if(audio.src && !audio.paused) push(); }, 100);
+
+  /* 接收外部指令 */
+  window.addEventListener('message', (ev) => {
+    const d = ev.data || {};
+    if(!d || typeof d !== 'object' || typeof d.type !== 'string') return;
+    switch(d.type){
+      case IN.req:
+        announceReady(); push(true); break;
+      case IN.toggle:
+        if(!audio.src) return;
+        if(audio.paused) audio.play().catch(()=>{});
+        else audio.pause();
+        break;
+      case IN.seek: {
+        if(!audio.src) return;
+        const t = Number(d.time);
+        if(!isFinite(t)) return;
+        const dur = isFinite(audio.duration) ? audio.duration : 0;
+        audio.currentTime = Math.max(0, dur ? Math.min(t, dur) : t);
+        if(audioInst && audioInst.src){ try{ audioInst.currentTime = audio.currentTime; }catch(_){} }
+        if(typeof updateProgressUI === 'function') updateProgressUI();
+        push(true);
+        break;
+      }
+      case IN.rate: {
+        const r = Number(d.rate) || 1;
+        audio.playbackRate = r;
+        if(audioInst) audioInst.playbackRate = r;
+        if(typeof updateSpeedUI === 'function') updateSpeedUI();
+        push(true);
+        break;
+      }
+      case IN.next:
+        if(typeof playByOffset === 'function'){ playByOffset(1); setTimeout(()=>push(true), 300); }
+        break;
+      case IN.prev:
+        if(typeof playByOffset === 'function'){ playByOffset(-1); setTimeout(()=>push(true), 300); }
+        break;
+      default: break;
+    }
+  });
+
+  function start(){
+    if(inited) return; inited = true;
+    announceReady();
+    setTimeout(announceReady, 300);          // 父页面监听可能比本页晚挂载，补发一次
+    setTimeout(() => push(true), 500);
+  }
+  return { start, push };
+})();
+
 async function init(){
+  try{ ExtBridge.start(); }catch(_){}
   try{ const v = parseFloat(localStorage.getItem(LS_VOL)); applyVolume(isNaN(v) ? 1 : v); }catch(_){ applyVolume(1); }
   loadLyricStyle();
   if(IS_LYRIC_MODE){
