@@ -3736,7 +3736,8 @@ const recordState = { stream:null, recorder:null, chunks:[], startTime:0, timerI
   guideMode:'inst', guideInst:null, guideVocal:null, guideVocalFactor:0.25, guideSyncTimer:null,
   isRecording:false, countdownStarted:false, countdownTimer:null, stopping:false, sessionActive:false,
   preparedKey:'', instDuration:0, wavDuration:0, recordedDuration:0, minSec:0, fullSec:0, lyricLastStart:0,
-  recordingPath:'', recordingSavePromise:null, uploadBlocked:false, autoStopTimer:null, mainMuted:false, session:'', sent:false };
+  recordingPath:'', recordingSavePromise:null, uploadBlocked:false, autoStopTimer:null, mainMuted:false, session:'', sent:false,
+  recId:'' };   /* ★ 每份录音的唯一号：修音页靠它去重，播放器靠它等签收 */
 
 $('#btnAiFix').addEventListener('click', ()=>{
   const song = getCurrent(); if(!song){ showToast('请先播放一首歌曲'); return; }
@@ -4248,6 +4249,7 @@ async function finalizeRecording(){
   let wavBlob = webmBlob;
   try{ wavBlob = await blobToWav(webmBlob); }catch(e){ console.warn('[record] wav 转换失败，使用 webm', e); }
   recordState.blob = wavBlob;
+  recordState.recId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   recordState.recordingPath = ''; recordState.recordingSavePromise = null;
   const recDur = Number(recordState.wavDuration) || roughLen;
   recordState.recordedDuration = recDur;
@@ -4309,13 +4311,18 @@ function recCacheKey(){
 async function cacheRecording(){
   if(!recordState.blob) return '';
   const key = recCacheKey();
-  if(recordState.recordingPath === key) return key;
   const song = recordState.song;
   const name = safeFileName(song ? (song.title || 'recording') : 'recording') + '-vocal.wav';
   const rec = { blob: recordState.blob, name, songId: song ? song.id : '', songTitle: song ? (song.title || '') : '',
-    session: recordState.session || '', mode: recordState.recordMode, duration: recordState.recordedDuration || 0, ts: Date.now() };
+    session: recordState.session || '', mode: recordState.recordMode, duration: recordState.recordedDuration || 0,
+    recId: recordState.recId || '', ts: Date.now() };
+  /* ★ 先写同步指针：万一 IndexedDB 慢/失败，修音页也能凭指针找到键，再决定要不要读库 */
+  const ptr = { key, songId: rec.songId, songTitle: rec.songTitle, session: rec.session, name, mode: rec.mode,
+    duration: rec.duration, recId: rec.recId, ts: rec.ts };
+  try{ localStorage.setItem('mp_record_handoff', JSON.stringify(ptr)); }catch(_){}
+  try{ await idbPut('kv', 'lastRecording', ptr); }catch(_){}
+  if(recordState.recordingPath === key) return key;
   await idbPut('files', key, rec);
-  try{ await idbPut('kv', 'lastRecording', { key, songId: rec.songId, songTitle: rec.songTitle, session: rec.session, name, mode: rec.mode, duration: rec.duration, ts: rec.ts }); }catch(_){}
   recordState.recordingPath = key;
   notifyStudioCached(key, rec);
   return key;
@@ -4328,7 +4335,8 @@ function ensureRecordingFile(){
   return recordState.recordingSavePromise;
 }
 function notifyStudioCached(key, rec){
-  const msg = { type:'RECORDING_CACHED', recKey:key, songId:rec.songId, songTitle:rec.songTitle, session:rec.session, name:rec.name, duration:rec.duration };
+  const msg = { type:'RECORDING_CACHED', recKey:key, songId:rec.songId, songTitle:rec.songTitle, session:rec.session,
+    name:rec.name, duration:rec.duration, recId:rec.recId || '' };
   try{ if(fixWindowRef && !fixWindowRef.closed) fixWindowRef.postMessage(msg, '*'); }catch(_){}
   try{ if(window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); }catch(_){}
   try{ if(recordBus) recordBus.postMessage(msg); }catch(_){}
@@ -4350,6 +4358,7 @@ async function sendRecordingBack(){
     songId: song ? song.id : '', songTitle: song ? (song.title || '') : '',
     session: fixSession || recordBusSession || '',
     recKey: recCacheKey(),
+    recId: recordState.recId || '',
     manifestUrl: appConfig.manifestUrl || DEFAULT_MANIFEST_URL, playerUrl: location.origin + location.pathname
   };
   /* 1) 修音页已经开着：直接发过去（同一份 blob，不重新编码） */
@@ -4393,22 +4402,49 @@ function openStudioForHandoff(song, payload){
     u.searchParams.set('playerUrl', location.origin + location.pathname);
     if(payload && payload.session) u.searchParams.set('session', payload.session);
     if(payload && payload.recKey) u.searchParams.set('recKey', payload.recKey);
+    if(payload && payload.recId) u.searchParams.set('recId', payload.recId);
     pendingHandoff = payload;
+    /* ★ 先同步落好指针+缓存，保证修音页一开就能自己取，不必等消息 */
+    ensureRecordingFile().catch(()=>{});
     fixWindowRef = window.open(u.toString(), 'k_song_tuner');
-    if(!fixWindowRef){ pendingHandoff = null; downloadRecordingFallback(); return; }
+    if(!fixWindowRef){
+      pendingHandoff = null;
+      recordState.sent = false;
+      $('#recordStatus').textContent = '⚠️ 浏览器拦下了新标签页：请允许本站弹窗，或手动打开修音工坊后再点一次「⬆ 上传到修音工程」';
+      showToast('弹窗被拦截：请允许弹窗，或手动打开修音页再发送');
+      return;
+    }
     $('#recordStatus').textContent = '正在打开修音工坊并传送录音…';
     /* ★ 缓存失败也继续：窗口已经打开，修音页会提示手动上传/下载 */
     ensureRecordingFile().then(key=>{
       if(!key){ $('#recordStatus').textContent = '⚠️ 修音页已打开，但干声缓存失败；可点「⬇ 下载干声 WAV」手动上传'; showToast('修音页已打开；干声缓存失败，请下载后手动上传'); }
       else { $('#recordStatus').textContent = '✅ 录音已缓存并发送，修音页会自动接收'; }
     }).catch(()=>{});
+    /* ★ 多次重发，直到修音页回 RECORDING_RECEIVED 或窗口关掉：慢加载/CDN 卡顿都不再丢消息 */
     clearTimeout(handoffTimer);
-    handoffTimer = setTimeout(()=>{
-      if(!pendingHandoff) return;
-      const p = pendingHandoff; pendingHandoff = null;
-      if(!(fixWindowRef && !fixWindowRef.closed && postRecordingTo(fixWindowRef, p))){ showToast('已打开修音页，录音可手动上传或下载备份'); }
-      else showToast('已发送到修音工坊');
-    }, 8000);
+    const delays = [1000, 2500, 5000, 9000, 14000, 20000, 28000];
+    let attempt = 0;
+    const tick = ()=>{
+      if(!pendingHandoff) return;                                  // 已签收
+      if(!fixWindowRef || fixWindowRef.closed){                    // 窗口被关掉
+        const p = pendingHandoff; pendingHandoff = null;
+        recordState.sent = false;
+        $('#recordStatus').textContent = '⚠️ 修音页窗口被关闭了；录音已缓存，可再点「⬆ 上传到修音工程」或下载 WAV 手动上传';
+        showToast('修音页被关掉了，录音还在，可再发送一次');
+        return;
+      }
+      const p = pendingHandoff;
+      postRecordingTo(fixWindowRef, p);
+      if(attempt < delays.length){
+        handoffTimer = setTimeout(tick, delays[attempt++]);
+      } else {
+        pendingHandoff = null;
+        recordState.sent = false;
+        $('#recordStatus').textContent = '⚠️ 修音页已打开，但没收到录音；可点「⬇ 下载干声 WAV」手动上传，或在修音页刷新一下';
+        showToast('修音页没收到录音，可下载 WAV 手动上传');
+      }
+    };
+    handoffTimer = setTimeout(tick, delays[attempt++]);
   }catch(e){ pendingHandoff = null; downloadRecordingFallback(); }
 }
 
@@ -4451,6 +4487,28 @@ window.addEventListener('message', (ev) => {
   if (!d || d.__kSongStudio !== true) return;
   if (d.type === 'STUDIO_READY') {                        // 修音页已就绪，补发待传送的录音
     if (!d.session || !fixSession || d.session === fixSession) finishHandoff(ev.source);
+    return;
+  }
+  if (d.type === 'HANDOFF_REJECTED') {                   // ★ 修音页没接收：说清原因，别让用户以为“发出去了”
+    pendingHandoff = null; clearTimeout(handoffTimer); recordState.sent = false;
+    const st = document.getElementById('recordStatus');
+    let tip = '修音页没接收这份录音。';
+    if (d.reason === 'song-mismatch') {
+      const cur = d.pinnedSongId ? getSongById(d.pinnedSongId) : null;
+      const mine = recordState.song ? (recordState.song.title || '') : '';
+      tip = `修音页正在修《${cur ? (cur.title || d.pinnedSongId) : d.pinnedSongId}》，这份录音是《${d.recTitle || mine}》，已丢弃；请在修音页切回这首歌，或重新点「⬆ 上传到修音工程」。`;
+    } else if (d.reason === 'stale-session') {
+      tip = '本次录音的会话已过期：请回修音页重新点「前往录音」再录一遍。';
+    }
+    if (st) st.textContent = '⚠️ ' + tip;
+    showToast('修音页未接收这份录音，看面板提示');
+    return;
+  }
+  if (d.type === 'RECORDING_RECEIVED') {                 // ★ 修音页已拿到干声：停止重发
+    if (d.recId && recordState.recId && d.recId !== recordState.recId) return;
+    pendingHandoff = null; recordState.sent = true; clearTimeout(handoffTimer);
+    const st = document.getElementById('recordStatus');
+    if (st) st.textContent = '✅ 修音页已收到干声，可以切过去点「下一步」了';
     return;
   }
   if (d.session && fixSession && d.session !== fixSession) return;   // 旧会话的消息，忽略
